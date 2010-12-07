@@ -2,6 +2,22 @@
 
 #include <assert.h>
 
+#include <time.h>
+
+double GetMicroSeconds()
+{
+    timespec t;
+    clock_gettime( CLOCK_MONOTONIC, &t );
+    return (t.tv_sec * 1000000.0) + (t.tv_nsec*0.0001);
+}
+
+double GetThreadMicroSeconds()
+{
+    timespec t;
+    clock_gettime( CLOCK_THREAD_CPUTIME_ID, &t );
+    return (t.tv_sec * 1000000.0) + (t.tv_nsec*0.0001);
+}
+
 size_t MotionMind::m_regSize[] = 
 {
     4,2,1,2,2,2,2,1,1,1,2,2,2,2,2,4,2,1,1,2,2,2,4,4,4,2,2,4,2,2,2
@@ -217,35 +233,23 @@ bool MotionMind::ReadRegister( int32_t addr, Register reg, int32_t& value )
 **/
 bool MotionMind::GetSingleByteAck()
 {
+    bool rval = false;
     char val;
-
-    int left = 1;
-    int c = 0;
-    const unsigned int MAX_TRIES = 10;
-    unsigned int tries = 0;
-    while ( tries < MAX_TRIES && c != 1 )
+    
+    bool byteReady = m_com.WaitForBytes( 20 ); // Wait 20ms for data
+    
+    if ( byteReady )
     {
-        int n = m_com.Read( &val, left );
-        if ( n > 0 )
+        int n = m_com.Read( &val, 1 );
+        if ( n == 1 && val == 6 )
         {
-            c += n;
-            left = 1 - c;
+            rval = true;
         }
-        if ( left )
-        {
-            GLK::Thread::Sleep(2);
-        }
-        tries++;
     }
 
     m_com.Flush();
 
-    if ( c == 1 && val == 6 )
-    {
-        return true;
-    }
-    
-    return false;
+    return rval;
 }
 
 /**
@@ -255,36 +259,52 @@ bool MotionMind::GetSingleByteAck()
 **/
 bool MotionMind::GetAck( int32_t& position )
 {
+    bool rval = false;
     char cmd[6];
+    double t1 = GetMicroSeconds();
+    bool bytesReady = m_com.WaitForBytes( 20 ); // Wait 20ms for data
 
-    int left = 6;
-    int c = 0;
-    const unsigned int MAX_TRIES = 10;
-    unsigned int tries = 0;
-    while ( tries < MAX_TRIES && c != 6 )
+    if ( bytesReady )
     {
-        int n = m_com.Read( cmd+c, left );
-        if ( n > 0 )
+        int left = 6;
+        int c = 0;
+        const unsigned int MAX_TRIES = 2;
+        unsigned int tries = 0;
+        while ( tries < MAX_TRIES && c != 6 )
         {
-            c += n;
-            left = 6 - c;
+            int n = m_com.Read( cmd+c, left );
+            if ( n > 0 )
+            {
+                c += n;
+                left = 6 - c;
+            }
+            if ( left )
+            {
+                GLK::Thread::Sleep(5);
+            }
+            tries++;
         }
-        if ( left )
+
+        m_com.Flush();
+
+        if ( c == 6  && ComputeCheckSum( cmd, 5 ) == cmd[5] )
         {
-            GLK::Thread::Sleep(2);
+            position = *((int32_t*)(cmd+1));
+            rval = true;
         }
-        tries++;
     }
 
     m_com.Flush();
 
-    if ( c == 6  && ComputeCheckSum( cmd, 5 ) == cmd[5] )
+    double t2 = GetMicroSeconds();
+    
+    if ( rval == true )
     {
-        position = *((int32_t*)(cmd+1));
-        return true;
+        fprintf( stderr, "Motion mind comm time: %fus\n", t2-t1 );
     }
     
-    return false;
+
+    return rval;
 }
 
 /**

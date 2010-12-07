@@ -1,8 +1,6 @@
 #ifndef GLK_SERIAL_PORT_H
 #define GLK_SERIAL_PORT_H
 
-#include "../../fwconfig.h"
-
 #include "../StdIO.h"
 
 #define WIN32_LEAN_AND_MEAN

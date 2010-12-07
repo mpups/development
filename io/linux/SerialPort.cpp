@@ -12,6 +12,30 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <poll.h>
+
+bool SerialPort::WaitForBytes( int timeout_ms ) const
+{
+    pollfd pfds;
+    pfds.fd = m_port;
+    pfds.events = POLLIN;
+    pfds.revents = 0;
+    
+    poll( &pfds, 1, timeout_ms );
+    
+    bool rval;
+    if ( pfds.revents & POLLIN )
+    {
+        rval = true;
+    }
+    else
+    {
+        rval = false;
+    }
+    
+    return rval;
+}
+
 /**
     Opens the specified device as a serial port.
 

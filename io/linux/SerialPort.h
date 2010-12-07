@@ -37,6 +37,8 @@ public:
     void SetRawOn();
     void SetRawOff();
 
+    bool WaitForBytes( int timeout_ms ) const;
+
     size_t Write( const char* buffer, size_t numBytes );
     int Printf( const char* formatString, ... );
         
