@@ -236,7 +236,7 @@ bool MotionMind::GetSingleByteAck()
     bool rval = false;
     char val;
     
-    bool byteReady = m_com.WaitForBytes( 20 ); // Wait 20ms for data
+    bool byteReady = m_com.WaitForBytes( 10 ); // Wait 20ms for data
     
     if ( byteReady )
     {
@@ -261,14 +261,13 @@ bool MotionMind::GetAck( int32_t& position )
 {
     bool rval = false;
     char cmd[6];
-    double t1 = GetMicroSeconds();
-    bool bytesReady = m_com.WaitForBytes( 20 ); // Wait 20ms for data
+    bool bytesReady = m_com.WaitForBytes( 10 ); // Wait 20ms for data
 
     if ( bytesReady )
     {
         int left = 6;
         int c = 0;
-        const unsigned int MAX_TRIES = 2;
+        const unsigned int MAX_TRIES = 3;
         unsigned int tries = 0;
         while ( tries < MAX_TRIES && c != 6 )
         {
@@ -280,7 +279,7 @@ bool MotionMind::GetAck( int32_t& position )
             }
             if ( left )
             {
-                GLK::Thread::Sleep(5);
+                GLK::Thread::Sleep(2);
             }
             tries++;
         }
@@ -295,15 +294,7 @@ bool MotionMind::GetAck( int32_t& position )
     }
 
     m_com.Flush();
-
-    double t2 = GetMicroSeconds();
     
-    if ( rval == true )
-    {
-        fprintf( stderr, "Motion mind comm time: %fus\n", t2-t1 );
-    }
-    
-
     return rval;
 }
 
