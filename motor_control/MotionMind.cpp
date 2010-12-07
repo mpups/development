@@ -236,7 +236,7 @@ bool MotionMind::GetSingleByteAck()
     bool rval = false;
     char val;
     
-    bool byteReady = m_com.WaitForBytes( 10 ); // Wait 20ms for data
+    bool byteReady = m_com.WaitForBytes( 20 ); // Wait 20ms - write acks take longer
     
     if ( byteReady )
     {
@@ -261,7 +261,7 @@ bool MotionMind::GetAck( int32_t& position )
 {
     bool rval = false;
     char cmd[6];
-    bool bytesReady = m_com.WaitForBytes( 10 ); // Wait 20ms for data
+    bool bytesReady = m_com.WaitForBytes( 10 ); // Wait 10ms for response to begin
 
     if ( bytesReady )
     {
@@ -294,6 +294,8 @@ bool MotionMind::GetAck( int32_t& position )
     }
 
     m_com.Flush();
+    
+    if (!rval) {fprintf(stderr,"FAIL!\n");}
     
     return rval;
 }
