@@ -4,7 +4,6 @@
 TARGET_DIR   = 'linux_build'
 
 DC1394_LIBS  = '/usr/lib'
-GLK_LIBS     = '../glk/linux_build'
 LUA_LIBS     = '/usr/lib'
 
 LUA_INC        = '/usr/include/lua5.1'

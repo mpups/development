@@ -5,7 +5,8 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
-#include <sys/time.h>
+//#include <sys/time.h>
+#include <poll.h>
 #include <linux/joystick.h>
 #include <assert.h>
 
@@ -63,28 +64,21 @@ void Joystick::Run()
         return;
     }
 
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
-
-    fd_set readFds;
-    FD_ZERO( &readFds );
-    FD_SET( m_joy, &readFds );
-
     // Switch to non-blocking I/O before we enter the event loop:
     fcntl( m_joy, F_SETFL, O_NONBLOCK );
 
-    struct js_event e;    
-    ButtonEvent button;    
+    struct pollfd pfds;
+    pfds.fd = m_joy;
+    pfds.events = POLLIN;
+    pfds.revents = 0;
+    struct js_event e;
+    ButtonEvent button;
     while ( !TerminationRequested() )
     {
-        timeout.tv_sec = 1; // Linux select() modifies timeout so must reset it every time!
-        FD_ZERO( &readFds );
-        FD_SET( m_joy, &readFds );
-        int val = select( m_joy+1, &readFds, 0, 0, &timeout );
+        int val = poll( &pfds, 1, 600 ); // 600ms timeout
         assert( val >= 0 );
-        if ( val )
-        {        
+        if ( val == 1 && pfds.revents & POLLIN )
+        {   
             val = read ( m_joy, &e, sizeof(struct js_event) );
             if ( val == sizeof(struct js_event) )
             {

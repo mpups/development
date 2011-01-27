@@ -8,14 +8,14 @@ double GetMicroSeconds()
 {
     timespec t;
     clock_gettime( CLOCK_MONOTONIC, &t );
-    return (t.tv_sec * 1000000.0) + (t.tv_nsec*0.0001);
+    return (t.tv_sec * 1000000.0) + (t.tv_nsec*0.001);
 }
 
 double GetThreadMicroSeconds()
 {
     timespec t;
     clock_gettime( CLOCK_THREAD_CPUTIME_ID, &t );
-    return (t.tv_sec * 1000000.0) + (t.tv_nsec*0.0001);
+    return (t.tv_sec * 1000000.0) + (t.tv_nsec*0.001);
 }
 
 size_t MotionMind::m_regSize[] = 
@@ -177,11 +177,11 @@ bool MotionMind::WriteRegister( int32_t addr, MotionMind::Register reg, int32_t 
     char cmd[8]; // This assumes max reg size is 4 bytes
     if ( store )
     {
-        cmd[0] = 0x18; // Write to registers
+        cmd[0] = 0x19; // Write to registers and store to eprom
     }
     else
     {
-        cmd[0] = 0x19; // Write to registers and store to eprom
+        cmd[0] = 0x18; // Write to registers
     }
     cmd[1] = addr;
     cmd[2] = reg;
