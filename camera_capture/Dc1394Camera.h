@@ -4,7 +4,10 @@
 #define DC1394_CAMERA_H
 
 #include <stdint.h>
+
+extern "C" {
 #include <dc1394/dc1394.h>
+}
 
 #include "CameraCapture.h"
 

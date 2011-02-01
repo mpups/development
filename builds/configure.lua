@@ -3,14 +3,14 @@
 
 TARGET_DIR   = 'linux_build'
 
-DC1394_LIBS  = '/usr/lib'
-LUA_LIBS     = '/usr/lib'
+INCLUDE_DIRS = {
+    '../../glk/include',
+    '/usr/include/lua5.1',
+    '/usr/local/include/freetype2',
+    '/usr/include/gtest',
+    '/usr/include/',
+    '/usr/include/unicap',
+    '/usr/local/include/opencv'
+}
 
-GLK_INC        = '../../glk/include'
-
-LUA_INC        = '/usr/include/lua5.1'
-FREETYPE2_INC  = '/usr/local/include/freetype2'
-GOOGLETEST_INC = '/usr/include/gtest'
-UNICAP_INC   = '/usr/include/unicap'
-DC1394_INC   = '/usr/include/dc1394'
-OPENCV_INC = '/usr/local/include/opencv'
+EXTRA_BUILD_OPTIONS = { '-msse -msse2' }

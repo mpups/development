@@ -3,10 +3,13 @@
 #ifndef UNICAP_CAMERA_H
 #define UNICAP_CAMERA_H
 
+extern "C" {
 #include <unicap.h>
+}
+
 #include <stdint.h>
 
-#include <glk.h>
+#include <glkcore.h>
 
 #include "CameraCapture.h"
 
