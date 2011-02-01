@@ -4,16 +4,17 @@ end
 
 dofile( 'configure.lua' )
 
+SRC = '../'
+
 solution 'robolib'
 	configurations { 'debug', 'release', 'profile' }
 	location( TARGET_DIR )
 	targetdir( TARGET_DIR )
 	language 'C++'
-	flags { 'NoExceptions','NoRTTI','ExtraWarnings','NoPCH' }
+	flags { 'NoExceptions','NoRTTI','ExtraWarnings','NoPCH', 'EnableSSE', 'EnableSSE2' }
 	
     includedirs { LUA_INC, GLK_INC, FREETYPE2_INC, UNICAP_INC, DC1394_INC }
     defines ( EXTRA_DEFINES )
-    buildoptions { "-msse -msse2" }
     buildoptions ( EXTRA_BUILD_OPTIONS )
     
     configuration 'release'
@@ -35,17 +36,17 @@ solution 'robolib'
     project 'robolib'
 		kind 'StaticLib'
 							
-		files { '**.h', '**.cpp' } -- recursivley add all cpp files
-		excludes { 'sse/test/*' }
+		files { SRC .. '**.h', SRC .. '**.cpp' } -- recursivley add all cpp files
+		excludes { SRC .. 'sse/test/*' }
 		
 		-- Then exclude files which are platform specific
 		if ( PLATFORM == 'win32' ) then
 			excludes {
-			    'io/linux/*'
+			    SRC .. 'io/linux/*'
 			}
 		elseif ( PLATFORM == 'linux' ) then
 			excludes {
-			    'io/win32/*'
+			    SRC .. 'io/win32/*'
 			}
 		end
 
