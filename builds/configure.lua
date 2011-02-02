@@ -13,6 +13,13 @@ INCLUDE_DIRS = {
     '/usr/local/include/opencv'
 }
 
+LIB_DIRS = {
+    '/use/local/lib',
+    '../../glk/builds/linux_build/debug',
+    '../../glk/builds/linux_build/release',
+}
+
 BUILD_OPTIONS = { '-msse -msse2' }
 LINK_OPTIONS = {}
-LINKS = { 'robolib', 'glkcore', 'lua5.1', 'freetype', 'pthread', 'rt', 'cxcore' }
+LINKS = { 'lua5.1', 'freetype', 'pthread', 'rt', 'cxcore', 'cvaux', 'unicap' }
+

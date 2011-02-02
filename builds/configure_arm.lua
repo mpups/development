@@ -22,5 +22,5 @@ LIB_DIRS = {
 DEFINES = { 'ARM_BUILD' }
 BUILD_OPTIONS = { '-mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
 LINK_OPTIONS = { '-Wl,--allow-shlib-undefined' }
-LINKS = { 'robolib', 'glkcore', 'lua5.1', 'freetype', 'pthread', 'rt', 'opencv_core', 'opencv_contrib', 'unicap' }
+LINKS = { 'glkcore', 'lua5.1', 'freetype', 'pthread', 'rt', 'opencv_core', 'opencv_contrib', 'unicap' }
 

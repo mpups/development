@@ -64,6 +64,14 @@ solution 'robolib'
         kind 'ConsoleApp'
         
         files { SRC .. 'tests/*.cpp' }
-                
-        links { LINKS }
+        
+        links { 'robolib' }
+
+        configuration { 'debug' }
+            links { 'glkcore_d' }
+        configuration { 'release' }
+            links { 'glkcore' }
+
+        configuration {}
+            links { LINKS }
         
