@@ -4,7 +4,7 @@
 #define LUA_BOT_CLASS_H
 
 #include <glkcore.h>
-#include "../RoboLibCore.h"
+#include "../../include/RoboLibCore.h"
 
 /**
     CLass which encapsulates lua control of a differential drive robot.

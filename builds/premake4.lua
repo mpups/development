@@ -4,7 +4,7 @@ end
 
 dofile( 'configure_arm.lua' )
 
-SRC = '../'
+SRC = '../src/'
 
 solution 'robolib'
 	configurations { 'debug', 'release', 'profile' }
