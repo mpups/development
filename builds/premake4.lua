@@ -2,7 +2,7 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
-dofile( 'configure.lua' )
+dofile( 'configure_arm.lua' )
 
 SRC = '../'
 
@@ -14,11 +14,14 @@ solution 'robolib'
 	location( TARGET_DIR )
 	targetdir( TARGET_DIR )
 	language 'C++'
+	
+    buildoptions ( BUILD_OPTIONS )
+    linkoptions ( LINK_OPTIONS)
 	flags { 'NoExceptions','NoRTTI','ExtraWarnings','NoPCH' }
 
     includedirs { INCLUDE_DIRS }
+    libdirs { LIB_DIRS }
     defines ( DEFINES )
-    buildoptions ( EXTRA_BUILD_OPTIONS )
     
     configuration 'release'
 		defines { 'NDEBUG' }
@@ -41,6 +44,7 @@ solution 'robolib'
 														
 		files { SRC .. '**.h', SRC .. '**.cpp' } -- recursivley add all cpp files
 		excludes { SRC .. 'sse/test/*' }
+        excludes { SRC .. 'tests/*' }
 
         excludes { SRC .. 'sse/*' }
         excludes { SRC .. 'camera_capture/Dc1394Camera.*' }
@@ -56,3 +60,10 @@ solution 'robolib'
 			}
 		end
 
+    project 'tests'
+        kind 'ConsoleApp'
+        
+        files { SRC .. 'tests/*.cpp' }
+                
+        links { LINKS }
+        

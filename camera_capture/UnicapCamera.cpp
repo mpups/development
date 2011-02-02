@@ -85,9 +85,12 @@ void UnicapCamera::StartCapture()
     status = unicap_register_callback( m_handle, UNICAP_EVENT_NEW_FRAME, (unicap_callback_t)NewFrame, (void*)this );
     assert( SUCCESS(status) );
 
-    m_captureFrame = true;
-    status = unicap_start_capture( m_handle );
-    assert( SUCCESS(status) );
+    if ( SUCCESS(status) )
+    {
+        m_captureFrame = true;
+        status = unicap_start_capture( m_handle );
+        assert( SUCCESS(status) );
+    }
 }
 
 /**

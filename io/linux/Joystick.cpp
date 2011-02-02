@@ -18,7 +18,7 @@ Joystick::Joystick( JoystickDevice_t device )
 {
     m_joy = open( device, O_RDONLY );
     fprintf( stderr,"Opened %s: %d\n", device, m_joy );
-    assert( m_joy > 0 );
+
     if ( m_joy )
     {
         m_button = new int16_t[256];
@@ -64,6 +64,8 @@ void Joystick::Run()
         return;
     }
 
+    assert( m_joy > 0 );
+    
     // Switch to non-blocking I/O before we enter the event loop:
     fcntl( m_joy, F_SETFL, O_NONBLOCK );
 

@@ -13,4 +13,6 @@ INCLUDE_DIRS = {
     '/usr/local/include/opencv'
 }
 
-EXTRA_BUILD_OPTIONS = { '-msse -msse2' }
+BUILD_OPTIONS = { '-msse -msse2' }
+LINK_OPTIONS = {}
+LINKS = { 'robolib', 'glkcore', 'lua5.1', 'freetype', 'pthread', 'rt', 'cxcore' }

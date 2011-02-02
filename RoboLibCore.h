@@ -5,6 +5,8 @@
 #include "io/SerialPort.h"
 #include "io/linux/Joystick.h"
 
+#include "lua/Luabot.h"
+
 #ifndef ARM_BUILD
 #include "sse/VectorVector.h"
 #include "sse/BatchOperations.h"
