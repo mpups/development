@@ -1,30 +1,5 @@
 #include "../../include/RoboLib.h"
-
 #include <glkcore.h>
-
-/*#include "opencv/cvaux.h"
-#include "opencv/highgui.h"
-#include "opencv/cxcore.h"
-#include <stdio.h>
- 
-int main(int argc, char* argv[])
-{    
-  CvCapture* camera = cvCreateCameraCapture(-1); // Use the default camera
- 
-  IplImage*     frame = 0;
-  IplImage      img;
- 
-  frame = cvQueryFrame(camera); //need to capture at least one extra frame
-  frame = cvQueryFrame(camera);
-  if (frame != NULL) {
-    printf("got frame\n\r");
-        cvSaveImage("webcam.jpg", frame);
-  } else {
-      printf("Null frame\n\r");
-  }
-  cvReleaseCapture(&camera);
-  return 0;
-}*/
 
 /**
     Saves an image as a simple raw pgm.
@@ -42,21 +17,29 @@ void WritePgm( const char* fileName, const uint8_t* buffer, const uint32_t width
 }
 
 int main( int argc, char** argv )
-{
-    Joystick joystick( "/dev/input/js0" );
-    if ( joystick.IsAvailable() )
+{   
+    Socket s;
+    s.Bind( 2000 );
+    s.Listen( 5 );
+    Socket* con = s.Accept();
+
+    if ( con )
     {
-        joystick.Start();
-        
-        Joystick::ButtonEvent b;
-        while ( b.id != 16 )
+        fprintf( stderr, "Connection!\n" );
+        char msg[256];
+        int n = con->Read( msg, 255 );
+        if ( n > 0 )
         {
-            fprintf( stderr, "%d %d\n", joystick.GetAxis(2), joystick.GetAxis(1)  );
+            msg[n] = '\0';
+            fprintf( stderr, "message: %s\n", msg );
         }
     }
-    
-    UnicapCamera camera;
-    if ( camera.IsAvailable() )
+    delete con;
+
+/*    UnicapCamera camera;
+    MotionMind motors( "/dev/ttyUSB0" );
+
+    if ( camera.IsAvailable() && motors.Available() )
     {
         GLK::String title( "" );
         title += ':';
@@ -66,24 +49,40 @@ int main( int argc, char** argv )
         title += GLK::String( camera.GetModel() );
         fprintf( stderr, "Found camera: %s\n", title.cStr() );
     
-    
         uint8_t* m_lum;
         int err = posix_memalign( (void**)&m_lum, 16, camera.GetFrameWidth() * camera.GetFrameHeight() * sizeof(uint8_t) );
         assert( err == 0 );
         
         camera.StartCapture();
-        for ( int i = 0; i<10; ++i )
+        
+        int32_t position;
+        motors.SetSpeed( 1, -600, position );
+        motors.SetSpeed( 2, 600, position );
+    
+        for ( int i = 0; i<40; ++i )
         {    
             camera.GetFrame();
-            fprintf( stderr, "Captured frame. Timestamp = %f secs\n", camera.GetFrameTimestamp()/1000000.0 );
+            double timeStamp = camera.GetFrameTimestamp() / 1000000.0;
             camera.ExtractLuminanceImage( m_lum );
             camera.DoneFrame();
+            
+            fprintf( stderr, "Captured frame. Timestamp = %f secs\n", timeStamp );
+            char name [] = "capture_####.pgm";
+            sprintf( name, "capture_%.4d.pgm", i+1 );
+            WritePgm( name, m_lum, camera.GetFrameWidth(), camera.GetFrameHeight() );
+            GLK::Thread::Sleep( 50 );
         }
+    
+        motors.SetSpeed( 1, 0, position );
+        motors.SetSpeed( 2, 0, position );
+    
+        motors.Move( 1, 0, position );
+        motors.Move( 2, 0, position );
+        
         camera.StopCapture();
         
-        WritePgm( "test_capture.pgm", m_lum, camera.GetFrameWidth(), camera.GetFrameHeight() );
-    
         free( m_lum );
-    }
+    }*/
+
 }
 

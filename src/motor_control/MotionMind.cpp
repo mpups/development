@@ -291,11 +291,11 @@ bool MotionMind::GetAck( int32_t& position )
             position = *((int32_t*)(cmd+1));
             rval = true;
         }
+        
+        if (!rval) {fprintf(stderr,"FAIL(%d bytes received back)!\n",c);}
     }
 
     m_com.Flush();
-    
-    if (!rval) {fprintf(stderr,"FAIL!\n");}
     
     return rval;
 }

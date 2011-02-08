@@ -19,12 +19,24 @@ public:
     Socket();
     ~Socket();
 
-    bool Connect();
+    bool IsValid() const { return m_socket >= 0; };
+
+    bool Bind( int );
+    bool Listen( int );
+    Socket* Accept();
+    void Shutdown();
+    bool Connect( char*, int );
+            
+    int Read( char* message, size_t maxBytes );
+    bool Write( char* message, size_t size );
+
+protected:
     
-    bool Send( char* message, int size );
 
 private:
     int m_socket;
+    
+    explicit Socket( int socket );
 };
 
 #endif // GLK_SOCKET_H

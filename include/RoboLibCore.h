@@ -4,6 +4,7 @@
 #include "../src/motor_control/MotionMind.h"
 #include "../src/io/SerialPort.h"
 #include "../src/io/linux/Joystick.h"
+#include "../src/io/Socket.h"
 
 #include "../src/lua/Luabot.h"
 

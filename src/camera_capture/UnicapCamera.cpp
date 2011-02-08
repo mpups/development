@@ -327,7 +327,7 @@ bool UnicapCamera::FindFormat( int width, int height, unsigned int fourcc, unica
         {
             if ( format.fourcc == fourcc )
             {
-                for ( unsigned int s=0; s<format.size_count; ++s )
+                for ( int s=0; s<format.size_count; ++s )
                 {
                     if ( format.sizes[s].width == width && format.sizes[s].height == height )
                     {
