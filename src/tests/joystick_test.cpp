@@ -18,21 +18,44 @@ void WritePgm( const char* fileName, const uint8_t* buffer, const uint32_t width
 
 int main( int argc, char** argv )
 {   
-    Socket s;
-    s.Bind( 2000 );
-    s.Listen( 5 );
-    Socket* con = s.Accept();
+    if ( argc < 1 )
+    {
+        return 0;
+    }
+
+    MotionMind motors( "/dev/ttyUSB0" );
+    int32_t position;
+
+    Socket s; // Setup a server socket:
+    s.Bind( atoi(argv[1]) ); // Get port from command line
+    s.Listen( 1 ); // Wait for connection
+    Socket* con = s.Accept(); // Create connection
 
     if ( con )
     {
-        fprintf( stderr, "Connection!\n" );
+        fprintf( stderr, "Client connected to robot.\n" );
         char msg[256];
-        int n = con->Read( msg, 255 );
-        if ( n > 0 )
+        int n = 0;
+        
+        // Read messages from client in a loop:
+        while ( n >= 0 )
         {
-            msg[n] = '\0';
-            fprintf( stderr, "message: %s\n", msg );
+            n = con->Read( msg, 256 );
+            if ( n > 0 )
+            {
+                int leftSpeed;
+                int rightSpeed;
+                int nf = sscanf( msg, "speed: %d %d\n", &leftSpeed, &rightSpeed );
+                if ( nf == 2 )
+                {
+                    fprintf( stderr, "Setting speed: %d %d\n", leftSpeed, rightSpeed );
+                            
+                    motors.SetSpeed( 1, -leftSpeed, position );
+                    motors.SetSpeed( 2, rightSpeed, position );
+                }
+            }
         }
+        
     }
     delete con;
 
