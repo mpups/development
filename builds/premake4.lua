@@ -16,7 +16,7 @@ solution 'robolib'
 	language 'C++'
 	
     buildoptions ( BUILD_OPTIONS )
-    linkoptions ( LINK_OPTIONS)
+    linkoptions ( LINK_OPTIONS )
 	flags { 'NoExceptions','NoRTTI','ExtraWarnings','NoPCH' }
 
     includedirs { INCLUDE_DIRS }
@@ -60,10 +60,25 @@ solution 'robolib'
 			}
 		end
 
-    project 'tests'
+    project 'robo-test'
         kind 'ConsoleApp'
         
-        files { SRC .. 'tests/*.cpp' }
+        files { SRC .. 'tests/robo_test.cpp' }
+        
+        links { 'robolib' }
+
+        configuration { 'debug' }
+            links { 'glkcore_d' }
+        configuration { 'release' }
+            links { 'glkcore' }
+
+        configuration {}
+            links { LINKS }
+            
+    project 'comms-test'
+        kind 'ConsoleApp'
+        
+        files { SRC .. 'tests/comms_test.cpp' }
         
         links { 'robolib' }
 
