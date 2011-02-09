@@ -108,19 +108,27 @@ bool Socket::Connect( char* hostname, int portNumber )
 {
     struct hostent* server;
     server = gethostbyname( hostname );
+    if ( server == 0 )
+    {
+        return false;
+    }
+    
+    fprintf( stderr, "Connecting to: %s:%d\n", hostname, portNumber );
 
     struct sockaddr_in addr;
-    memset( (void*)&addr, 0, sizeof(sockaddr_in) );
-    
-    memcpy( (void*)server->h_addr, (void*)&addr.sin_addr.s_addr, server->h_length );
+    memset( &addr, 0, sizeof(sockaddr_in) );
+    addr.sin_family = AF_INET;
+    memcpy( &addr.sin_addr.s_addr, server->h_addr, server->h_length );
     addr.sin_port = htons( portNumber );
             
-    int err = connect( m_socket, (sockaddr*)&addr, sizeof(sockaddr) );
-    assert( err == 0 );
+    int err = connect( m_socket, (struct sockaddr*)&addr, sizeof(struct sockaddr_in) );
+    if ( err == -1 )
+    {
+        fprintf( stderr, "%s\n", strerror(errno) );           
+    }
     
     return err != -1;
 }
-
 
 /**
     Blocking read from this socket.
@@ -144,15 +152,9 @@ int Socket::Read( char* message, size_t maxBytes )
 
     @return False if message could not be sent.
 **/
-bool Socket::Write( char* message, size_t size )
+int Socket::Write( char* message, size_t size )
 {
-    int err = write( m_socket, message, size );
-    if ( err == -1 && errno != EAGAIN )
-    {
-        assert( 0 );
-    }
-    
-    return err != -1;
+    return write( m_socket, message, size );
 }
 
 /**

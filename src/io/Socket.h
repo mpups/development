@@ -28,7 +28,7 @@ public:
     bool Connect( char*, int );
             
     int Read( char* message, size_t maxBytes );
-    bool Write( char* message, size_t size );
+    int Write( char* message, size_t size );
 
 protected:
     
