@@ -24,6 +24,7 @@ int main( int argc, char** argv )
     
         // Only a port specified so this is server process
         MotionMind motors( "/dev/ttyUSB0" );
+        DiffDrive drive( motors );
         int32_t position;
 
         Socket s; // Setup a server socket:
@@ -37,28 +38,35 @@ int main( int argc, char** argv )
             char msg[256];
             int n = 0;
         
+            int leftSpeed  = 0;
+            int rightSpeed = 0;
+            int maxVal     = 1;
+        
             // Read messages from client in a loop:
             while ( n >= 0 )
             {
                 n = con->Read( msg, 256 );
                 if ( n > 0 )
                 {
-                    int leftSpeed;
-                    int rightSpeed;
-                    int nf = sscanf( msg, "%d %d\n", &leftSpeed, &rightSpeed );
-                    if ( nf == 2 )
+                    int nf = sscanf( msg, "%d %d %d\n", &leftSpeed, &rightSpeed, &maxVal );
+                    if ( nf == 3 )
                     {
-                        fprintf( stderr, "Setting speed: %d %d\n", leftSpeed, rightSpeed );
-                            
-                        motors.SetSpeed( 1, -leftSpeed, position );
-                        motors.SetSpeed( 2, rightSpeed, position );
+                        fprintf( stderr, "Received joystick axes: %d %d (%d)\n", leftSpeed, rightSpeed, maxVal );
                     }
                     else
                     {
-                        motors.SetSpeed( 1, 0, position );
-                        motors.SetSpeed( 2, 0, position );    
+                        // For safety set speeds to zero when we don't receive command:
+                        leftSpeed  = 0;
+                        rightSpeed = 0;
+                        maxVal     = 1;
                     }
                 }
+
+                float lA = drive.GetLeftAmps();
+                float rA = drive.GetRightAmps();                
+                drive.JoyControl( leftSpeed, rightSpeed, maxVal );
+                fprintf( stderr, "AMPS: %f %f\n", lA, rA );
+                
             }
         
         }
@@ -81,13 +89,13 @@ int main( int argc, char** argv )
                 int n = 0;
                 while ( n >= 0 )
                 {
-                    int l = js.GetAxis(1) / -33;
-                    int r = js.GetAxis(3) / -33;
-                    
+                    int jx = js.GetAxis(1);
+                    int jy = js.GetAxis(2);
+                    int max = 32767;
                     char msg[256];
-                    sprintf( msg, "%d %d\n", l, r );
+                    sprintf( msg, "%d %d %d\n", jx, jy, max );
                     n = client.Write( msg, strlen(msg) );
-                    GLK::Thread::Sleep( 100 );
+                    GLK::Thread::Sleep( 50 );
                 }
             }
         }

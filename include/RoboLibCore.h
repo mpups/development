@@ -2,6 +2,7 @@
 #define ROBO_LIB_CORE_H
 
 #include "../src/motor_control/MotionMind.h"
+#include "../src/motor_control/DiffDrive.h"
 #include "../src/io/SerialPort.h"
 #include "../src/io/linux/Joystick.h"
 #include "../src/io/Socket.h"
