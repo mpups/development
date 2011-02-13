@@ -30,6 +30,9 @@ public:
     int Read( char* message, size_t maxBytes );
     int Write( char* message, size_t size );
 
+    void SetNagleBufferingOn();
+    void SetNagleBufferingOff();
+
 protected:
     
 

@@ -8,7 +8,8 @@
 #include <stdio.h>
 
 #include <netinet/in.h>
-#include <netdb.h> 
+#include <netdb.h>
+#include <netinet/tcp.h>
 
 /**
     Create and open a socket of the specified type.
@@ -19,7 +20,6 @@ Socket::Socket()
     assert( m_socket != -1 );
 }
 
-
 /**
     Internal provate utility for creating socket with specific filedescriptor id.
 **/
@@ -27,6 +27,17 @@ Socket::Socket( int socket )
 :
     m_socket (socket)
 {
+}
+
+/**
+    Closes the socket connection.
+**/
+Socket::~Socket()
+{
+    if ( m_socket != -1 )
+    {
+        close( m_socket );
+    }
 }
 
 /**
@@ -157,13 +168,33 @@ int Socket::Write( char* message, size_t size )
     return write( m_socket, message, size );
 }
 
-/**
-    Closes the socket connection.
-**/
-Socket::~Socket()
+void Socket::SetNagleBufferingOn()
 {
-    if ( m_socket != -1 )
+    int flag = 0;
+    int result = setsockopt( m_socket,           // socket affected
+                            IPPROTO_TCP,    // set option at TCP level
+                            TCP_NODELAY,    // name of option
+                            (char *) &flag, // the cast is historical cruft
+                            sizeof(int)     // length of option value
+                           );
+    if ( result < 0 )
     {
-        close( m_socket );
-    }
+        fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );        
+    }    
 }
+
+void Socket::SetNagleBufferingOff()
+{
+    int flag = 1;
+    int result = setsockopt( m_socket,           // socket affected
+                            IPPROTO_TCP,    // set option at TCP level
+                            TCP_NODELAY,    // name of option
+                            (char *) &flag, // the cast is historical cruft
+                            sizeof(int)     // length of option value
+                           );
+    if ( result < 0 )
+    {
+        fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );        
+    }      
+}
+    

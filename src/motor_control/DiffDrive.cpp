@@ -10,6 +10,9 @@ m_motors    ( motors )
     m_countsPerMetre  = 6800.f;
     m_gearRatio       = 52.f;
     m_countsPerRevIn  = 12.f;
+    
+    m_motors.WriteRegister( LEFT_WHEEL, MotionMind::POSITION, 0 );
+    m_motors.WriteRegister( RIGHT_WHEEL, MotionMind::POSITION, 0 );
 }
 
 /**
@@ -58,6 +61,7 @@ DiffDrive::MotorData DiffDrive::SetSpeeds( float left_counts_per_sec, float righ
     m_motors.SetSpeed( LEFT_WHEEL,  left,  data.leftPos );
     m_motors.SetSpeed( RIGHT_WHEEL, right, data.rightPos );
     
+    data.leftPos = -data.leftPos;
     return data;
 }
 
@@ -74,6 +78,7 @@ DiffDrive::MotorData DiffDrive::SetMoves( float left_counts, float right_counts 
     m_motors.Move( LEFT_WHEEL,  left,  data.leftPos );
     m_motors.Move( RIGHT_WHEEL, right, data.rightPos );
     
+    data.leftPos = -data.leftPos;
     return data;
 }
 
@@ -127,8 +132,7 @@ DiffDrive::MotorData DiffDrive::JoyControl( int32_t jx, int32_t jy, int32_t maxV
 float DiffDrive::GetLeftAmps()
 {
     int32_t val;
-    const MotionMind::Register reg = m_motors.StringToRegister( "AMPS" );
-    m_motors.ReadRegister( LEFT_WHEEL, reg, val );
+    m_motors.ReadRegister( LEFT_WHEEL, MotionMind::AMPS, val );
     return val * 0.02f;
 }
 
@@ -138,8 +142,7 @@ float DiffDrive::GetLeftAmps()
 float DiffDrive::GetRightAmps()
 {
     int32_t val;
-    const MotionMind::Register reg = m_motors.StringToRegister( "AMPS" );
-    m_motors.ReadRegister( RIGHT_WHEEL, reg, val );
+    m_motors.ReadRegister( RIGHT_WHEEL, MotionMind::AMPS, val );
     return val * 0.02f;
 }
 
@@ -149,8 +152,7 @@ float DiffDrive::GetRightAmps()
 float DiffDrive::GetLeftPwm()
 {
     int32_t val;
-    const MotionMind::Register reg = m_motors.StringToRegister( "PWM" );
-    m_motors.ReadRegister( LEFT_WHEEL, reg, val );
+    m_motors.ReadRegister( LEFT_WHEEL, MotionMind::PWMLIMIT, val );
     return val * (100.f/1024.f);
 }
 
@@ -160,8 +162,7 @@ float DiffDrive::GetLeftPwm()
 float DiffDrive::GetRightPwm()
 {
     int32_t val;
-    const MotionMind::Register reg = m_motors.StringToRegister( "PWM" );
-    m_motors.ReadRegister( RIGHT_WHEEL, reg, val );
+    m_motors.ReadRegister( RIGHT_WHEEL, MotionMind::PWMLIMIT, val );
     return val * (100.f/1024.f);
 }
 

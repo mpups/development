@@ -43,7 +43,8 @@ int main( int argc, char** argv )
             int maxVal     = 1;
         
             // Read messages from client in a loop:
-            while ( n >= 0 )
+            int failedReads = 0; // Keep count of sequential failed reads.
+            while ( failedReads < 20 )
             {
                 n = con->Read( msg, 256 );
                 if ( n > 0 )
@@ -51,22 +52,32 @@ int main( int argc, char** argv )
                     int nf = sscanf( msg, "%d %d %d\n", &leftSpeed, &rightSpeed, &maxVal );
                     if ( nf == 3 )
                     {
-                        fprintf( stderr, "Received joystick axes: %d %d (%d)\n", leftSpeed, rightSpeed, maxVal );
-                    }
-                    else
-                    {
-                        // For safety set speeds to zero when we don't receive command:
-                        leftSpeed  = 0;
-                        rightSpeed = 0;
-                        maxVal     = 1;
+                        failedReads = 0;
+                        //fprintf( stderr, "Received joystick axes: %d %d (%d)\n", leftSpeed, rightSpeed, maxVal );
                     }
                 }
+                else
+                {
+                    failedReads += 1;
+                }
 
-                float lA = drive.GetLeftAmps();
-                float rA = drive.GetRightAmps();                
-                drive.JoyControl( leftSpeed, rightSpeed, maxVal );
-                fprintf( stderr, "AMPS: %f %f\n", lA, rA );
+                if ( failedReads > 2 )
+                {
+                        // For safety set speeds to zero when commands stop arriving:
+                        leftSpeed  = 0;
+                        rightSpeed = 0;
+                        maxVal     = 1;                  
+                }
                 
+                // Read amps
+                float lA = drive.GetLeftAmps();
+                float rA = drive.GetRightAmps();
+                
+                // Read arduino sensors values
+                DiffDrive::MotorData data = drive.JoyControl( leftSpeed, rightSpeed, maxVal );
+                
+                // Log all the data to stdout:
+                fprintf( stdout, "%d %d %f %f\n", data.leftPos, data.rightPos, lA, rA );
             }
         
         }
@@ -84,6 +95,7 @@ int main( int argc, char** argv )
             js.Start();     
     
             Socket client;
+            client.SetNagleBufferingOff();
             if ( client.Connect( argv[1], atoi( argv[2] ) ) )
             {
                 int n = 0;
