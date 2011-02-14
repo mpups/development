@@ -21,5 +21,5 @@ LIB_DIRS = {
 
 BUILD_OPTIONS = { '-msse -msse2' }
 LINK_OPTIONS = {}
-LINKS = { 'lua5.1', 'freetype', 'pthread', 'rt', 'cxcore', 'cvaux', 'unicap' }
+LINKS = { 'lua5.1', 'freetype', 'pthread', 'rt', 'cxcore', 'cvaux', 'unicap', 'rt', 'Xrender', 'X11', 'GL' }
 

@@ -68,9 +68,9 @@ solution 'robolib'
         links { 'robolib' }
 
         configuration { 'debug' }
-            links { 'glkcore_d' }
+            links { 'glk_d', 'glkcore_d' }
         configuration { 'release' }
-            links { 'glkcore' }
+            links { 'glk', 'glkcore' }
 
         configuration {}
             links { LINKS }
@@ -83,9 +83,9 @@ solution 'robolib'
         links { 'robolib' }
 
         configuration { 'debug' }
-            links { 'glkcore_d' }
+            links { 'glk_d', 'glkcore_d' }
         configuration { 'release' }
-            links { 'glkcore' }
+            links { 'glk', 'glkcore' }
 
         configuration {}
             links { LINKS }

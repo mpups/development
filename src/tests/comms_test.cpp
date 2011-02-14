@@ -18,16 +18,42 @@ void WritePgm( const char* fileName, const uint8_t* buffer, const uint32_t width
 
 /**
     Program behaves as server:
-    COntrols robot and receives commands from cient.
+    Controls robot and receives commands from cient.
 **/
 void runServer( int argc, char** argv )
 {
     fprintf( stderr, "server process here...\n" );
 
     // Setup comms to motors:
-    MotionMind motors( "/dev/ttyUSB0" );
-    DiffDrive drive( motors );
-    int32_t position;
+    DiffDrive*  drive;
+    MotionMind* motors = new MotionMind( "/dev/ttyUSB0" );
+    
+    if ( motors->Available() )
+    {
+        drive = new DiffDrive( *motors );
+    }
+    else
+    {
+        delete motors;
+        drive  = 0;
+        motors = 0;
+    }
+
+    // Setup camera:
+    UnicapCamera* camera = new UnicapCamera();
+    uint8_t* m_lum;
+    size_t imageBufferSize = camera->GetFrameWidth() * camera->GetFrameHeight() * sizeof(uint8_t);
+    if ( camera->IsAvailable() )
+    {
+        camera->StartCapture();
+        int err = posix_memalign( (void**)&m_lum, 16, imageBufferSize );
+        assert( err == 0 );
+    }
+    else
+    {
+        delete camera;
+        camera = 0;
+    }
 
     // Setup a server socket for receiving client commands:
     Socket s;
@@ -73,7 +99,6 @@ void runServer( int argc, char** argv )
                 if ( nf == 3 )
                 {
                     failedReads = 0;
-                    //fprintf( stderr, "Received joystick axes: %d %d (%d)\n", leftSpeed, rightSpeed, maxVal );
                 }
             }
             else
@@ -91,38 +116,36 @@ void runServer( int argc, char** argv )
             
             uint32_t ms = time.GetMilliSeconds();
             time.Reset();
+            fprintf( stderr, "Loop time: %dms\n", ms );
             
-            // Read amps
-            float lA = drive.GetLeftAmps();
-            float rA = drive.GetRightAmps();
-                
-            // Read arduino sensors values
-            int at,ax,ay,az;
-            if ( serial )
+            if ( drive )
             {
-                n = 0;
-                while (n <= 1)
-                {
-                    n = serial->ReadLine( msg, 255 );
-                }
-                n = sscanf( msg, "%d %d %d %d", &at, &ax, &ay, &az );
-                if ( n != 4 )
-                {
-                    at = -1;
-                }
+                DiffDrive::MotorData data = drive->JoyControl( leftSpeed, rightSpeed, maxVal );
             }
             
-            DiffDrive::MotorData data = drive.JoyControl( leftSpeed, rightSpeed, maxVal );
-           
-            // Log all the data to stdout:
-            fprintf( stdout, "%d %d %f %f %d %d %d %d\n", data.leftPos, data.rightPos, lA, rA, at, ax, ay, az );
-
+            if ( camera )
+            {
+                camera->GetFrame();
+                camera->ExtractLuminanceImage( m_lum );
+                camera->DoneFrame();
+                con->Write( reinterpret_cast<char*>( m_lum ), imageBufferSize );
+            }
+            
         } // end while
             
     }
 
+    if ( camera )
+    {
+        camera->StopCapture();
+        delete camera;
+        free( m_lum );
+    }
+
+    delete motors;
+    delete drive;
     delete serial;
-    delete con;    
+    delete con; 
 }
 
 /**
@@ -131,6 +154,7 @@ void runServer( int argc, char** argv )
 void runClient( int argc, char** argv )
 {
         fprintf( stderr, "Client process here...\n" );
+        ImageWindow display;
         
         Joystick js( "/dev/input/js0" );
 
@@ -141,7 +165,7 @@ void runClient( int argc, char** argv )
             Socket client;
             client.SetNagleBufferingOff();
             if ( client.Connect( argv[1], atoi( argv[2] ) ) )
-            {
+            {                            
                 int n = 0;
                 while ( n >= 0 )
                 {
@@ -151,9 +175,27 @@ void runClient( int argc, char** argv )
                     char msg[256];
                     sprintf( msg, "%d %d %d\n", jx, jy, max );
                     n = client.Write( msg, strlen(msg) );
-                    GLK::Thread::Sleep( 50 );
+                
+                    static uint8_t image[640*480];
+                    int n = 0;
+                    while ( n != 640 * 480 )
+                    {
+                        n += client.Read( reinterpret_cast<char*>( image + n ), 640*480 - n );
+                        //fprintf( stderr,"\tn = %d\n", n );
+                    }
+                    //fprintf( stderr,"Image received?: n = %d\n", n );
+                    if (display.IsRunning() )
+                    {
+                        display.PostImage( image );
+                    }
+                    //WritePgm( "remote_capture.pgm", image, 640, 480 );
+                    GLK::Thread::Sleep( 46 );
                 }
             }
+        }
+        else
+        {
+            fprintf( stderr, "Stopped: No joystick.\n" );
         }
 }
 
@@ -169,6 +211,5 @@ int main( int argc, char** argv )
         // IP and port specified so process should behave as client:
         runClient( argc, argv );
     }
-    
 }
 
