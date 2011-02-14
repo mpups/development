@@ -67,6 +67,7 @@ MotionMind::MotionMind( tPortName port )
     m_com( port )
 {
     assert( m_com.IsOpen() );
+    m_com.SetBaudRate( SerialPort::BAUD_19200 );
 }
 
 /**

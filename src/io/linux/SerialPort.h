@@ -5,6 +5,8 @@
 
 #ifdef __linux
 
+#include <termios.h>
+
 #define HANDLE int
 #define LPCWSTR const char*
 #define INVALID_HANDLE_VALUE -1
@@ -25,7 +27,8 @@ public:
 
     enum BaudRate
     {
-        
+        BAUD_9600 = B9600,
+        BAUD_19200 = B19200
     };
 
     static void Test();

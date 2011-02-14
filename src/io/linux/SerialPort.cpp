@@ -46,23 +46,9 @@ bool SerialPort::WaitForBytes( int timeout_ms ) const
 **/
 SerialPort::SerialPort( const char* portName )
 {
+    fprintf( stderr, "Attempting to open serial port: '%s'\n", portName );
     m_port = open( portName, O_RDWR | O_NONBLOCK );
-    
-    if ( m_port > 0 )
-    {
-        // currently force the baud rate for motion-mind compatibility
-        struct termios t;
-        int err = tcgetattr( m_port, &t );
-        assert( err == 0 );
-
-        err = cfsetispeed( &t, B19200 );
-        assert( err == 0 );
-        err = cfsetospeed( &t, B19200 );
-        assert( err == 0 );
-        cfmakeraw( &t );
-        err = tcsetattr( m_port, 0,  &t );
-        assert( err == 0 );
-    }
+    fprintf( stderr, "Result: %d\n", m_port );
 }
 
 SerialPort::~SerialPort()
@@ -70,6 +56,26 @@ SerialPort::~SerialPort()
     if ( m_port != -1 )
     {
         close( m_port );
+    }
+}
+
+void SerialPort::SetBaudRate( BaudRate rate )
+{
+    if ( m_port > 0 )
+    {
+        struct termios t;
+        int err = tcgetattr( m_port, &t );
+        assert( err == 0 );
+
+        cfmakeraw( &t );
+        
+        err = cfsetispeed( &t, rate );
+        assert( err == 0 );
+        err = cfsetospeed( &t, rate );
+        assert( err == 0 );
+        cfmakeraw( &t );
+        err = tcsetattr( m_port, 0,  &t );
+        assert( err == 0 );
     }
 }
 
