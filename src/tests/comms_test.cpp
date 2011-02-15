@@ -60,80 +60,39 @@ void runServer( int argc, char** argv )
     s.Bind( atoi( argv[1] ) ); // Get port from command line
     s.Listen( 1 ); // Wait for connection
     Socket* con = s.Accept(); // Create connection
-
-    // Setup a serial port for Arduino comms:
-    SerialPort* serial = new SerialPort( "/dev/ttyUSB1" );
-
-    if ( !serial->IsOpen() )
-    {
-        fprintf( stderr, "Warning: Could not open serial port to Arduno\n" );
-        delete serial;
-        serial = 0;
-    }
-    else
-    {
-        serial->SetBaudRate( SerialPort::BAUD_9600 );
-    }
-
-    if ( con )
+    con->SetBlocking( false );
+        
+    // Setup a TeleJoystick object:
+    TeleJoystick* teljoy = 0;
+    if ( con /*&& drive*/ )
     {
         fprintf( stderr, "Client connected to robot.\n" );
-        char msg[256];
-        int n = 0;
         
-        int leftSpeed  = 0;
-        int rightSpeed = 0;
-        int maxVal     = 1;
-
-        GLK::Timer time;
-
-        // Read messages from client in a loop:
-        int failedReads = 0; // Keep count of sequential failed reads.
-        while ( failedReads < 20 )
+        teljoy = new TeleJoystick( *con, *drive ); // Will start receiving and processing remote joystick cammands immediately.
+        GLK::Thread::Sleep( 100 );
+        fprintf( stderr, "running: %d\n", teljoy->IsRunning() );
+            
+        // Capture images continuously:
+        while ( teljoy->IsRunning() )
         {
-            memset( msg, 0, 256 );
-            n = con->Read( msg, 256 );
-            if ( n > 0 )
-            {
-                int nf = sscanf( msg, "%d %d %d\n", &leftSpeed, &rightSpeed, &maxVal );
-                if ( nf == 3 )
-                {
-                    failedReads = 0;
-                }
-            }
-            else
-            {
-                failedReads += 1;
-            }
-            
-            if ( failedReads > 2 )
-            {
-                // For safety set speeds to zero when commands stop arriving:
-                leftSpeed  = 0;
-                rightSpeed = 0;
-                maxVal     = 1;  
-            }
-            
-            uint32_t ms = time.GetMilliSeconds();
-            time.Reset();
-            fprintf( stderr, "Loop time: %dms\n", ms );
-            
-            if ( drive )
-            {
-                DiffDrive::MotorData data = drive->JoyControl( leftSpeed, rightSpeed, maxVal );
-            }
-            
             if ( camera )
             {
                 camera->GetFrame();
                 camera->ExtractLuminanceImage( m_lum );
                 camera->DoneFrame();
+                con->SetBlocking( true );
                 con->Write( reinterpret_cast<char*>( m_lum ), imageBufferSize );
+                con->SetBlocking( false );
+                GLK::Thread::Sleep( 10 );
             }
             
         } // end while
-            
-    }
+        
+        fprintf( stderr, "Control terminated\n" );
+        
+    } // end if
+
+    delete teljoy;
 
     if ( camera )
     {
@@ -144,7 +103,6 @@ void runServer( int argc, char** argv )
 
     delete motors;
     delete drive;
-    delete serial;
     delete con; 
 }
 
@@ -154,8 +112,9 @@ void runServer( int argc, char** argv )
 void runClient( int argc, char** argv )
 {
         fprintf( stderr, "Client process here...\n" );
+#ifndef ARM_BUILD
         ImageWindow display;
-        
+#endif        
         Joystick js( "/dev/input/js0" );
 
         if ( js.IsAvailable() )
@@ -172,23 +131,24 @@ void runClient( int argc, char** argv )
                     int jx = js.GetAxis(1);
                     int jy = js.GetAxis(2);
                     int max = 32767;
-                    char msg[256];
-                    sprintf( msg, "%d %d %d\n", jx, jy, max );
-                    n = client.Write( msg, strlen(msg) );
-                
+                    int data[3] = { jx, jy, max };
+                    client.SetBlocking( true );
+                    client.Write( reinterpret_cast<char*>( data ), 3*sizeof(int) );
+                    client.SetBlocking( false );
+                                    
                     static uint8_t image[640*480];
-                    int n = 0;
-                    while ( n != 640 * 480 )
+                    n += client.Read( reinterpret_cast<char*>( image + n ), 640*480 - n );
+
+                    if ( n == 640*480 )
                     {
-                        n += client.Read( reinterpret_cast<char*>( image + n ), 640*480 - n );
-                        //fprintf( stderr,"\tn = %d\n", n );
+#ifndef ARM_BUILD
+                        if ( display.IsRunning() )
+                        {
+                            display.PostImage( image );
+                        }
+#endif
+                        n = 0;
                     }
-                    //fprintf( stderr,"Image received?: n = %d\n", n );
-                    if (display.IsRunning() )
-                    {
-                        display.PostImage( image );
-                    }
-                    //WritePgm( "remote_capture.pgm", image, 640, 480 );
                     GLK::Thread::Sleep( 46 );
                 }
             }

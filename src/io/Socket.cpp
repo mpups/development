@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <netinet/tcp.h>
+#include <fcntl.h>
 
 /**
     Create and open a socket of the specified type.
@@ -81,8 +82,7 @@ Socket* Socket::Accept()
 {
     Socket* newClient;
     int socket;    
-    
-//    setsockopt( m_socket, SOL_SOCKET, SO_REUSEADDR, &socket, sizeof(int) );
+    setsockopt( m_socket, SOL_SOCKET, SO_REUSEADDR, &socket, sizeof(int) );
     
     struct sockaddr_in addr;
     memset( (void*)&addr, 0, sizeof(sockaddr_in) );
@@ -152,7 +152,7 @@ int Socket::Read( char* message, size_t maxBytes )
     int n = read( m_socket, message, maxBytes );
     if ( n < 0 )
     {
-        fprintf( stderr, "%s\n", strerror(errno) );        
+        n = 0;
     }
     
     return n;
@@ -165,7 +165,11 @@ int Socket::Read( char* message, size_t maxBytes )
 **/
 int Socket::Write( char* message, size_t size )
 {
-    return write( m_socket, message, size );
+    int n = write( m_socket, message, size );
+    if ( n < 0 )
+    {
+        n = 0;
+    }
 }
 
 void Socket::SetNagleBufferingOn()
@@ -197,4 +201,20 @@ void Socket::SetNagleBufferingOff()
         fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );        
     }      
 }
+
+/**
+    @param block True set socket to blocking mode, false sets socket to non-blocking.
+**/
+void Socket::SetBlocking( bool block )
+{
+    if ( block )
+    {
+        fcntl( m_socket, F_SETFL, O_ASYNC );
+    }
+    else
+    {
+        fcntl( m_socket, F_SETFL, O_NONBLOCK );
+    }
+}
+
     

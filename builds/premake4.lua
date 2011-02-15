@@ -64,29 +64,19 @@ solution 'robolib'
         kind 'ConsoleApp'
         
         files { SRC .. 'tests/robo_test.cpp' }
-        
+
+        configuration {}        
         links { 'robolib' }
-
-        configuration { 'debug' }
-            links { 'glk_d', 'glkcore_d' }
-        configuration { 'release' }
-            links { 'glk', 'glkcore' }
-
-        configuration {}
-            links { LINKS }
+        links ( GLK_LINKS )
+        links { LINKS }
             
     project 'comms-test'
         kind 'ConsoleApp'
         
         files { SRC .. 'tests/comms_test.cpp' }
         
+        configuration {}        
         links { 'robolib' }
-
-        configuration { 'debug' }
-            links { 'glk_d', 'glkcore_d' }
-        configuration { 'release' }
-            links { 'glk', 'glkcore' }
-
-        configuration {}
-            links { LINKS }
+        links ( GLK_LINKS )
+        links { LINKS }
         

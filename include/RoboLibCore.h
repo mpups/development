@@ -9,6 +9,8 @@
 
 #include "../src/lua/Luabot.h"
 
+#include "../src/motor_control/TeleJoystick.h"
+
 #ifndef ARM_BUILD
 #include "../src/sse/VectorVector.h"
 #include "../src/sse/BatchOperations.h"

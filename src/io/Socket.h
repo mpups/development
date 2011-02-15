@@ -32,6 +32,7 @@ public:
 
     void SetNagleBufferingOn();
     void SetNagleBufferingOff();
+    void SetBlocking( bool );
 
 protected:
     
