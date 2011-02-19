@@ -97,8 +97,9 @@ void runServer( int argc, char** argv )
                 int bytesWritten = con->Write( pSend, bytesToSend );
                 bytesToSend -= bytesWritten;
                 pSend += bytesWritten;
-                GLK::Thread::Sleep( 10 );
-            }                
+            }
+            
+            GLK::Thread::Sleep( 10 );
         } // end while
         
         fprintf( stderr, "Control terminated\n" );
@@ -151,7 +152,7 @@ void runClient( int argc, char** argv )
                                     
                     static uint8_t image[IMG_WIDTH*IMG_HEIGHT];
                     int nThisTime = IMG_WIDTH*IMG_HEIGHT - n;
-                    if ( nThisTime > IMG_WIDTH*IMG_HEIGHT/10 ) { nThisTime = IMG_WIDTH*IMG_HEIGHT/10; }
+                    if ( nThisTime > IMG_WIDTH*(IMG_HEIGHT/4) ) { nThisTime = IMG_WIDTH*(IMG_HEIGHT/4); }
                     n += client.Read( reinterpret_cast<char*>( image ) + n, nThisTime );
 
                     if ( n == IMG_WIDTH*IMG_HEIGHT )
@@ -164,7 +165,7 @@ void runClient( int argc, char** argv )
 #endif
                         n = 0;
                     }
-                    GLK::Thread::Sleep( 46 );
+                    GLK::Thread::Sleep( 50 );
                 }
             }
         }

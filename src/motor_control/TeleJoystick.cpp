@@ -31,17 +31,19 @@ void TeleJoystick::Run()
         }
         
         m_drive.JoyControl( data[0], data[1], data[2] );
+        
+        /*
         float lA = 0.f;
-        //lA = m_drive.GetLeftAmps();
+        lA = m_drive.GetLeftAmps();
         float rA = 0.f;
-        //lR = m_drive.GetRightAmps();                
-                
+        rA = m_drive.GetRightAmps();
                 
         uint32_t ms = time.GetMilliSeconds();
         time.Reset();
         fprintf( stderr, "Loop time: %dms (conrol = %d,%d) (amps: l=%f. r=%f)\n", ms, data[0], data[1], lA, rA );
-        GLK::Thread::Sleep( 10 );
+        //GLK::Thread::Sleep( 10 );*/
     }
     
     m_drive.SetMotion( 0.f, 0.f );
 }
+
