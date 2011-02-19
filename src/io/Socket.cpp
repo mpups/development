@@ -163,13 +163,15 @@ int Socket::Read( char* message, size_t maxBytes )
 
     @return False if message could not be sent.
 **/
-int Socket::Write( char* message, size_t size )
+int Socket::Write( const char* message, size_t size )
 {
     int n = write( m_socket, message, size );
     if ( n < 0 )
     {
         n = 0;
     }
+    
+    return n;
 }
 
 void Socket::SetNagleBufferingOn()

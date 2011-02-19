@@ -1,20 +1,12 @@
 #include "../../include/RoboLib.h"
 #include <glkcore.h>
 
-/**
-    Saves an image as a simple raw pgm.
-*/
-void WritePgm( const char* fileName, const uint8_t* buffer, const uint32_t width, const uint32_t height )
-{
-    FILE* fp = fopen( fileName, "w" );
-    assert( fp != 0 );
-    if ( fp )
-    {
-        fprintf( fp, "P5 %d %d 255\n", width, height );
-        fwrite( buffer, sizeof(uint8_t), width*height, fp );
-        fclose( fp );
-    }
-}
+#include <math.h>
+
+#include "../opencv/opencv_utils.h"
+
+const int IMG_WIDTH = 320;
+const int IMG_HEIGHT = 240;
 
 /**
     Program behaves as server:
@@ -31,6 +23,11 @@ void runServer( int argc, char** argv )
     if ( motors->Available() )
     {
         drive = new DiffDrive( *motors );
+        float amps = 1.f;
+        int32_t currentLimit = roundf( amps/0.02f );
+        
+        motors->WriteRegister( 1, MotionMind::AMPSLIMIT, currentLimit );
+        motors->WriteRegister( 2, MotionMind::AMPSLIMIT, currentLimit );
     }
     else
     {
@@ -64,7 +61,9 @@ void runServer( int argc, char** argv )
         
     // Setup a TeleJoystick object:
     TeleJoystick* teljoy = 0;
-    if ( con /*&& drive*/ )
+    int bytesToSend = 0;
+    const char* pSend = 0;
+    if ( con && drive )
     {
         fprintf( stderr, "Client connected to robot.\n" );
         
@@ -74,18 +73,32 @@ void runServer( int argc, char** argv )
             
         // Capture images continuously:
         while ( teljoy->IsRunning() )
-        {
-            if ( camera )
+        {       
+            if ( camera && (bytesToSend == 0) )
             {
                 camera->GetFrame();
                 camera->ExtractLuminanceImage( m_lum );
                 camera->DoneFrame();
-                con->SetBlocking( true );
-                con->Write( reinterpret_cast<char*>( m_lum ), imageBufferSize );
-                con->SetBlocking( false );
-                GLK::Thread::Sleep( 10 );
+                
+                IplImage* cvImage = cvCreateImage( cvSize(640,480), IPL_DEPTH_8U, 1 );
+                IplImage* cvSmaller = cvCreateImage( cvSize( IMG_WIDTH, IMG_HEIGHT ), IPL_DEPTH_8U, 1 );
+                FillIplImage( m_lum, cvImage );
+                cvResize( cvImage, cvSmaller );
+                SpillIplImage( cvSmaller, m_lum );
+                cvReleaseImage( &cvImage );
+                cvReleaseImage( &cvSmaller );
+                
+                bytesToSend =  IMG_WIDTH * IMG_HEIGHT * sizeof(uint8_t);
+                pSend = reinterpret_cast<char*>( m_lum );
             }
-            
+        
+            if ( bytesToSend > 0 )
+            {
+                int bytesWritten = con->Write( pSend, bytesToSend );
+                bytesToSend -= bytesWritten;
+                pSend += bytesWritten;
+                GLK::Thread::Sleep( 10 );
+            }                
         } // end while
         
         fprintf( stderr, "Control terminated\n" );
@@ -136,14 +149,16 @@ void runClient( int argc, char** argv )
                     client.Write( reinterpret_cast<char*>( data ), 3*sizeof(int) );
                     client.SetBlocking( false );
                                     
-                    static uint8_t image[640*480];
-                    n += client.Read( reinterpret_cast<char*>( image + n ), 640*480 - n );
+                    static uint8_t image[IMG_WIDTH*IMG_HEIGHT];
+                    int nThisTime = IMG_WIDTH*IMG_HEIGHT - n;
+                    if ( nThisTime > IMG_WIDTH*IMG_HEIGHT/10 ) { nThisTime = IMG_WIDTH*IMG_HEIGHT/10; }
+                    n += client.Read( reinterpret_cast<char*>( image ) + n, nThisTime );
 
-                    if ( n == 640*480 )
+                    if ( n == IMG_WIDTH*IMG_HEIGHT )
                     {
 #ifndef ARM_BUILD
                         if ( display.IsRunning() )
-                        {
+                        {                           
                             display.PostImage( image );
                         }
 #endif

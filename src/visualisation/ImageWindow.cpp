@@ -2,9 +2,12 @@
 
 #ifndef ARM_BUILD
 
+const int IMG_WIDTH = 320;
+const int IMG_HEIGHT = 240;
+
 ImageWindow::ImageWindow()
 :
-    GlThreadWindow  ( 640, 480 ),
+    GlThreadWindow  ( IMG_WIDTH, IMG_HEIGHT ),
     m_msgs          ( 8 )
 {
     StartEventLoopAsync();
@@ -31,7 +34,7 @@ bool ImageWindow::InitGL()
     glBindTexture( GL_TEXTURE_2D, m_lumTex );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE8, 640, 480, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE8, IMG_WIDTH, IMG_HEIGHT, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
     
     return true;
 }
@@ -56,7 +59,7 @@ bool ImageWindow::Update( unsigned int )
     if ( m_lum )
     {
         glBindTexture( GL_TEXTURE_2D, m_lumTex );
-        glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 640, 480, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
+        glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, IMG_WIDTH, IMG_HEIGHT, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
         return true;
     }
     
@@ -74,7 +77,7 @@ void ImageWindow::Render()
     glColor3f( 1.f, 1.f, 1.f );
 
     // Render the image from the camera:
-    glViewport( 0, 0, 640, 480 );
+    glViewport( 0, 0, IMG_WIDTH, IMG_HEIGHT );
     glBindTexture( GL_TEXTURE_2D, m_lumTex );
     glEnable( GL_TEXTURE_2D );
 

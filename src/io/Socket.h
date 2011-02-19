@@ -28,7 +28,7 @@ public:
     bool Connect( char*, int );
             
     int Read( char* message, size_t maxBytes );
-    int Write( char* message, size_t size );
+    int Write( const char* message, size_t size );
 
     void SetNagleBufferingOn();
     void SetNagleBufferingOff();
