@@ -23,11 +23,14 @@ void runServer( int argc, char** argv )
     if ( motors->Available() )
     {
         drive = new DiffDrive( *motors );
-        float amps = 1.f;
+        float amps = 1.5f;
         int32_t currentLimit = roundf( amps/0.02f );
+        int32_t pwmLimit = (72*1024)/120; // motor voltage / battery voltage
         
         motors->WriteRegister( 1, MotionMind::AMPSLIMIT, currentLimit );
         motors->WriteRegister( 2, MotionMind::AMPSLIMIT, currentLimit );
+        motors->WriteRegister( 1, MotionMind::PWMLIMIT, pwmLimit );
+        motors->WriteRegister( 2, MotionMind::PWMLIMIT, pwmLimit );
     }
     else
     {
