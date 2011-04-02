@@ -25,16 +25,23 @@ bool ImageWindow::InitGL()
 {
     glGenTextures( 1, &m_lumTex );
     
-    uint8_t* m_lum = 0;
-    while( m_msgs.TryRead( &m_lum, 1 ) )
+    uint8_t* img = 0;
+    while( m_msgs.TryRead( &img, 1 ) )
     {
         // loop to get latest image data
+    }
+    
+    uint8_t blank[IMG_WIDTH*IMG_HEIGHT];
+    if ( img == 0 )
+    {
+        memset( blank, 1, IMG_WIDTH*IMG_HEIGHT );
+        img = blank;
     }
     
     glBindTexture( GL_TEXTURE_2D, m_lumTex );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE8, IMG_WIDTH, IMG_HEIGHT, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE8, IMG_WIDTH, IMG_HEIGHT, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, img );
     
     return true;
 }
@@ -51,15 +58,15 @@ void ImageWindow::Resize( const unsigned int w, const unsigned int h )
 
 bool ImageWindow::Update( unsigned int )
 {
-    uint8_t* m_lum = 0;
-    while( m_msgs.TryRead( &m_lum, 1 ) )
+    uint8_t* lum = 0;
+    while( m_msgs.TryRead( &lum, 1 ) )
     {
     }
     
-    if ( m_lum )
+    if ( lum )
     {
         glBindTexture( GL_TEXTURE_2D, m_lumTex );
-        glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, IMG_WIDTH, IMG_HEIGHT, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
+        glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, IMG_WIDTH, IMG_HEIGHT, GL_LUMINANCE, GL_UNSIGNED_BYTE, lum );
         return true;
     }
     
