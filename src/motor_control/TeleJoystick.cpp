@@ -40,7 +40,7 @@ void TeleJoystick::Run()
                 
         uint32_t ms = time.GetMilliSeconds();
         time.Reset();
-        fprintf( stderr, "Loop time: %dms (conrol = %d,%d) (amps: l=%f. r=%f)\n", ms, data[0], data[1], lA, rA );
+        fprintf( stderr, "Loop time: %dms (control = %d,%d) (amps: l=%f. r=%f)\n", ms, data[0], data[1], lA, rA );
         //GLK::Thread::Sleep( 10 );*/
     }
     

@@ -17,15 +17,17 @@ void WritePgm( const char* fileName, const uint8_t* buffer, const uint32_t width
 }
 
 /*
-    Quick test of various components fo robolib in one program.
+    Quick test of various components of robolib in one program.
 */
 int main( int argc, char** argv )
 {   
+    // Try to get camera and motors:
     UnicapCamera camera;
     MotionMind motors( "/dev/ttyUSB0" );
 
     if ( camera.IsAvailable() && motors.Available() )
     {
+        // Got them!
         GLK::String title( "" );
         title += ':';
         title += ' ';
@@ -34,12 +36,14 @@ int main( int argc, char** argv )
         title += GLK::String( camera.GetModel() );
         fprintf( stderr, "Found camera: %s\n", title.cStr() );
     
+        // Allocate memory for capturing images:
         uint8_t* m_lum;
         int err = posix_memalign( (void**)&m_lum, 16, camera.GetFrameWidth() * camera.GetFrameHeight() * sizeof(uint8_t) );
         assert( err == 0 );
         
         camera.StartCapture();
         
+        // Move the robot forwards for a short time, capturing images as it goes.
         int32_t position;
         motors.SetSpeed( 1, -600, position );
         motors.SetSpeed( 2, 600, position );
@@ -51,6 +55,7 @@ int main( int argc, char** argv )
             camera.ExtractLuminanceImage( m_lum );
             camera.DoneFrame();
             
+            // Save the captured images to a file:
             fprintf( stderr, "Captured frame. Timestamp = %f secs\n", timeStamp );
             char name [] = "capture_####.pgm";
             sprintf( name, "capture_%.4d.pgm", i+1 );
@@ -61,6 +66,7 @@ int main( int argc, char** argv )
         motors.SetSpeed( 1, 0, position );
         motors.SetSpeed( 2, 0, position );
     
+        // This ensures minimum current draw from motors.
         motors.Move( 1, 0, position );
         motors.Move( 2, 0, position );
         

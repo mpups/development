@@ -23,6 +23,10 @@ Joystick::Joystick( JoystickDevice_t device )
     {
         m_button = new int16_t[256];
         m_axis   = new int16_t[256];
+        
+        // Zero all buttons and axes:
+        memset( m_button, 0, 256*sizeof(int16_t) );
+        memset( m_axis, 0, 256*sizeof(int16_t) );
     }
 }
 
@@ -77,7 +81,7 @@ void Joystick::Run()
     ButtonEvent button;
     while ( !TerminationRequested() )
     {
-        int val = poll( &pfds, 1, 600 ); // 600ms timeout
+        int val = poll( &pfds, 1, m_POLL_TIMEOUT_MS );
         assert( val >= 0 );
         if ( val == 1 && pfds.revents & POLLIN )
         {   

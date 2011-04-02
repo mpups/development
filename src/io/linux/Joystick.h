@@ -39,6 +39,8 @@ public:
     void Run();
 
 private:
+    static const int m_POLL_TIMEOUT_MS = 600; // timeout in millisecs
+
     JoystickHandle_t m_joy;
     int16_t* m_button;
     int16_t* m_axis;

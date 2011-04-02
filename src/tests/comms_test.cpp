@@ -128,54 +128,61 @@ void runServer( int argc, char** argv )
 **/
 void runClient( int argc, char** argv )
 {
-        fprintf( stderr, "Client process here...\n" );
+    fprintf( stderr, "Client process here...\n" );
 #ifndef ARM_BUILD
-        ImageWindow display;
-#endif        
-        Joystick js( "/dev/input/js0" );
-
-        if ( js.IsAvailable() )
-        {
-            js.Start();
-    
-            Socket client;
-            client.SetNagleBufferingOff();
-            if ( client.Connect( argv[1], atoi( argv[2] ) ) )
-            {                            
-                int n = 0;
-                while ( n >= 0 )
-                {
-                    int jx = js.GetAxis(1);
-                    int jy = js.GetAxis(2);
-                    int max = 32767;
-                    int data[3] = { jx, jy, max };
-                    client.SetBlocking( true );
-                    client.Write( reinterpret_cast<char*>( data ), 3*sizeof(int) );
-                    client.SetBlocking( false );
-                                    
-                    static uint8_t image[IMG_WIDTH*IMG_HEIGHT];
-                    int nThisTime = IMG_WIDTH*IMG_HEIGHT - n;
-                    if ( nThisTime > IMG_WIDTH*(IMG_HEIGHT/4) ) { nThisTime = IMG_WIDTH*(IMG_HEIGHT/4); }
-                    n += client.Read( reinterpret_cast<char*>( image ) + n, nThisTime );
-
-                    if ( n == IMG_WIDTH*IMG_HEIGHT )
-                    {
-#ifndef ARM_BUILD
-                        if ( display.IsRunning() )
-                        {                           
-                            display.PostImage( image );
-                        }
+    ImageWindow display; // Used to display images received from robot.
 #endif
-                        n = 0;
+
+    // Try to access the joystick:
+    Joystick js( "/dev/input/js0" );
+
+    if ( js.IsAvailable() )
+    {
+        js.Start();
+    
+        Socket client;
+        client.SetNagleBufferingOff(); // The joystick commands a re small packets for which we want low latency, so turn off Nagle.
+        
+        if ( client.Connect( argv[1], atoi( argv[2] ) ) )
+        {
+            // Connected to robot
+            int n = 0;
+            while ( n >= 0 ) // Continue until we get a read error
+            {
+                // Read joystick and send
+                int jx = js.GetAxis(1); // left hat-stick on ps3 controller
+                int jy = js.GetAxis(2); // right hat-stick on ps3 controller
+                int max = 32767;
+                int data[3] = { jx, jy, max };
+                client.SetBlocking( true );
+                client.Write( reinterpret_cast<char*>( data ), 3*sizeof(int) );
+                client.SetBlocking( false );
+
+                // Try to receive some image data.
+                // NOTE: we receive the image in parts so the joystick remains responsive.
+                static uint8_t image[IMG_WIDTH*IMG_HEIGHT];
+                int nThisTime = IMG_WIDTH*IMG_HEIGHT - n;
+                if ( nThisTime > IMG_WIDTH*(IMG_HEIGHT/4) ) { nThisTime = IMG_WIDTH*(IMG_HEIGHT/4); }
+                n += client.Read( reinterpret_cast<char*>( image ) + n, nThisTime );
+                if ( n == IMG_WIDTH*IMG_HEIGHT )
+                {
+#ifndef ARM_BUILD
+                    // Show the image by posting pointer to the ImageWindow object:
+                    if ( display.IsRunning() )
+                    {                           
+                        display.PostImage( image );
                     }
-                    GLK::Thread::Sleep( 50 );
+#endif
+                    n = 0;
                 }
+                GLK::Thread::Sleep( 50 );
             }
         }
-        else
-        {
-            fprintf( stderr, "Stopped: No joystick.\n" );
-        }
+    }
+    else
+    {
+        fprintf( stderr, "Stopped: No joystick.\n" );
+    }
 }
 
 int main( int argc, char** argv )
