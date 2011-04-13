@@ -22,7 +22,8 @@
 class TeleJoystick : public GLK::Thread
 {
 public:
-    TeleJoystick( Socket& socket, DiffDrive& drive );
+    TeleJoystick( Socket& socket );
+    TeleJoystick( Socket& socket, DiffDrive* drive );
     virtual ~TeleJoystick();
     
     virtual void Run();
@@ -32,7 +33,7 @@ protected:
     
 private:
     Socket&     m_socket;
-    DiffDrive&  m_drive;
+    DiffDrive*  m_drive;
     int32_t     m_failedReads;
 };
 

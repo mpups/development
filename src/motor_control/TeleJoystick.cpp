@@ -1,6 +1,16 @@
 #include "TeleJoystick.h"
 
-TeleJoystick::TeleJoystick( Socket& socket, DiffDrive& drive )
+#include <arpa/inet.h>
+
+TeleJoystick::TeleJoystick( Socket& socket )
+:
+    m_socket    ( socket ),
+    m_drive     ( 0 )
+{
+    Start();
+}
+
+TeleJoystick::TeleJoystick( Socket& socket, DiffDrive* drive )
 :
     m_socket    ( socket ),
     m_drive     ( drive )
@@ -15,8 +25,6 @@ TeleJoystick::~TeleJoystick()
 
 void TeleJoystick::Run()
 {
-    GLK::Timer time;
-    
     while ( true )
     {
         int n = 3*sizeof(int);
@@ -30,20 +38,23 @@ void TeleJoystick::Run()
             pData += r;
         }
         
-        m_drive.JoyControl( data[0], data[1], data[2] );
+        data[0] = ntohl( data[0] );
+        data[1] = ntohl( data[1] );
+        data[2] = ntohl( data[2] );
         
-        /*
-        float lA = 0.f;
-        lA = m_drive.GetLeftAmps();
-        float rA = 0.f;
-        rA = m_drive.GetRightAmps();
-                
-        uint32_t ms = time.GetMilliSeconds();
-        time.Reset();
-        fprintf( stderr, "Loop time: %dms (control = %d,%d) (amps: l=%f. r=%f)\n", ms, data[0], data[1], lA, rA );
-        //GLK::Thread::Sleep( 10 );*/
+        if ( m_drive )
+        {
+            m_drive->JoyControl( data[0], data[1], data[2] );
+        }
+        else
+        {
+            fprintf( stderr, "Drive control := %d,%d (%d)\n", data[0], data[1], data[2] );    
+        }
     }
     
-    m_drive.SetMotion( 0.f, 0.f );
+    if ( m_drive )
+    {
+        m_drive->SetMotion( 0.f, 0.f );
+    }
 }
 

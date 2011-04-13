@@ -8,6 +8,8 @@
 const int IMG_WIDTH = 320;
 const int IMG_HEIGHT = 240;
 
+#include <arpa/inet.h>
+
 /**
     Program behaves as server:
     Controls robot and receives commands from cient.
@@ -66,11 +68,11 @@ void runServer( int argc, char** argv )
     TeleJoystick* teljoy = 0;
     int bytesToSend = 0;
     const char* pSend = 0;
-    if ( con && drive )
+    if ( con )
     {
         fprintf( stderr, "Client connected to robot.\n" );
         
-        teljoy = new TeleJoystick( *con, *drive ); // Will start receiving and processing remote joystick cammands immediately.
+        teljoy = new TeleJoystick( *con, drive ); // Will start receiving and processing remote joystick cammands immediately.
         GLK::Thread::Sleep( 100 );
         fprintf( stderr, "running: %d\n", teljoy->IsRunning() );
             
@@ -150,10 +152,10 @@ void runClient( int argc, char** argv )
             while ( n >= 0 ) // Continue until we get a read error
             {
                 // Read joystick and send
-                int jx = js.GetAxis(1); // left hat-stick on ps3 controller
-                int jy = js.GetAxis(2); // right hat-stick on ps3 controller
-                int max = 32767;
-                int data[3] = { jx, jy, max };
+                int32_t jx = js.GetAxis(1); // left hat-stick on ps3 controller
+                int32_t jy = js.GetAxis(2); // right hat-stick on ps3 controller
+                int32_t max = 32767;
+                int32_t data[3] = { htonl(jx), htonl(jy), htonl(max) };
                 client.SetBlocking( true );
                 client.Write( reinterpret_cast<char*>( data ), 3*sizeof(int) );
                 client.SetBlocking( false );
@@ -163,7 +165,7 @@ void runClient( int argc, char** argv )
                 static uint8_t image[IMG_WIDTH*IMG_HEIGHT];
                 int nThisTime = IMG_WIDTH*IMG_HEIGHT - n;
                 if ( nThisTime > IMG_WIDTH*(IMG_HEIGHT/4) ) { nThisTime = IMG_WIDTH*(IMG_HEIGHT/4); }
-                n += client.Read( reinterpret_cast<char*>( image ) + n, nThisTime );
+                //n += client.Read( reinterpret_cast<char*>( image ) + n, nThisTime ); // Can;t client.Read return -1 - if not then while loop condition is wrong - SOMETHING IS WRONG
                 if ( n == IMG_WIDTH*IMG_HEIGHT )
                 {
 #ifndef ARM_BUILD
