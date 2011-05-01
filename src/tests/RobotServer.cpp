@@ -152,6 +152,8 @@ void RobotServer::RunCommsLoop()
         
     } // end if
 
-    delete teljoy;   
+    delete teljoy;
+    
+    PostCommsCleanup();
 }
 
