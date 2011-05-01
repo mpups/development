@@ -1,5 +1,8 @@
 #include "RobotServer.h"
 
+const int IMG_WIDTH = 320;
+const int IMG_HEIGHT = 240;
+
 /**
     Setup a robot server with specified TCP and serial ports.
     
@@ -8,8 +11,13 @@
 RobotServer::RobotServer( const char* tcpPort, const char* motorSerialPort )
 :
     m_drive ( 0 ),
-    m_motors( new MotionMind( motorSerialPort ) )    
+    m_motors( 0 ),
+    m_server( 0 ),
+    m_con   ( 0 ),
+    m_camera( 0 )
 {
+    // @todo: this should be done in PostConnectionSetup
+    m_motors = new MotionMind( motorSerialPort );
     if ( m_motors->Available() )
     {
         m_drive = new DiffDrive( *m_motors );
@@ -27,15 +35,123 @@ RobotServer::RobotServer( const char* tcpPort, const char* motorSerialPort )
         delete m_motors;
         m_motors = 0;
     }
+    
+    // Setup a server socket for receiving client commands:
+    m_server = new Socket();
+    m_server->Bind( atoi( tcpPort ) ); // Get port from command line
 }
 
 RobotServer::~RobotServer()
 {
-    
+    delete m_camera;
+    delete m_con;
+    delete m_server;
+    delete m_server;
+    delete m_drive;
+    delete m_motors;
 }
 
+/**
+    Blocks until robot gets a connection.
+**/
 void RobotServer::Listen()
 {
+    fprintf( stderr, "Waiting for new connection...\n" );
+    m_server->Listen( 0 ); // Wait for connection - no queue
+    m_con = m_server->Accept(); // Create connection
+    m_con->SetBlocking( false );
+    
+    PostConnectionSetup();
+}
 
+/**
+    Perform post conection processing.
+    
+    Attempts to access camera and wheels.
+**/
+void RobotServer::PostConnectionSetup()
+{
+    // Setup camera:
+    m_camera = new UnicapCamera();
+    size_t imageBufferSize = m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t);
+    if ( m_camera->IsAvailable() )
+    {
+        m_camera->StartCapture();
+        int err = posix_memalign( (void**)&m_lum, 16, imageBufferSize );
+        assert( err == 0 );
+    }
+    else
+    {
+        delete m_camera;
+        m_camera = 0;
+    }        
+}
+
+/**
+    Cleans up resources once the comms loop has finished.
+**/
+void RobotServer::PostCommsCleanup()
+{
+    if ( m_camera )
+    {
+        m_camera->StopCapture();
+        delete m_camera;
+        free( m_lum );
+    }
+}
+
+/**
+    Runs the robot's comms loop untli the connection ends or fails.
+**/
+void RobotServer::RunCommsLoop()
+{
+    // Setup a TeleJoystick object:
+    TeleJoystick* teljoy = 0;
+    int bytesToSend = 0;
+    const char* pSend = 0;
+    if ( m_con )
+    {
+        fprintf( stderr, "Client connected to robot.\n" );
+        
+        teljoy = new TeleJoystick( *m_con, m_drive ); // Will start receiving and processing remote joystick cammands immediately.
+        GLK::Thread::Sleep( 100 );
+        fprintf( stderr, "running: %d\n", teljoy->IsRunning() );
+            
+        // Capture images continuously:
+        while ( teljoy->IsRunning() )
+        {       
+            if ( m_camera && (bytesToSend == 0) )
+            {
+                m_camera->GetFrame();
+                m_camera->ExtractLuminanceImage( m_lum );
+                m_camera->DoneFrame();
+                
+                IplImage* cvImage = cvCreateImage( cvSize(640,480), IPL_DEPTH_8U, 1 );
+                IplImage* cvSmaller = cvCreateImage( cvSize( IMG_WIDTH, IMG_HEIGHT ), IPL_DEPTH_8U, 1 );
+                FillIplImage( m_lum, cvImage );
+                cvResize( cvImage, cvSmaller );
+                SpillIplImage( cvSmaller, m_lum );
+                cvReleaseImage( &cvImage );
+                cvReleaseImage( &cvSmaller );
+                
+                bytesToSend =  IMG_WIDTH * IMG_HEIGHT * sizeof(uint8_t);
+                pSend = reinterpret_cast<char*>( m_lum );
+            }
+        
+            if ( bytesToSend > 0 )
+            {
+                int bytesWritten = m_con->Write( pSend, bytesToSend );
+                bytesToSend -= bytesWritten;
+                pSend += bytesWritten;
+            }
+            
+            GLK::Thread::Sleep( 10 );
+        } // end while
+        
+        fprintf( stderr, "Control terminated\n" );
+        
+    } // end if
+
+    delete teljoy;   
 }
 

@@ -18,6 +18,13 @@ void runServer( int argc, char** argv )
 {
     fprintf( stderr, "server process here...\n" );
 
+    // Setup a server socket for receiving client commands:
+    Socket s;
+    s.Bind( atoi( argv[1] ) ); // Get port from command line
+    s.Listen( 0 ); // Wait for connection - no queue
+    Socket* con = s.Accept(); // Create connection
+    con->SetBlocking( false );
+
     // Setup comms to motors:
     DiffDrive*  drive;
     MotionMind* motors = new MotionMind( "/dev/ttyUSB0" );
@@ -40,13 +47,6 @@ void runServer( int argc, char** argv )
         drive  = 0;
         motors = 0;
     }
-
-    // Setup a server socket for receiving client commands:
-    Socket s;
-    s.Bind( atoi( argv[1] ) ); // Get port from command line
-    s.Listen( 0 ); // Wait for connection - no queue
-    Socket* con = s.Accept(); // Create connection
-    con->SetBlocking( false );
 
     // Setup camera:
     UnicapCamera* camera = new UnicapCamera();

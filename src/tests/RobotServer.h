@@ -6,7 +6,6 @@
 
 #include <arpa/inet.h>
 
-
 class RobotServer
 {
 public:
@@ -15,9 +14,18 @@ public:
 
     void Listen();
 
+    void RunCommsLoop();
+
 private:
+    void PostConnectionSetup();
+    void PostCommsCleanup();
+
     DiffDrive*  m_drive;
     MotionMind* m_motors;
+    Socket*     m_server;
+    Socket*     m_con;
+    UnicapCamera* m_camera;
+    uint8_t* m_lum;
 };
 
 #endif // ROBOT_SERVER_H
