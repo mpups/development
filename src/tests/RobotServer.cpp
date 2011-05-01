@@ -10,32 +10,13 @@ const int IMG_HEIGHT = 240;
 **/
 RobotServer::RobotServer( const char* tcpPort, const char* motorSerialPort )
 :
+    m_serialPort( motorSerialPort ),
     m_drive ( 0 ),
     m_motors( 0 ),
     m_server( 0 ),
     m_con   ( 0 ),
     m_camera( 0 )
-{
-    // @todo: this should be done in PostConnectionSetup
-    m_motors = new MotionMind( motorSerialPort );
-    if ( m_motors->Available() )
-    {
-        m_drive = new DiffDrive( *m_motors );
-        float amps = 1.5f;
-        int32_t currentLimit = roundf( amps/0.02f );
-        int32_t pwmLimit = (72*1024)/120; // motor voltage / battery voltage
-        
-        m_motors->WriteRegister( 1, MotionMind::AMPSLIMIT, currentLimit );
-        m_motors->WriteRegister( 2, MotionMind::AMPSLIMIT, currentLimit );
-        m_motors->WriteRegister( 1, MotionMind::PWMLIMIT, pwmLimit );
-        m_motors->WriteRegister( 2, MotionMind::PWMLIMIT, pwmLimit );
-    }
-    else
-    {
-        delete m_motors;
-        m_motors = 0;
-    }
-    
+{   
     // Setup a server socket for receiving client commands:
     m_server = new Socket();
     m_server->Bind( atoi( tcpPort ) ); // Get port from command line
@@ -71,6 +52,26 @@ void RobotServer::Listen()
 **/
 void RobotServer::PostConnectionSetup()
 {
+    // Setup comms to motors:
+    m_motors = new MotionMind( m_serialPort.cStr() );
+    if ( m_motors->Available() )
+    {
+        m_drive = new DiffDrive( *m_motors );
+        float amps = 1.5f;
+        int32_t currentLimit = roundf( amps/0.02f );
+        int32_t pwmLimit = (72*1024)/120; // motor voltage / battery voltage
+        
+        m_motors->WriteRegister( 1, MotionMind::AMPSLIMIT, currentLimit );
+        m_motors->WriteRegister( 2, MotionMind::AMPSLIMIT, currentLimit );
+        m_motors->WriteRegister( 1, MotionMind::PWMLIMIT, pwmLimit );
+        m_motors->WriteRegister( 2, MotionMind::PWMLIMIT, pwmLimit );
+    }
+    else
+    {
+        delete m_motors;
+        m_motors = 0;
+    }
+    
     // Setup camera:
     m_camera = new UnicapCamera();
     size_t imageBufferSize = m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t);
@@ -92,6 +93,12 @@ void RobotServer::PostConnectionSetup()
 **/
 void RobotServer::PostCommsCleanup()
 {
+    // These must be deleted in this order:
+    delete m_drive;   
+    delete m_motors;
+    m_drive = 0;
+    m_motors = 0;
+    
     if ( m_camera )
     {
         m_camera->StopCapture();

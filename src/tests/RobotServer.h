@@ -20,6 +20,7 @@ private:
     void PostConnectionSetup();
     void PostCommsCleanup();
 
+    GLK::String m_serialPort;
     DiffDrive*  m_drive;
     MotionMind* m_motors;
     Socket*     m_server;
