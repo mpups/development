@@ -127,6 +127,7 @@ void runServer( int argc, char** argv )
 
 /**
     Program behaves as client: reads joystick commands and sends to sever.
+    Recieves images from robot.
 **/
 void runClient( int argc, char** argv )
 {
@@ -164,18 +165,27 @@ void runClient( int argc, char** argv )
                 // NOTE: we receive the image in parts so the joystick remains responsive.
                 static uint8_t image[IMG_WIDTH*IMG_HEIGHT];
                 int nThisTime = IMG_WIDTH*IMG_HEIGHT - n;
-                if ( nThisTime > IMG_WIDTH*(IMG_HEIGHT/4) ) { nThisTime = IMG_WIDTH*(IMG_HEIGHT/4); }
-                //n += client.Read( reinterpret_cast<char*>( image ) + n, nThisTime ); // Can;t client.Read return -1 - if not then while loop condition is wrong - SOMETHING IS WRONG
-                if ( n == IMG_WIDTH*IMG_HEIGHT )
+                // Limit the amount of image we are willing to recieve in one go:
+                if ( nThisTime > IMG_WIDTH*(IMG_HEIGHT/4) )
                 {
+                    nThisTime = IMG_WIDTH*(IMG_HEIGHT/4);
+                }
+                
+                int bytesRead = client.Read( reinterpret_cast<char*>( image ) + n, nThisTime );
+                if ( bytesRead > 0 )
+                {
+                    n += bytesRead;
+                    if ( n == IMG_WIDTH*IMG_HEIGHT )
+                    {
 #ifndef ARM_BUILD
-                    // Show the image by posting pointer to the ImageWindow object:
-                    if ( display.IsRunning() )
-                    {                           
-                        display.PostImage( image );
-                    }
+                        // Show the image by posting pointer to the ImageWindow object:
+                        if ( display.IsRunning() )
+                        {                           
+                            display.PostImage( image );
+                        }
 #endif
-                    n = 0;
+                        n = 0;
+                    }
                 }
                 GLK::Thread::Sleep( 50 );
             }

@@ -296,6 +296,8 @@ bool UnicapCamera::OpenDevice()
         m_vendor = GLK::String( devices[0].vendor_name );
         m_model = GLK::String( devices[0].model_name );
         fprintf( stderr, "\nUnicap: Opened camera with GUID %llu\n", m_guid );
+        
+        EnumerateProperties();
         return true;
     }
     else
@@ -342,8 +344,60 @@ bool UnicapCamera::FindFormat( int width, int height, unsigned int fourcc, unica
             numFormats++;
         }
     }
-    while ( status != STATUS_NO_MATCH );
+    while ( SUCCESS(status) );
 
     return success;
+}
+
+/**
+    Just list all properties for debugging.
+**/
+void UnicapCamera::EnumerateProperties()
+{
+    unicap_property_t property;
+    unicap_status_t status = STATUS_NO_MATCH;
+    int count = 0;
+
+    /*status = unicap_set_property_auto( m_handle, "Brightness" );
+    if ( SUCCESS( status ) )
+    {
+        fprintf( stderr, "Success: Turned on auto-brightness!\n" );
+    }
+    else
+    {
+       fprintf( stderr, "Falure: Could not turn on auto-brightness!\n" );
+    }
+
+    status = unicap_set_property_auto( m_handle, "Exposure" );
+    if ( SUCCESS( status ) )
+    {
+        fprintf( stderr, "Success: Turned on auto-exposure!\n" );
+    }
+    else
+    {
+       fprintf( stderr, "Falure: Could not turn on auto-exposure!\n" );
+    }*/
+    
+    status = unicap_set_property_manual( m_handle, "Autogain" );
+    status = unicap_set_property_value( m_handle, "Autogain", 1.0 );
+    if ( SUCCESS( status ) )
+    {
+        fprintf( stderr, "Success: Turned on auto-gain!\n" );
+    }
+    else
+    {
+       fprintf( stderr, "Falure: Could not turn on auto-gain!\n" );
+    }
+    
+    do
+    {
+        status = unicap_enumerate_properties( m_handle, 0, &property, count );
+        fprintf ( stderr, "Property %d : %s", count, property.identifier );
+        fprintf( stderr, " ( value := %f, category := %s)\n ", property.value, property.category );
+         
+        count += 1;
+        
+    } while ( SUCCESS(status) );
+
 }
 

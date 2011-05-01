@@ -144,14 +144,19 @@ bool Socket::Connect( char* hostname, int portNumber )
 /**
     Blocking read from this socket.
     
+    In the case of non-blocking IO Read returns 0 if no bytes were
+    immediately available.
+    
     @param message Storage for received bytes.
-    @return Number of bytes read.
+    @return Number of bytes read or -1 if there was an error.
 **/
 int Socket::Read( char* message, size_t maxBytes )
 {
     int n = read( m_socket, message, maxBytes );
-    if ( n < 0 )
+    if ( n == -1 && errno == EAGAIN )
     {
+        // For non-blocking IO just return zero bytes were available.
+        // Otherwise we return the error (-1)
         n = 0;
     }
     
@@ -159,14 +164,15 @@ int Socket::Read( char* message, size_t maxBytes )
 }
 
 /**
-    Asserts.
+    In the case of non-blocking IO Write returns 0 if the write would have
+    caused the process to block.
 
-    @return False if message could not be sent.
+    @return Number of bytes written or -1 if there was an error.
 **/
 int Socket::Write( const char* message, size_t size )
 {
     int n = write( m_socket, message, size );
-    if ( n < 0 )
+    if ( n == -1 && errno == EAGAIN )
     {
         n = 0;
     }
