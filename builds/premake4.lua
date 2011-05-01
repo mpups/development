@@ -74,6 +74,7 @@ solution 'robolib'
     project 'comms-test'
         kind 'ConsoleApp'
         
+        files { SRC .. 'tests/RobotServer.cpp' }
         files { SRC .. 'tests/comms_test.cpp' }
         
         configuration {}        

@@ -63,7 +63,8 @@ bool Socket::Bind( int portNumber )
 
 /**
     Listen for connections.
-    @param queueSize Max number of established connections.
+    
+    @param queueSize Max number of pending connections.
 **/
 bool Socket::Listen( int queueSize )
 {
