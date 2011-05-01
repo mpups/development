@@ -25,17 +25,26 @@ TeleJoystick::~TeleJoystick()
 
 void TeleJoystick::Run()
 {
-    while ( true )
+    while ( !TerminationRequested() )
     {
+        int timeoutCount = 0;
+        int r = 0;
         int n = 3*sizeof(int);
         int data[3];
         char* pData = reinterpret_cast<char*>( data );
-        while ( n != 0 )
+        while ( n != 0 && r >= 0 && timeoutCount < 200 )
         {
             GLK::Thread::Sleep( 2 );
-            int r = m_socket.Read( pData, n );
-            n -= r;
-            pData += r;
+            r = m_socket.Read( pData, n );
+            if ( r > 0 )
+            {
+                n -= r;
+                pData += r;
+            }
+            else if ( r == 0 )
+            {
+                timeoutCount += 1;
+            }
         }
         
         data[0] = ntohl( data[0] );
@@ -56,5 +65,7 @@ void TeleJoystick::Run()
     {
         m_drive->SetMotion( 0.f, 0.f );
     }
+    
+    fprintf( stderr, "Telejoy: thread finished\n" );
 }
 

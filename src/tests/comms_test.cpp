@@ -3,8 +3,6 @@
 
 #include <math.h>
 
-#include "../opencv/opencv_utils.h"
-
 const int IMG_WIDTH = 320;
 const int IMG_HEIGHT = 240;
 

@@ -118,7 +118,7 @@ void RobotServer::RunCommsLoop()
         fprintf( stderr, "running: %d\n", teljoy->IsRunning() );
             
         // Capture images continuously:
-        while ( teljoy->IsRunning() )
+        while ( bytesToSend >= 0 && teljoy->IsRunning() )
         {       
             if ( m_camera && (bytesToSend == 0) )
             {
@@ -141,8 +141,16 @@ void RobotServer::RunCommsLoop()
             if ( bytesToSend > 0 )
             {
                 int bytesWritten = m_con->Write( pSend, bytesToSend );
-                bytesToSend -= bytesWritten;
-                pSend += bytesWritten;
+                if ( bytesWritten >= 0  )
+                {
+                    bytesToSend -= bytesWritten;
+                    pSend += bytesWritten;
+                }
+                else
+                {
+                    fprintf( stderr, "Error writing to socket\n" );
+                    bytesToSend = -1;
+                }
             }
             
             GLK::Thread::Sleep( 10 );

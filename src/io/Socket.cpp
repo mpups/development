@@ -172,7 +172,7 @@ int Socket::Read( char* message, size_t maxBytes )
 **/
 int Socket::Write( const char* message, size_t size )
 {
-    int n = write( m_socket, message, size );
+    int n = send( m_socket, message, size, MSG_NOSIGNAL );
     if ( n == -1 && errno == EAGAIN )
     {
         n = 0;
