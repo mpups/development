@@ -41,6 +41,13 @@ void runServer( int argc, char** argv )
         motors = 0;
     }
 
+    // Setup a server socket for receiving client commands:
+    Socket s;
+    s.Bind( atoi( argv[1] ) ); // Get port from command line
+    s.Listen( 1 ); // Wait for connection
+    Socket* con = s.Accept(); // Create connection
+    con->SetBlocking( false );
+
     // Setup camera:
     UnicapCamera* camera = new UnicapCamera();
     uint8_t* m_lum;
@@ -56,13 +63,6 @@ void runServer( int argc, char** argv )
         delete camera;
         camera = 0;
     }
-
-    // Setup a server socket for receiving client commands:
-    Socket s;
-    s.Bind( atoi( argv[1] ) ); // Get port from command line
-    s.Listen( 1 ); // Wait for connection
-    Socket* con = s.Accept(); // Create connection
-    con->SetBlocking( false );
         
     // Setup a TeleJoystick object:
     TeleJoystick* teljoy = 0;
