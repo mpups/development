@@ -25,13 +25,15 @@ TeleJoystick::~TeleJoystick()
 
 void TeleJoystick::Run()
 {
+    int data[3] = { 0, 0, 1 };
+
     while ( !TerminationRequested() )
     {
         int timeoutCount = 0;
         int r = 0;
         int n = 3*sizeof(int);
-        int data[3];
-        char* pData = reinterpret_cast<char*>( data );
+        int tmpData[3];
+        char* pData = reinterpret_cast<char*>( tmpData );
         while ( n != 0 && r >= 0 && timeoutCount < 200 )
         {
             GLK::Thread::Sleep( 2 );
@@ -47,9 +49,13 @@ void TeleJoystick::Run()
             }
         }
         
-        data[0] = ntohl( data[0] );
-        data[1] = ntohl( data[1] );
-        data[2] = ntohl( data[2] );
+        if ( n == 0 )
+        {
+            // Only update data if all necessary bytes were read:
+            data[0] = ntohl( tmpData[0] );
+            data[1] = ntohl( tmpData[1] );
+            data[2] = ntohl( tmpData[2] );
+        }
         
         if ( m_drive )
         {

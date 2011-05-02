@@ -158,9 +158,10 @@ void RobotServer::RunCommsLoop()
                     fprintf( stderr, "Error writing to socket\n" );
                     bytesToSend = -1;
                 }
+
+                GLK::Thread::Sleep( 5 );
             }
             
-            GLK::Thread::Sleep( 10 );
         } // end while
         
         fprintf( stderr, "Control terminated\n" );
