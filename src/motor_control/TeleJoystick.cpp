@@ -25,9 +25,14 @@ TeleJoystick::~TeleJoystick()
 
 void TeleJoystick::Run()
 {
+    GLK::Timer timer;
+    float timeSinceLastCommand_secs = 0.f;
+    const float motionTimeout_secs  = 1.f; // Motion will be stopped for safety if no command in this time.
+    const float taskTimeout_secs    = 5.f; // Task will terminate if no command in this time.
+    
     int data[3] = { 0, 0, 1 };
 
-    while ( !TerminationRequested() )
+    while ( !TerminationRequested() && timeSinceLastCommand_secs < taskTimeout_secs )
     {
         int timeoutCount = 0;
         int r = 0;
@@ -49,12 +54,22 @@ void TeleJoystick::Run()
             }
         }
         
+        timeSinceLastCommand_secs = timer.GetSeconds();
         if ( n == 0 )
         {
             // Only update data if all necessary bytes were read:
+            timer.Reset();
+            
             data[0] = ntohl( tmpData[0] );
             data[1] = ntohl( tmpData[1] );
             data[2] = ntohl( tmpData[2] );
+        }
+        else if ( timeSinceLastCommand_secs > motionTimeout_secs )
+        {
+            // Set speeds to zero since we have lost comms (maybe temporarily)
+            fprintf( stderr, "Warning: Joystick comms timedout - stopping motion until new comms received." );
+            data[0] = 0;
+            data[1] = 0;
         }
         
         if ( m_drive )
@@ -63,7 +78,7 @@ void TeleJoystick::Run()
         }
         else
         {
-            fprintf( stderr, "Drive control := %d,%d (%d)\n", data[0], data[1], data[2] );    
+            fprintf( stderr, "Drive control (interval %f secs) := %d,%d (%d)\n", timeSinceLastCommand_secs, data[0], data[1], data[2] );    
         }
     }
     
