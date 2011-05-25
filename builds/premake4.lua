@@ -2,7 +2,7 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
-dofile( 'configure.lua' )
+dofile( 'configure_arm.lua' )
 
 SRC = '../src/'
 

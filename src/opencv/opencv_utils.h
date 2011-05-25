@@ -4,7 +4,6 @@
 #define OPENCV_UTILS_H
 
 #include "opencv/cvaux.h"
-#include "opencv/highgui.h"
 #include "opencv/cxcore.h"
 
 void FillIplImage( const uint8_t* buffer, IplImage* img );

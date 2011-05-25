@@ -3,7 +3,7 @@
 
 TARGET_DIR   = 'arm_build'
 
-ARM_DEPLOYMENT = '/home/mpupilli/code/beagle_builds/deploy'
+ARM_DEPLOYMENT = '/home/mark/code/beagle_builds/deploy'
 TOOLCHAIN = 'arm-angstrom-linux-gnueabi-'
 
 INCLUDE_DIRS = {

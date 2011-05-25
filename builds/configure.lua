@@ -6,11 +6,11 @@ TARGET_DIR   = 'linux_build'
 INCLUDE_DIRS = {
     '../../glk/include',
     '/usr/include/lua5.1',
-    '/usr/local/include/freetype2',
+    '/usr/include/freetype2',
     '/usr/include/gtest',
     '/usr/include/',
     '/usr/include/unicap',
-    '/usr/local/include/opencv'
+    '/usr/include/opencv'
 }
 
 LIB_DIRS = {
