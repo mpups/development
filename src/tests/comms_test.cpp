@@ -83,7 +83,7 @@ void runClient( int argc, char** argv )
                         // Show the image by posting pointer to the ImageWindow object:
                         if ( display.IsRunning() )
                         {                           
-                            display.PostImage( image );
+                            display.PostImage( image, IMG_WIDTH, IMG_HEIGHT, ImageWindow::FixedAspectRatio );
                         }
 #endif
                         n = 0;
