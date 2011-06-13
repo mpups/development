@@ -4,13 +4,9 @@
 
 DiffDrive::DiffDrive( MotionMind& motors )
 :
-m_motors    ( motors )
+    m_motors    ( motors ),
+    m_config    ( 0.275f, 6800.f, 52.f, 12.f )
 {
-    m_wheelbaseMetres = 0.275f;
-    m_countsPerMetre  = 6800.f;
-    m_gearRatio       = 52.f;
-    m_countsPerRevIn  = 12.f;
-    
     m_motors.WriteRegister( LEFT_WHEEL, MotionMind::POSITION, 0 );
     m_motors.WriteRegister( RIGHT_WHEEL, MotionMind::POSITION, 0 );
 }
@@ -29,12 +25,11 @@ DiffDrive::~DiffDrive()
 }
 
 /**
-    Compute the number of encoder counts per wheel revolution from the
-    gear ratio and encoder counts per rev on the input shaft.
+    Compute the number of encoder counts per wheel (output shaft) assuming quadrature encoding.
 **/
 float DiffDrive::ComputeCountsPerRev() const
 {
-    return m_countsPerRevIn * m_gearRatio * 4;
+    return m_config.CountsPerRevOnOutputShaft() * 4;
 }
 
 /**
@@ -43,7 +38,7 @@ float DiffDrive::ComputeCountsPerRev() const
 **/
 float DiffDrive::ComputeRevsPerMetre() const
 {
-    return m_countsPerMetre / ComputeCountsPerRev();
+    return m_config.CountsPerMetre() / ComputeCountsPerRev();
 }
 
 /**
@@ -89,7 +84,8 @@ DiffDrive::MotorData DiffDrive::SetMoves( float left_counts, float right_counts 
 **/
 DiffDrive::MotorData DiffDrive::SetSpeeds_mps( float left_metres_per_sec, float right_metres_per_sec )
 {
-    return SetSpeeds( left_metres_per_sec * m_countsPerMetre, right_metres_per_sec * m_countsPerMetre );
+    float cpm = m_config.CountsPerMetre();
+    return SetSpeeds( left_metres_per_sec * cpm, right_metres_per_sec * cpm );
 }
 
 /**
@@ -99,7 +95,8 @@ DiffDrive::MotorData DiffDrive::SetSpeeds_mps( float left_metres_per_sec, float 
 **/
 DiffDrive::MotorData DiffDrive::SetMotion( float velocity_metres_per_sec, float angular_deg_per_sec )
 {
-    float w = angular_deg_per_sec * m_wheelbaseMetres * (3.141592653/180.0);
+    float b = m_config.WheelBaseInMetres();
+    float w = angular_deg_per_sec * b * (3.141592653/180.0);
     float vl = velocity_metres_per_sec - w;
     float vr = velocity_metres_per_sec + w;
     return SetSpeeds_mps( vl, vr );

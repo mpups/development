@@ -2,6 +2,7 @@
 #define DIFF_DRIVE_H
 
 #include "MotionMind.h"
+#include "DiffDriveConfig.h"
 
 /**
     Class for controlling simple differential drive robots.
@@ -43,10 +44,7 @@ private:
     static const int RIGHT_WHEEL = 2;
     
     MotionMind& m_motors;
-    float m_wheelbaseMetres;
-    float m_countsPerMetre;
-    float m_gearRatio;
-    float m_countsPerRevIn;
+    const DiffDriveConfig m_config;
 };
 
 #endif // DIFF_DRIVE_H
