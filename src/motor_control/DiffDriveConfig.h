@@ -17,13 +17,14 @@ public:
     float CountsPerMetre()    const { return m_countsPerMetre; };
     float GearRatio()         const { return m_gearRatio; };
     float CountsPerRevOnInputShaft()  const { return m_countsPerRevIn; };
-    float CountsPerRevOnOutputShaft() const { return m_countsPerRevIn * m_gearRatio; };
+    float CountsPerRevOnOutputShaft() const { return m_countsPerRevOut; };
 
 private:
     float m_wheelbaseMetres;
     float m_countsPerMetre;
     float m_gearRatio;
     float m_countsPerRevIn;
+    float m_countsPerRevOut;
 };
 
 #endif // DIFF_DRIVE_CONFIG_H

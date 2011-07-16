@@ -15,7 +15,7 @@ DiffDriveConfig::DiffDriveConfig( float base_m, float cpm, float gr, float cpri 
     m_gearRatio       ( gr ),
     m_countsPerRevIn  ( cpri )  
 {
-    
+    m_countsPerRevOut = m_countsPerRevIn * m_gearRatio;
 }
 
 DiffDriveConfig::~DiffDriveConfig()

@@ -81,4 +81,9 @@ solution 'robolib'
         links { 'robolib' }
         links ( GLK_LINKS )
         links { LINKS }
-        
+
+    project 'sse-test'
+        kind 'ConsoleApp'
+        files { SRC .. 'sse/**.cpp' }
+        links ( GLK_LINKS )
+        links { LINKS }

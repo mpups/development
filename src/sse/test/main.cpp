@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <Timer.h>
+#include <glkcore.h>
 
-#include <SimdKernels.h>
+#include "../SimdKernels.h"
 
 #define ITRS 100000
 
