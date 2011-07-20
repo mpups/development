@@ -49,7 +49,7 @@ bool Socket::Bind( int portNumber )
     struct sockaddr_in addr;
     memset( (void*)&addr, 0, sizeof(sockaddr_in) );
     addr.sin_family      = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_addr.s_addr = htonl( INADDR_ANY );
     addr.sin_port        = htons( portNumber );
     
     int err = bind( m_socket, (struct sockaddr*)&addr, sizeof(addr) );
