@@ -5,7 +5,7 @@ TARGET_DIR   = 'linux_build'
 
 INCLUDE_DIRS = {
     '../../../glk/include',
-    '../../../robolib/include',
+    '../../include', -- Robolib includes.
     '/usr/include/lua5.1',
     '/usr/include/freetype2',
     '/usr/include/gtest',
@@ -20,7 +20,7 @@ LIB_DIRS = {
     '/use/local/lib',
     '../../../glk/builds/linux_build/debug',
     '../../../glk/builds/linux_build/release',
-    '../../../robolib/builds/linux_build',
+    '../../builds/linux_build', -- robolib libraries built here
 }
 
 BUILD_OPTIONS = { '-msse -msse2' }
