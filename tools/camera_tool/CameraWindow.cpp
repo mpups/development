@@ -1,0 +1,364 @@
+// Copyright (c) 2010 Mark Pupilli, All Rights Reserved.
+
+#include "CameraWindow.h"
+#include "CameraCalibrationSystem.h"
+#include "KltTracker.h"
+#include "opencv_utils.h"
+
+#include <assert.h>
+
+using namespace GLK;
+
+CameraWindow::CameraWindow( String title )
+:
+    GlWindow        ( 1, 1 ),
+    m_lastTimestamp ( 0 ),
+    m_interFrameTime_ms ( 0 ),
+    m_waitTime_ms   ( 0 ),
+    m_lum           ( 0 ),
+    m_rgb           ( 0 ),
+    m_calibration   (0),
+    m_showUndistorted( false ),
+    m_klt           (0),
+    m_tracking      (false)
+{
+    m_camera = new UnicapCamera();
+  
+    if ( m_camera->IsAvailable() )
+    {
+        // set window title:
+        title += ':';
+        title += ' ';
+        title += String( m_camera->GetVendor() );
+        title += ' ';
+        title += String( m_camera->GetModel() );
+
+        int err = posix_memalign( (void**)&m_lum, 16, m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t) );
+        assert( err == 0 );
+        err = posix_memalign( (void**)&m_rgb, 16, m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * 3 * sizeof(uint8_t) );
+        assert( err == 0 );    
+    }
+    else
+    {  
+        Quit( -1 );
+    }
+
+    SetWindowName( title.cStr() );
+
+    PushKeyboardHandler( this );
+}
+
+CameraWindow::~CameraWindow()
+{
+    delete m_calibration;
+    delete m_klt;
+    delete m_camera;    
+    free( m_lum );
+    free( m_rgb );
+}
+
+bool CameraWindow::InitGL()
+{
+    bool ok = true;
+
+    if ( m_camera->IsAvailable() )
+    {
+        m_camera->StartCapture();
+        m_camera->GetFrame();
+        m_camera->ExtractLuminanceImage( m_lum );
+        m_camera->ExtractRgbImage( m_rgb );
+        m_camera->DoneFrame();
+
+        // Set window size to match camera: 
+        Move( 50, 50, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() + 100 );
+
+        // setup texture for displaying captured images:
+        glGenTextures( 1, &m_lumTex );
+        glGenTextures( 1, &m_rgbTex );
+
+        glBindTexture( GL_TEXTURE_2D, m_lumTex );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE8, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
+        assert( glGetError() == GL_NO_ERROR );
+
+        glBindTexture( GL_TEXTURE_2D, m_rgbTex );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, m_rgb );
+        assert( glGetError() == GL_NO_ERROR );
+
+        // Setup calibration system:
+        m_calibration = new CameraCalibrationSystem( 8, 8, 23 );
+
+        // Setup a tracker:
+        m_klt = new KltTracker( 256, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
+    }
+    else
+    {
+        ok = false;
+    }
+    
+    fprintf( stderr, "OpenGL version: %s\n", glGetString( GL_VERSION ) );
+    
+    glPointSize( 4.f );
+
+    // setup a font for rendering:
+    m_font = new GLK::GlFont( m_fontLibrary, DEFAULT_FONT );
+    if ( m_font->FontLoaded() )
+    {
+        fprintf( stderr, "Successfully loaded font '%s, %s'\n", m_font->GetFace().GetFamilyName(), m_font->GetFace().GetStyleName() );
+        m_font->SetSizePx( 10 );
+    }
+    else
+    {
+        fprintf( stderr, "Could not load font '%s'\n", DEFAULT_FONT );
+        ok = false;
+    }
+
+    return ok;
+}
+
+void CameraWindow::DestroyGL()
+{
+    if ( m_camera->IsAvailable() )
+    {
+        m_camera->StopCapture();
+
+        glDeleteTextures( 1, &m_lumTex );
+        glDeleteTextures( 1, &m_rgbTex );
+    }
+
+    delete m_font;
+}
+
+void CameraWindow::Resize( const unsigned int w, const unsigned int h )
+{
+    Render();
+}
+
+bool CameraWindow::Update( unsigned int )
+{
+    bool captured = false;
+
+    //if ( m_camera->IsAvailable() )
+    {
+        GLK::Timer waitTimer;
+        m_camera->GetFrame();
+        m_waitTime_ms = waitTimer.GetMicroSeconds() / 1000;
+
+        m_camera->ExtractLuminanceImage( m_lum );
+
+        //GLK::Timer tmr;
+        //m_camera->ExtractRgbImage( m_rgb );
+        //fprintf(stderr,"YUV conversion: %llu us\n", tmr.GetMicroSeconds() );
+
+        //tmr.Reset();
+        glBindTexture( GL_TEXTURE_2D, m_lumTex );
+        glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
+        //fprintf(stderr,"lum tex2d: %llu us\n", tmr.GetMicroSeconds() );
+
+        //tmr.Reset();
+        //glBindTexture( GL_TEXTURE_2D, m_rgbTex );
+        //glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), GL_RGB, GL_UNSIGNED_BYTE, m_rgb );
+        //fprintf(stderr,"rgb tex2d: %llu us\n", tmr.GetMicroSeconds() );    
+
+        if ( m_showUndistorted && m_calibration->Calibrated() )
+        {
+            m_calibration->UndistortImage( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), m_lum );
+            glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
+        }
+
+        if ( m_tracking )
+        {
+            m_klt->Track( m_lum );
+        }
+
+        m_interFrameTime_ms = (m_camera->GetFrameTimestamp() - m_lastTimestamp) / 1000;
+        m_lastTimestamp = m_camera->GetFrameTimestamp();
+        m_camera->DoneFrame();        
+        captured = true;
+    }
+
+    return captured;
+}
+
+void CameraWindow::TimerExpired( int id )
+{
+}
+
+void CameraWindow::Render()
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho( 0, 1, 1, 0, -1, 1 );
+
+	glMatrixMode( GL_MODELVIEW );
+    glLoadIdentity();
+    glColor3f( 1.f, 1.f, 1.f );
+
+    // Render the image from the camera:
+    glViewport( 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
+    glBindTexture( GL_TEXTURE_2D, m_lumTex );
+    glEnable( GL_TEXTURE_2D );
+
+    glBegin( GL_QUADS );
+    {
+        glTexCoord2f( 0, 0 );
+        glVertex2i( 0, 0 );
+
+        glTexCoord2f( 0, 1 );
+        glVertex2i( 0, 1 );
+
+        glTexCoord2f( 1, 1 );
+        glVertex2i( 1, 1 );
+
+        glTexCoord2f( 1, 0 );
+        glVertex2i( 1, 0 );
+    }
+    glEnd();
+
+    glDisable( GL_TEXTURE_2D );
+
+    if ( 1 )//TODO: m_foundAll )
+    {
+        glColor3f( 0.f, 1.f, 0.f ); // green
+    }
+    else
+    {
+        glColor3f( 1.f, 0.f, 0.f ); // red
+    }
+
+    // Render detected calibration points and tracked points:
+    glEnable( GL_POINT_SMOOTH );
+    glEnable( GL_BLEND );
+    glBegin( GL_POINTS );
+    {
+/*   TODO:     for ( int i=0; i<m_numCorners; ++i )
+        {
+            glVertex2f( m_corners[i].x/m_camera->GetFrameWidth(), m_corners[i].y/m_camera->GetFrameHeight());
+        }
+*/
+        if ( m_klt )
+        {
+            glColor3f( 0.f, 1.f, 0.f );
+            for ( int i=0; i<m_klt->NumTracked(); ++i )
+            {
+                glVertex2f( (*m_klt)[i].x/m_camera->GetFrameWidth(), (*m_klt)[i].y/m_camera->GetFrameHeight() );
+            }
+        }
+       
+    }
+    glEnd();
+    //glDisable( GL_BLEND );
+    glDisable( GL_POINT_SMOOTH );
+
+    glColor4f( 1, 0 ,0, 0.5 );
+    glBegin( GL_LINES );
+    {
+        glVertex2f( 0, 0.5);
+        glVertex2f( 1, 0.5 );
+        
+        glVertex2f( 0, 0.25 );
+        glVertex2f( 1, 0.25 );
+        
+        glVertex2f( 0, 0.75 );
+        glVertex2f( 1, 0.75 );
+        
+        glVertex2f( 0.5, 0 );
+        glVertex2f( 0.5, 1 );
+        
+        glVertex2f( 0.25, 0 );
+        glVertex2f( 0.25, 1 );
+        
+        glVertex2f( 0.75, 0 );
+        glVertex2f( 0.75, 1 );
+    }
+    glEnd();
+
+    // Render textual info:
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho( 0, GetWidth(), 0, 100, -1, 1 );
+	glMatrixMode( GL_MODELVIEW );
+    glViewport( 0, m_camera->GetFrameHeight(), GetWidth(), 100 );
+
+    glColor3f( 0.2f, 0.2f, 0.2f );
+
+    glBegin( GL_QUADS );
+    {
+        glVertex2i( 0, 0 );
+        glVertex2i( 0, 100 );
+        glVertex2i( m_camera->GetFrameWidth(), 100 );
+        glVertex2i( m_camera->GetFrameWidth(), 0 );
+    }
+    glEnd();
+
+    glTranslatef(4,80,0);
+    glColor3f( 1.f, 1.f, 1.f );
+    char info[1024];
+    //int n =
+        sprintf( info, "Inter-frame time: %ums\nTime waiting for frame: %ums\n", m_interFrameTime_ms, m_waitTime_ms );
+    /*if ( m_distCoeff )
+    {
+        n += sprintf( info + n, "\nCalibration result (average error = %f pixels):\nk1, k2, k3 = %f, %f, %f\n", m_avgError, m_distCoeff->data.db[0], m_distCoeff->data.db[1], m_distCoeff->data.db[4] );
+        sprintf( info + n, "cx, cy = %f, %f\nfx, fy = %f, %f", m_cameraMatrix->data.db[2],m_cameraMatrix->data.db[5],m_cameraMatrix->data.db[0], m_cameraMatrix->data.db[4] );
+    } */   
+    m_font->RenderString( info );
+
+    SwapBuffers();
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+}
+
+void CameraWindow::Key( char c )
+{
+    switch (c)
+    {
+        case 13: // RETURN computes calibration
+            m_calibration->ComputeCalibration();
+        break;
+
+        case 32: // SPACE saves the calibration image
+            m_calibration->AddCalibrationImage( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), m_lum );
+        break;
+
+        case 'u': // Toggle display of original or undistorted image
+            m_showUndistorted = !m_showUndistorted;
+        break;
+
+        case 's': // Save the calibration result
+            m_calibration->Print( stdout );
+        break;
+
+        case 'p': // Save an image
+            WritePgm( "shot.pgm", m_lum, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
+        break;
+
+        case 't': // start tracking points using optical flow
+        {
+            m_klt->DetectFeatures( m_lum );
+            m_tracking = true;
+        }
+        break;
+
+        default:
+            fprintf( stderr, "%d\n", c );
+        break;
+    }
+}
+
+bool CameraWindow::WasUpdated()
+{
+    return false;
+}
+
+void CameraWindow::Activated()
+{
+    
+}
+
+void CameraWindow::Deactivated()
+{
+    
+}
+
