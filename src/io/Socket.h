@@ -10,8 +10,6 @@
 
 /**
     Wrapper object for sockets API.
-    
-    
 **/
 class Socket
 {
@@ -25,7 +23,7 @@ public:
     bool Listen( int );
     Socket* Accept();
     void Shutdown();
-    bool Connect( char*, int );
+    bool Connect( const char*, int );
             
     int Read( char* message, size_t maxBytes );
     int Write( const char* message, size_t size );

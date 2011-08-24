@@ -88,3 +88,15 @@ solution 'robolib'
         links ( GLK_LINKS )
         links { LINKS }
 
+    project 'gtests' -- unit tests
+        kind 'ConsoleApp'
+
+        files { SRC .. 'test/unit/*.cpp' }
+
+        configuration {}
+        links { 'robolib' }		
+        links ( SYSTEM_LINKS )
+        links ( 'gtest' )
+
+		
+

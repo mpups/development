@@ -13,7 +13,7 @@
 #include <fcntl.h>
 
 /**
-    Create and open a socket of the specified type.
+    Create and open a TCP socket (SOCK_STREAM).
 **/
 Socket::Socket()
 {
@@ -108,7 +108,10 @@ Socket* Socket::Accept()
 void Socket::Shutdown()
 {
     int err = shutdown( m_socket, SHUT_RDWR );
-    assert( err == 0 );
+    if ( err == -1 )
+    {
+        fprintf( stderr, "Error on socket shutdown: %s\n", strerror(errno) );           
+    }
 }
 
 /**
@@ -116,7 +119,7 @@ void Socket::Shutdown()
 
     @return True if the connection was successful.
 **/
-bool Socket::Connect( char* hostname, int portNumber )
+bool Socket::Connect( const char* hostname, int portNumber )
 {
     struct hostent* server;
     server = gethostbyname( hostname );

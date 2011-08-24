@@ -21,6 +21,22 @@ LIB_DIRS = {
 
 BUILD_OPTIONS = { '-msse -msse2' }
 LINK_OPTIONS = {}
-LINKS = { 'lua5.1', 'freetype', 'pthread', 'rt', 'cxcore', 'cvaux', 'unicap', 'Xrender', 'X11', 'GL' }
+
+OPENCV_LINKS = { 'cxcore', 'cvaux' }
+OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }
+SYSTEM_LINKS = { 'pthread', 'rt' }
+
+function append( A, B )
+  for i,v in pairs(B) do table.insert(A,v) end
+end
+
+-- Append individual link groups together so we can use LINKS to link to all libs:
+LINKS = { 'lua5.1', 'freetype', 'unicap' }
+append( LINKS, OPENCV_LINKS )
+append( LINKS, OPENGL_LINKS )
+append( LINKS, SYSTEM_LINKS )
+
+--for i,v in pairs(LINKS) do print(i,v) end
+
 GLK_LINKS = { 'glk', 'glkcore' }
 
