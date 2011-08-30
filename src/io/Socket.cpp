@@ -26,13 +26,15 @@ Socket::Socket()
 
     The specified socket will be closed in the destructor of this object.
 
-    @param [in] socket A valid file descriptor that must refer to a socket.
+    If the file descriptor is invalid no error occurs - the resulting object will simply refer
+    to an invlaid socket (Socket::IsValid() will return false).
+
+    @param [in] socket A file descriptor that refers to a socket.
 **/
 Socket::Socket( int socket )
 :
     m_socket (socket)
 {
-    assert( m_socket != -1 );
 }
 
 /**
@@ -194,6 +196,9 @@ int Socket::Write( const char* message, size_t size )
     return n;
 }
 
+/**
+    Enable TCP Nagle buffereing.
+**/
 void Socket::SetNagleBufferingOn()
 {
     int flag = 0;
@@ -209,6 +214,9 @@ void Socket::SetNagleBufferingOn()
     }    
 }
 
+/**
+    Disable TCP Nagle buffereing.
+**/
 void Socket::SetNagleBufferingOff()
 {
     int flag = 1;

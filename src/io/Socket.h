@@ -12,12 +12,14 @@
     Wrapper object for sockets API.
 
     @todo Socket error messages should say 'Warning' not 'error'
+
+    @todo TcpSocket should be derived from this base class instead of embedded in it.
 **/
 class Socket
 {
 public:
     Socket();
-    ~Socket();
+    virtual ~Socket();
 
     bool IsValid() const;
 
@@ -35,11 +37,12 @@ public:
     void SetBlocking( bool );
 
 protected:
+    int m_socket;
+
+    explicit Socket( int socket );
 
 private:
-    int m_socket;
-    
-    explicit Socket( int socket );
+
 };
 
 #endif // GLK_SOCKET_H
