@@ -12,12 +12,13 @@
 #include "../../io/Socket.h"
 #include "../../io/TcpSocket.h"
 #include "../../io/UdpSocket.h"
+#include "../../io/Ipv4Address.h"
 
 const int MSG_SIZE = 8;
 const char MSG[ MSG_SIZE ] = "1234abc";
 const char UDP_MSG[] = "Udp connection-less Datagram!";
 
-/**
+/*
     Server waits for client to connect then reads the test message from the client.
 */
 void* RunTcpServerThread( void* arg )
@@ -64,7 +65,7 @@ void TestTcp()
     pthread_join( serverThread, 0 );
 }
 
-/**
+/*
     Server waits for messages from client and checks they are correct.
 */
 void* RunUdpServerThread( void* arg )
@@ -99,8 +100,10 @@ void TestUdp()
     pthread_create( &serverThread, 0 , RunUdpServerThread, (void*)&server );
 
     // Test connection-less datagram:
+    Ipv4Address localhost( "127.0.0.1", TEST_PORT );
+    ASSERT_TRUE( localhost.IsValid() );
     UdpSocket client;
-    int bytesSent = client.SendTo( "127.0.0.1", TEST_PORT, UDP_MSG, strlen(UDP_MSG)+1 );
+    int bytesSent = client.SendTo( localhost, UDP_MSG, strlen(UDP_MSG)+1 );
     ASSERT_EQ( strlen(UDP_MSG)+1, bytesSent );
 
     // Test datagram to a connection:
@@ -112,3 +115,17 @@ void TestUdp()
     client.Shutdown();
 }
 
+void TestIpv4Address()
+{
+    Ipv4Address localhost( "localhost", 12000 );
+    ASSERT_TRUE( localhost.IsValid() );
+
+    Ipv4Address nonsense( "@nonsense.ww.arg.?", 120 );
+    ASSERT_FALSE( nonsense.IsValid() );
+
+    Ipv4Address uninitialised;
+    ASSERT_FALSE( uninitialised.IsValid() );
+
+    Ipv4Address copy( localhost );
+    ASSERT_TRUE( localhost.IsValid() );
+}

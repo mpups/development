@@ -4,6 +4,9 @@
 #include "Socket.h"
 
 
+// fwd decl:
+class Ipv4Address;
+
 /**
     Class for creating UDP (datagram) sockets.
 
@@ -18,7 +21,7 @@ public:
     UdpSocket ();
     virtual ~UdpSocket ();
 
-    int SendTo( const char* hostname, int portNumber, const char* message, size_t size );
+    int SendTo( const Ipv4Address& addr, const char* message, size_t size );
 };
 
 #endif /* GLK_UDP_SOCKET_H */

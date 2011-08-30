@@ -7,10 +7,10 @@
 #include <memory.h>
 #include <stdio.h>
 
-#include <netinet/in.h>
-#include <netdb.h>
 #include <netinet/tcp.h>
 #include <fcntl.h>
+
+#include "Ipv4Address.h"
 
 /**
     Initialises the internal socket to an invalid value.
@@ -76,25 +76,17 @@ void Socket::Shutdown()
 **/
 bool Socket::Connect( const char* hostname, int portNumber )
 {
-    struct hostent* server;
-    server = gethostbyname( hostname );
-    if ( server == 0 )
+    Ipv4Address addr( hostname, portNumber );
+
+    if ( addr.IsValid() == false )
     {
         return false;
     }
-    
-    fprintf( stderr, "Connecting to: %s:%d\n", hostname, portNumber );
 
-    struct sockaddr_in addr;
-    memset( &addr, 0, sizeof(sockaddr_in) );
-    addr.sin_family = AF_INET;
-    memcpy( &addr.sin_addr.s_addr, server->h_addr, server->h_length );
-    addr.sin_port = htons( portNumber );
-            
-    int err = connect( m_socket, (struct sockaddr*)&addr, sizeof(struct sockaddr_in) );
+    int err = connect( m_socket, (struct sockaddr*)addr.Get_sockaddr_in_Ptr(), sizeof(struct sockaddr_in) );
     if ( err == -1 )
     {
-        fprintf( stderr, "%s\n", strerror(errno) );           
+        fprintf( stderr, "%s\n", strerror(errno) );
     }
     
     return err != -1;

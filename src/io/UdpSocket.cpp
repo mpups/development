@@ -12,6 +12,9 @@
 #include <netinet/tcp.h>
 #include <fcntl.h>
 
+#include "Ipv4Address.h"
+
+
 /**
     Initialise the base class with an invlaid socket ID then create
     a datagram socket.
@@ -30,31 +33,24 @@ UdpSocket::~UdpSocket ()
 }
 
 /**
-    Send a datagram to an unconnected socket at the specified address (hostaname and port-number).
+    Send a datagram to an unconnected socket at the specified IPv4 address.
 
-    @param [in] hostname String containing the name or IP address you want to send to.
-    @param [in] portNumber Port-number you want to send to.
+    @param [in] addr A valid IPv4 address you want to send to.
     @param [in] Pointer to data you want to send.
     @param [in] size Length of message to send in bytes.
 
+    It is an error to supply an invalid address object and -1 is returned in this case.
+
     @return Number of bytes sent or -1 on error. If the call would block and the socket is non-blocking 0 can be returned.
 **/
-int UdpSocket::SendTo( const char* hostname, int portNumber, const char* message, size_t size )
+int UdpSocket::SendTo( const Ipv4Address& addr, const char* message, size_t size )
 {
-    struct hostent* server;
-    server = gethostbyname( hostname );
-    if ( server == 0 )
+    if ( addr.IsValid() == false )
     {
         return -1;
     }
-    
-    struct sockaddr_in addr;
-    memset( &addr, 0, sizeof(sockaddr_in) );
-    addr.sin_family = AF_INET;
-    memcpy( &addr.sin_addr.s_addr, server->h_addr, server->h_length );
-    addr.sin_port = htons( portNumber );
 
-    int n = sendto( m_socket, message, size, MSG_NOSIGNAL, (struct sockaddr*)&addr, sizeof(struct sockaddr_in) );
+    int n = sendto( m_socket, message, size, MSG_NOSIGNAL, (struct sockaddr*)addr.Get_sockaddr_in_Ptr(), sizeof(struct sockaddr_in) );
     if ( n == -1 && errno == EAGAIN )
     {
         n = 0;

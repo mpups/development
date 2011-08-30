@@ -9,6 +9,7 @@
 
 void TestTcp();
 void TestUdp();
+void TestIpv4Address();
 
 #endif /* __NETWORKING_TESTS_H__ */
 

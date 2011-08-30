@@ -9,11 +9,12 @@
 
 #include "NetworkingTests.h"
 
-TEST( core, networking )
+TEST( io, networking )
 {
+    TestIpv4Address();
     TestTcp();
     TestUdp();
-}
+}   
 
 /**
     Runs all the tests listed above.    
