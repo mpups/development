@@ -10,6 +10,8 @@
 
 /**
     Wrapper object for sockets API.
+
+    @todo Socket error messages should say 'Warning' not 'error'
 **/
 class Socket
 {
@@ -17,14 +19,14 @@ public:
     Socket();
     ~Socket();
 
-    bool IsValid() const { return m_socket >= 0; };
+    bool IsValid() const;
 
     bool Bind( int );
     bool Listen( int );
     Socket* Accept();
     void Shutdown();
     bool Connect( const char*, int );
-            
+
     int Read( char* message, size_t maxBytes );
     int Write( const char* message, size_t size );
 
@@ -33,7 +35,6 @@ public:
     void SetBlocking( bool );
 
 protected:
-    
 
 private:
     int m_socket;

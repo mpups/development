@@ -22,12 +22,17 @@ Socket::Socket()
 }
 
 /**
-    Internal provate utility for creating socket with specific filedescriptor id.
+    Internal private constructor for creating socket deirectly from a specified file descriptor.
+
+    The specified socket will be closed in the destructor of this object.
+
+    @param [in] socket A valid file descriptor that must refer to a socket.
 **/
 Socket::Socket( int socket )
 :
     m_socket (socket)
 {
+    assert( m_socket != -1 );
 }
 
 /**
@@ -39,6 +44,11 @@ Socket::~Socket()
     {
         close( m_socket );
     }
+}
+
+bool Socket::IsValid() const
+{
+    return m_socket >= 0;
 }
 
 /**
