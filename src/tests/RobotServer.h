@@ -23,8 +23,8 @@ private:
     GLK::String m_serialPort;
     DiffDrive*  m_drive;
     MotionMind* m_motors;
-    Socket*     m_server;
-    Socket*     m_con;
+    TcpSocket*     m_server;
+    TcpSocket*     m_con;
     UnicapCamera* m_camera;
     uint8_t* m_lum;
 };

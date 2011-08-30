@@ -10,6 +10,7 @@
 #include "NetworkingTests.h"
 
 #include "../../io/Socket.h"
+#include "../../io/TcpSocket.h"
 #include "../../io/UdpSocket.h"
 
 const int MSG_SIZE = 8;
@@ -21,8 +22,8 @@ const char UDP_MSG[] = "Udp connection-less Datagram!";
 */
 void* RunTcpServerThread( void* arg )
 {
-    Socket* server = (Socket*)arg;
-    Socket* connection = server->Accept();
+    TcpSocket* server = (TcpSocket*)arg;
+    TcpSocket* connection = server->Accept();
 
     EXPECT_FALSE( connection == 0 );
     if ( connection )
@@ -44,7 +45,7 @@ void* RunTcpServerThread( void* arg )
 void TestTcp()
 {
     const int TEST_PORT = 2000;
-    Socket server;
+    TcpSocket server;
     EXPECT_TRUE( server.IsValid() );
     server.Bind( TEST_PORT );
     server.Listen( 0 );
@@ -54,7 +55,7 @@ void TestTcp()
     pthread_create( &serverThread, 0 , RunTcpServerThread, (void*)&server );
 
     // client connects and sends a test message
-    Socket client;
+    TcpSocket client;
     ASSERT_TRUE( client.Connect( "127.0.0.1", TEST_PORT ) );
 
     client.Write( MSG, MSG_SIZE );

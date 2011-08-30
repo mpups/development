@@ -45,7 +45,7 @@ void runClient( int argc, char** argv )
     {
         js.Start();
     
-        Socket client;
+        TcpSocket client;
         client.SetNagleBufferingOff(); // The joystick commands a re small packets for which we want low latency, so turn off Nagle.
         
         if ( client.Connect( argv[1], atoi( argv[2] ) ) )

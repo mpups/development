@@ -7,10 +7,10 @@
 /**
     Class for creating UDP (datagram) sockets.
 
-    inherits from the base class Socket which provides the generic socket functionality.
+    Inherits from the base class Socket which provides the generic socket functionality.
 
-    This allows datagrams to be sent via a connection with Read() and Write() or
-    to a specific host and port using SendTo().
+    UDP sockets allows connection-less communication between sockets using SendTo().
+    Alternatively the socket can be connected and datagrams sent using Read() and Write().
 **/
 class UdpSocket : public Socket
 {

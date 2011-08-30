@@ -18,7 +18,7 @@ RobotServer::RobotServer( const char* tcpPort, const char* motorSerialPort )
     m_camera( 0 )
 {   
     // Setup a server socket for receiving client commands:
-    m_server = new Socket();
+    m_server = new TcpSocket();
     m_server->Bind( atoi( tcpPort ) ); // Get port from command line
 }
 

@@ -13,27 +13,11 @@
 #include <fcntl.h>
 
 /**
-    Create and open a TCP socket (SOCK_STREAM).
+    Initialises the internal socket to an invalid value.
 **/
 Socket::Socket()
-{
-    m_socket = socket( AF_INET, SOCK_STREAM, 0 );
-    assert( m_socket != -1 );
-}
-
-/**
-    Internal private constructor for creating socket deirectly from a specified file descriptor.
-
-    The specified socket will be closed in the destructor of this object.
-
-    If the file descriptor is invalid no error occurs - the resulting object will simply refer
-    to an invlaid socket (Socket::IsValid() will return false).
-
-    @param [in] socket A file descriptor that refers to a socket.
-**/
-Socket::Socket( int socket )
 :
-    m_socket (socket)
+    m_socket (-1)
 {
 }
 
@@ -71,47 +55,6 @@ bool Socket::Bind( int portNumber )
     }
     
     return err != -1;
-}
-
-/**
-    Listen for connections.
-    
-    @param queueSize Max number of pending connections.
-**/
-bool Socket::Listen( int queueSize )
-{
-    int err = listen( m_socket, queueSize );
-    return err == 0;
-}
-
-/**
-    Accept a connection from a bound socket.
-    
-    This socket must be bound or null will be returned.
-    
-    @return New client socket connection - or null on error or timeout.
-**/
-Socket* Socket::Accept()
-{
-    Socket* newClient;
-    int socket;    
-    setsockopt( m_socket, SOL_SOCKET, SO_REUSEADDR, &socket, sizeof(int) );
-    
-    struct sockaddr_in addr;
-    memset( (void*)&addr, 0, sizeof(sockaddr_in) );
-    
-    socklen_t clientSize = sizeof(addr);
-    socket = accept( m_socket, (struct sockaddr*)&addr, &clientSize );
-    if ( socket != -1 )
-    {
-        newClient = new Socket( socket );
-    }
-    else
-    {
-        newClient = 0;
-    }
-    
-    return newClient;
 }
 
 /**
@@ -194,42 +137,6 @@ int Socket::Write( const char* message, size_t size )
     }
     
     return n;
-}
-
-/**
-    Enable TCP Nagle buffereing.
-**/
-void Socket::SetNagleBufferingOn()
-{
-    int flag = 0;
-    int result = setsockopt( m_socket,           // socket affected
-                            IPPROTO_TCP,    // set option at TCP level
-                            TCP_NODELAY,    // name of option
-                            (char *) &flag, // the cast is historical cruft
-                            sizeof(int)     // length of option value
-                           );
-    if ( result < 0 )
-    {
-        fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );        
-    }    
-}
-
-/**
-    Disable TCP Nagle buffereing.
-**/
-void Socket::SetNagleBufferingOff()
-{
-    int flag = 1;
-    int result = setsockopt( m_socket,           // socket affected
-                            IPPROTO_TCP,    // set option at TCP level
-                            TCP_NODELAY,    // name of option
-                            (char *) &flag, // the cast is historical cruft
-                            sizeof(int)     // length of option value
-                           );
-    if ( result < 0 )
-    {
-        fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );        
-    }      
 }
 
 /**
