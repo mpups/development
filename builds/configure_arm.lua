@@ -22,6 +22,11 @@ LIB_DIRS = {
 DEFINES = { 'ARM_BUILD' }
 BUILD_OPTIONS = { '-mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
 LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib' }
-LINKS = { 'lua5.1', 'freetype', 'pthread', 'rt', 'opencv_core', 'opencv_contrib', 'unicap' }
+
+OPENCV_LINKS = { 'opencv_core', 'opencv_contrib' }
+OPENGL_LINKS = {}
+SYSTEM_LINKS = { 'pthread', 'rt' }
+LINKS = { 'lua5.1', 'freetype', 'unicap' }
+
 GLK_LINKS = { 'glkcore' }
 

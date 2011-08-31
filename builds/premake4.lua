@@ -2,7 +2,16 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
-dofile( 'configure.lua' )
+dofile( 'configure_arm.lua' )
+
+-- Append individual link groups together so we can use LINKS to link to all libs:
+function append( A, B )
+  for i,v in pairs(B) do table.insert(A,v) end
+end
+append( LINKS, OPENCV_LINKS )
+append( LINKS, OPENGL_LINKS )
+append( LINKS, SYSTEM_LINKS )
+--for i,v in pairs(LINKS) do print(i,v) end
 
 SRC = '../src/'
 
