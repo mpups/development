@@ -53,6 +53,8 @@ bool Ipv4Address::IsValid() const
     Resolve an address from a host name and port number.
 
     If successful then this object will hold the address of the specified host (and IsValid() will return true).
+
+    @todo gethostbyname is obsolete - should use getaddrinfo/getnameinfo
 */
 void Ipv4Address::GetHostByName( const char* hostname, int portNumber )
 {

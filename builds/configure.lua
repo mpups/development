@@ -22,7 +22,7 @@ LIB_DIRS = {
 BUILD_OPTIONS = { '-msse -msse2' }
 LINK_OPTIONS = {}
 
-OPENCV_LINKS = { 'cxcore', 'cvaux' }
+OPENCV_LINKS = { 'ml', 'cvaux','highgui', 'cv', 'cxcore' }
 OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }
 SYSTEM_LINKS = { 'pthread', 'rt' }
 LINKS = { 'lua5.1', 'freetype', 'unicap' }
