@@ -63,9 +63,9 @@ void TestTcp()
     Ipv4Address peerAddress;
     client.GetPeerAddress( peerAddress );
 
-    char peerName[] = "255.255.255.255:9999##";
-    peerAddress.GetHostName( peerName, strlen(peerName) );
-    ASSERT_STREQ( peerName, "localhost" );
+    std::string peerName;
+    peerAddress.GetHostName( peerName );
+    EXPECT_STREQ( "localhost", peerName.c_str() );
 
     client.Write( MSG, MSG_SIZE );
     client.Shutdown();

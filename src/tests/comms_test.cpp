@@ -44,10 +44,10 @@ void runClient( int argc, char** argv )
     if ( js.IsAvailable() )
     {
         js.Start();
-    
+
         TcpSocket client;
-        client.SetNagleBufferingOff(); // The joystick commands a re small packets for which we want low latency, so turn off Nagle.
-        
+        client.SetNagleBufferingOff(); // The joystick commands are small packets for which we want low latency, so turn off Nagle.
+
         if ( client.Connect( argv[1], atoi( argv[2] ) ) )
         {
             // Connected to robot
@@ -72,7 +72,7 @@ void runClient( int argc, char** argv )
                 {
                     nThisTime = IMG_WIDTH*(IMG_HEIGHT/4);
                 }
-                
+
                 int bytesRead = client.Read( reinterpret_cast<char*>( image ) + n, nThisTime );
                 if ( bytesRead > 0 )
                 {

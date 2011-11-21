@@ -65,19 +65,30 @@ void Socket::Shutdown()
     int err = shutdown( m_socket, SHUT_RDWR );
     if ( err == -1 )
     {
-        fprintf( stderr, "Error on socket shutdown: %s\n", strerror(errno) );           
+        fprintf( stderr, "Error on socket shutdown: %s\n", strerror(errno) );
     }
 }
 
 /**
     Connect this socket to a server at specified address.
 
+    @param [in] hostname name of host to connect to. Can be numeric IP or host name.
+    @param [in] portNumber integer port number to connect to.
     @return True if the connection was successful.
 **/
 bool Socket::Connect( const char* hostname, int portNumber )
 {
-    Ipv4Address addr( hostname, portNumber );
+    return Connect( Ipv4Address( hostname, portNumber ) );
+}
 
+/**
+    Connect this socket by directly providing a Ipv4Address object.
+
+    @param [in] address an Ipv4Address object.
+    @return true if the connection was successful, false otherwise.
+*/
+bool Socket::Connect( const Ipv4Address& addr )
+{
     if ( addr.IsValid() == false )
     {
         return false;

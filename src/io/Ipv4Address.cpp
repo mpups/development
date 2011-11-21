@@ -55,15 +55,29 @@ bool Ipv4Address::IsValid() const
     Resolve the host name from this Ipv4 address.
 
     The address must already be known to be valid or the string "(invalid address)" is returned.
+
+    @param [out] host string representation of host name. Could be numeric IP or a resolved name.
 */
-void Ipv4Address::GetHostName( char* host, size_t length )
+void Ipv4Address::GetHostName( std::string& host )
 {
     sockaddr* addr = reinterpret_cast<sockaddr*>(&m_addr);
-    int err = getnameinfo( addr, sizeof(m_addr), host, length, 0, 0, 0 );
 
-    if ( err != 0 )
+    int size = 16;
+    char* buffer = new char[ size ];
+    int err = getnameinfo( addr, sizeof(m_addr), buffer, size, 0, 0, NI_NUMERICHOST );
+
+    // If the buffer is too small keep growing and retrying until it is ok:
+    while ( err == EAI_OVERFLOW )
     {
-        snprintf( host, length, "(Invalid address)" );
+        size *= 2;
+        delete [] buffer;
+        buffer = new char[ size ];
+        err = getnameinfo( addr, sizeof(m_addr), buffer, size, 0, 0, NI_NUMERICHOST );
+    }
+
+    if ( err == 0 )
+    {
+        host = buffer;
     }
 }
 

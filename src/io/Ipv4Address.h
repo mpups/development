@@ -3,6 +3,8 @@
 
 #include <netinet/in.h>
 
+#include <iostream>
+
 /**
     Class for storing and manipulating IPv4 addresses.
 **/
@@ -19,7 +21,7 @@ public:
 
     bool IsValid() const;
 
-    void GetHostName( char* host, size_t hostLen );
+    void GetHostName( std::string& );
 
 private:
     sockaddr_storage m_addr;

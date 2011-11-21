@@ -1,6 +1,6 @@
 #include "RobotServer.h"
 
-const int IMG_WIDTH = 320;
+const int IMG_WIDTH  = 320;
 const int IMG_HEIGHT = 240;
 
 /**
@@ -71,7 +71,7 @@ void RobotServer::PostConnectionSetup()
         delete m_motors;
         m_motors = 0;
     }
-    
+
     // Setup camera:
     m_camera = new UnicapCamera();
     size_t imageBufferSize = m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t);
@@ -85,7 +85,7 @@ void RobotServer::PostConnectionSetup()
     {
         delete m_camera;
         m_camera = 0;
-    }        
+    }
 }
 
 /**
@@ -122,18 +122,18 @@ void RobotServer::RunCommsLoop()
         m_con->GetPeerAddress( clientAddress );
 
         {
-            char name[] = "255.255.255.255:9999##";
-            clientAddress.GetHostName( name, strlen(name) );
-            fprintf( stderr, "Client %s connected to robot.\n", name );
+            std::string name;
+            clientAddress.GetHostName( name );
+            fprintf( stderr, "Client %s connected to robot.\n", name.c_str() );
         }
 
         teljoy = new TeleJoystick( *m_con, m_drive ); // Will start receiving and processing remote joystick cammands immediately.
         GLK::Thread::Sleep( 100 );
         fprintf( stderr, "running: %d\n", teljoy->IsRunning() );
-            
+
         // Capture images continuously:
         while ( bytesToSend >= 0 && teljoy->IsRunning() )
-        {       
+        {
             if ( m_camera && (bytesToSend == 0) )
             {
                 m_camera->GetFrame();

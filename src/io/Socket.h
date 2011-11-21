@@ -28,6 +28,7 @@ public:
     bool Bind( int );
     void Shutdown();
     bool Connect( const char*, int );
+    bool Connect( const Ipv4Address& address );
 
     int Read( char* message, size_t maxBytes );
     int Write( const char* message, size_t size );

@@ -4,18 +4,19 @@
 TARGET_DIR   = 'linux_build'
 
 INCLUDE_DIRS = {
-    '../../glk/include',
+    '../../../glk/include',
     '/usr/include/lua5.1',
     '/usr/include/freetype2',
-    '/usr/include/gtest',
     '/usr/include/',
     '/usr/include/unicap',
-    '/usr/include/opencv'
+    '/usr/include/opencv',
+    '../../include'
 }
 
 LIB_DIRS = {
-    '../../glk/builds/linux_build/debug',
-    '../../glk/builds/linux_build/release',
+    '../../../glk/builds/linux_build/debug',
+    '../../../glk/builds/linux_build/release',
+    '../../builds/linux_build'
 }
 
 BUILD_OPTIONS = { '-msse -msse2' }
