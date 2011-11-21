@@ -19,12 +19,15 @@ public:
 
     bool IsValid() const;
 
+    void GetHostName( char* host, size_t hostLen );
+
 private:
-    sockaddr_in m_addr;
+    sockaddr_storage m_addr;
 
     void GetHostByName( const char* hostname, int portNumber );
 
     const sockaddr_in* const Get_sockaddr_in_Ptr() const;
+    const sockaddr_storage* const Get_sockaddr_storage_Ptr() const;
 };
 
 #endif /* __IPV4_ADDRESS_H__ */

@@ -146,4 +146,28 @@ void Socket::SetBlocking( bool block )
     }
 }
 
-    
+/**
+    Get the IPV4 address of the peer connected to this socket.
+
+    Will fail (returning false) if the socket is not connected or the peer does not have an Ipv4 address.
+
+    @return true if an Ipv4 address was retrieved successfully, false otherwise.
+*/
+bool Socket::GetPeerAddress( Ipv4Address& address )
+{
+    const sockaddr_storage* addr_storage = address.Get_sockaddr_storage_Ptr();
+    sockaddr* addr = const_cast<sockaddr*>( reinterpret_cast< const sockaddr* >( addr_storage ) );
+    socklen_t length = sizeof( sockaddr_storage );
+    int err = getpeername( m_socket, addr, &length );
+
+    if ( err == 0 || length > sizeof( sockaddr_storage ) )
+    {
+        if ( addr_storage->ss_family == AF_INET )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+

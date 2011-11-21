@@ -8,6 +8,8 @@
 
 #endif
 
+class Ipv4Address;
+
 /**
     Wrapper object for sockets API.
 
@@ -31,6 +33,8 @@ public:
     int Write( const char* message, size_t size );
 
     void SetBlocking( bool );
+
+    bool GetPeerAddress( Ipv4Address& address );
 
 protected:
     int m_socket;

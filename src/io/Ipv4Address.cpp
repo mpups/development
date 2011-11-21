@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <memory.h>
+#include <stdio.h>
 
 #include <netdb.h>
 
@@ -10,7 +11,8 @@
 **/
 Ipv4Address::Ipv4Address()
 {
-    m_addr.sin_family = AF_INET - 1;
+    sockaddr_in* addr = reinterpret_cast<sockaddr_in*>( &m_addr );
+    addr->sin_family = AF_INET - 1;
 }
 
 /**
@@ -46,7 +48,23 @@ Ipv4Address::~Ipv4Address()
 */
 bool Ipv4Address::IsValid() const
 {
-    return m_addr.sin_family == AF_INET;
+    return m_addr.ss_family == AF_INET;
+}
+
+/**
+    Resolve the host name from this Ipv4 address.
+
+    The address must already be known to be valid or the string "(invalid address)" is returned.
+*/
+void Ipv4Address::GetHostName( char* host, size_t length )
+{
+    sockaddr* addr = reinterpret_cast<sockaddr*>(&m_addr);
+    int err = getnameinfo( addr, sizeof(m_addr), host, length, 0, 0, 0 );
+
+    if ( err != 0 )
+    {
+        snprintf( host, length, "(Invalid address)" );
+    }
 }
 
 /**
@@ -54,23 +72,24 @@ bool Ipv4Address::IsValid() const
 
     If successful then this object will hold the address of the specified host (and IsValid() will return true).
 
-    @todo gethostbyname is obsolete - should use getaddrinfo/getnameinfo
+    @todo gethostbyname is obsolete - should use getaddrinfo
 */
 void Ipv4Address::GetHostByName( const char* hostname, int portNumber )
 {
-    memset( (void*)&m_addr, 0, sizeof(sockaddr_in) );
+    memset( (void*)&m_addr, 0, sizeof(sockaddr_storage) );
+    sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(&m_addr);
 
     struct hostent* host = gethostbyname( hostname );
 
     if ( host == 0 )
     {
-        m_addr.sin_family = AF_INET - 1;
+        addr->sin_family = AF_INET - 1;
     }
     else
     {
-        m_addr.sin_family = AF_INET;
-        memcpy( &m_addr.sin_addr.s_addr, host->h_addr, host->h_length );
-        m_addr.sin_port = htons( portNumber );
+        addr->sin_family = AF_INET;
+        memcpy( &addr->sin_addr.s_addr, host->h_addr, host->h_length );
+        addr->sin_port = htons( portNumber );
     }
 }
 
@@ -79,6 +98,15 @@ void Ipv4Address::GetHostByName( const char* hostname, int portNumber )
     (e.g. Socket objects).
 **/
 const sockaddr_in* const Ipv4Address::Get_sockaddr_in_Ptr() const
+{
+    return reinterpret_cast<const sockaddr_in*>(&m_addr);
+}
+
+/**
+    Private member for friend classes that need direct access to the sockaddr_storage structure
+    (e.g. Socket objects).
+*/
+const sockaddr_storage* const Ipv4Address::Get_sockaddr_storage_Ptr() const
 {
     return &m_addr;
 }

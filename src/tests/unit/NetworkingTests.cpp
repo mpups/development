@@ -59,6 +59,14 @@ void TestTcp()
     TcpSocket client;
     ASSERT_TRUE( client.Connect( "127.0.0.1", TEST_PORT ) );
 
+    // Get the peer address of the client (i.e. the address of the server):
+    Ipv4Address peerAddress;
+    client.GetPeerAddress( peerAddress );
+
+    char peerName[] = "255.255.255.255:9999##";
+    peerAddress.GetHostName( peerName, strlen(peerName) );
+    ASSERT_STREQ( peerName, "localhost" );
+
     client.Write( MSG, MSG_SIZE );
     client.Shutdown();
 

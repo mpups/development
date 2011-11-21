@@ -102,7 +102,7 @@ void TcpSocket::SetNagleBufferingOn()
     if ( result < 0 )
     {
         fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );        
-    }    
+    }
 }
 
 /**
