@@ -108,7 +108,7 @@ void RobotServer::PostCommsCleanup()
 }
 
 /**
-    Runs the robot's comms loop untli the connection ends or fails.
+    Runs the robot's comms loop until the connection terminates or fails.
 **/
 void RobotServer::RunCommsLoop()
 {
@@ -118,8 +118,15 @@ void RobotServer::RunCommsLoop()
     const char* pSend = 0;
     if ( m_con )
     {
-        fprintf( stderr, "Client connected to robot.\n" );
-        
+        Ipv4Address clientAddress;
+        m_con->GetPeerAddress( clientAddress );
+
+        {
+            char name[] = "255.255.255.255:9999##";
+            clientAddress.GetHostName( name, strlen(name) );
+            fprintf( stderr, "Client %s connected to robot.\n", name );
+        }
+
         teljoy = new TeleJoystick( *m_con, m_drive ); // Will start receiving and processing remote joystick cammands immediately.
         GLK::Thread::Sleep( 100 );
         fprintf( stderr, "running: %d\n", teljoy->IsRunning() );

@@ -6,6 +6,7 @@
 #include "../src/io/SerialPort.h"
 #include "../src/io/linux/Joystick.h"
 #include "../src/io/Socket.h"
+#include "../src/io/Ipv4Address.h"
 #include "../src/io/TcpSocket.h"
 #include "../src/io/UdpSocket.h"
 

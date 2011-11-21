@@ -2,7 +2,7 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
-dofile( 'configure.lua' )
+dofile( 'configure_arm.lua' )
 
 -- Append individual link groups together so we can use LINKS to link to all libs:
 function append( A, B )
@@ -91,11 +91,13 @@ solution 'robolib'
         links ( GLK_LINKS )
         links { LINKS }
 
+if ( not CONFIGURING_ARM == 1 ) then
     project 'sse-test'
         kind 'ConsoleApp'
         files { SRC .. 'sse/**.cpp' }
         links ( GLK_LINKS )
         links { LINKS }
+end
 
     project 'gtests' -- unit tests
         kind 'ConsoleApp'

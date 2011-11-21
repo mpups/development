@@ -30,3 +30,4 @@ LINKS = { 'lua5.1', 'freetype', 'unicap' }
 
 GLK_LINKS = { 'glkcore' }
 
+CONFIGURING_ARM = 1

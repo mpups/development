@@ -29,7 +29,7 @@ void TeleJoystick::Run()
     float timeSinceLastCommand_secs = 0.f;
     const float motionTimeout_secs  = 1.f; // Motion will be stopped for safety if no command in this time.
     const float taskTimeout_secs    = 5.f; // Task will terminate if no command in this time.
-    
+
     int data[3] = { 0, 0, 1 };
 
     while ( !TerminationRequested() && timeSinceLastCommand_secs < taskTimeout_secs )
@@ -53,7 +53,7 @@ void TeleJoystick::Run()
                 timeoutCount += 1;
             }
         }
-        
+
         timeSinceLastCommand_secs = timer.GetSeconds();
         if ( n == 0 )
         {
@@ -71,22 +71,22 @@ void TeleJoystick::Run()
             data[0] = 0;
             data[1] = 0;
         }
-        
+
         if ( m_drive )
         {
-            m_drive->JoyControl( data[0], data[1], data[2] );
+            DiffDrive::MotorData odometry = m_drive->JoyControl( data[0], data[1], data[2] );
         }
         else
         {
             fprintf( stderr, "Drive control (interval %f secs) := %d,%d (%d)\n", timeSinceLastCommand_secs, data[0], data[1], data[2] );    
         }
     }
-    
+
     if ( m_drive )
     {
         m_drive->SetMotion( 0.f, 0.f );
     }
-    
+
     fprintf( stderr, "Telejoy: thread finished\n" );
 }
 
