@@ -21,7 +21,7 @@ public:
 
     bool IsValid() const;
 
-    void GetHostName( std::string& );
+    void GetHostName( std::string& ) const;
 
 private:
     sockaddr_storage m_addr;

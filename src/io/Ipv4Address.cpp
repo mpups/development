@@ -58,9 +58,9 @@ bool Ipv4Address::IsValid() const
 
     @param [out] host string representation of host name. Could be numeric IP or a resolved name.
 */
-void Ipv4Address::GetHostName( std::string& host )
+void Ipv4Address::GetHostName( std::string& host ) const
 {
-    sockaddr* addr = reinterpret_cast<sockaddr*>(&m_addr);
+    const sockaddr* addr = reinterpret_cast<const sockaddr*>(&m_addr);
 
     int size = 16;
     char* buffer = new char[ size ];

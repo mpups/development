@@ -52,7 +52,8 @@ solution 'apps'
     project 'puppybot-server'
         kind 'ConsoleApp'
 
-        files { SRC .. 'puppybot/server.cpp', SRC .. 'puppybot/PuppybotServer.cpp' }
+        excludes { SRC .. 'puppybot/client.cpp' }
+        files { SRC .. 'puppybot/*.cpp' }
 
         configuration {}
         links { 'robolib' }
@@ -63,7 +64,8 @@ if ( not CONFIGURING_ARM ) then
     project 'puppybot-client'
         kind 'ConsoleApp'
 
-        files { SRC .. 'puppybot/client.cpp' }
+        excludes { SRC .. 'puppybot/server.cpp' }
+        files { SRC .. 'puppybot/*.cpp' }
 
         configuration {}
         links { 'robolib' }
