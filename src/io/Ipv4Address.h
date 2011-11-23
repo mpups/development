@@ -22,10 +22,13 @@ public:
     bool IsValid() const;
 
     void GetHostName( std::string& ) const;
+    void GetHostAddress( std::string& ) const;
+    uint16_t GetPort() const;
 
 private:
     sockaddr_storage m_addr;
 
+    void GetHostNameInfo( std::string&, int nameInfoFlags ) const;
     void GetHostByName( const char* hostname, int portNumber );
 
     const sockaddr_in* const Get_sockaddr_in_Ptr() const;

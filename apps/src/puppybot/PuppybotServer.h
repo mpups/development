@@ -17,6 +17,10 @@ private:
     Ipv4Address m_clientAddress;
     TcpSocket*  m_server;
     TcpSocket*  m_con;
+    UdpSocket*  m_udpChannel;
+
+    void PostConnectionSetup();
+    void SendHandshakePacket();
 };
 
 #endif /* __PUPPYBOT_SERVER_H__ */

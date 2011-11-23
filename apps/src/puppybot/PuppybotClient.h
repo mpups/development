@@ -14,7 +14,7 @@ public:
     void RunCommsLoop();
 
 private:
-    TcpSocket* m_server;
+    TcpSocket*   m_server;
     Ipv4Address* m_addr;
 };
 

@@ -57,15 +57,7 @@ void TestTcp()
 
     // client connects and sends a test message
     TcpSocket client;
-    ASSERT_TRUE( client.Connect( "127.0.0.1", TEST_PORT ) );
-
-    // Get the peer address of the client (i.e. the address of the server):
-    Ipv4Address peerAddress;
-    client.GetPeerAddress( peerAddress );
-
-    std::string peerName;
-    peerAddress.GetHostName( peerName );
-    EXPECT_STREQ( "localhost", peerName.c_str() );
+    ASSERT_TRUE( client.Connect( "localhost", TEST_PORT ) );
 
     client.Write( MSG, MSG_SIZE );
     client.Shutdown();
@@ -125,8 +117,18 @@ void TestUdp()
 
 void TestIpv4Address()
 {
-    Ipv4Address localhost( "localhost", 12000 );
+    const int TEST_PORT = 3000;
+    Ipv4Address localhost( "localhost", TEST_PORT );
     ASSERT_TRUE( localhost.IsValid() );
+
+    std::string hostName;
+    localhost.GetHostName( hostName );
+    EXPECT_STREQ( "localhost", hostName.c_str() );
+    std::string hostIP;
+    localhost.GetHostAddress( hostIP );
+    EXPECT_STREQ( "127.0.0.1", hostIP.c_str() );
+
+    EXPECT_EQ( TEST_PORT, localhost.GetPort() );
 
     Ipv4Address nonsense( "@nonsense.ww.arg.?", 120 );
     ASSERT_FALSE( nonsense.IsValid() );

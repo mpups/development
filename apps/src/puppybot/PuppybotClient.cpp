@@ -30,17 +30,14 @@ bool PuppybotClient::Connect( const Ipv4Address& serverAddress )
         string serverName;
 
         m_addr->GetHostName( serverName );
-        cerr << "Connected to PuppyBot '" << serverName << "'" << endl;
+        int port = m_addr->GetPort();
+        cerr << "Connected to PuppyBot '" << serverName << "' on port " << port << endl;
 
         // Create a secondary UDP connection to PuppyBot (this will be used to send control packets):
-        int controlPort = 3000; // @todo - this port should be read from the server configuration packet received over the first TCP connection:
+        GLK::Thread::Sleep(1000);
+        std::cerr << "Sending UDP message..." << std::endl;
         UdpSocket udpControl;
-        if ( udpControl.Connect( serverName.c_str(), controlPort ) )
-        {
-            cerr << "Setup control channel to PuppyBot " << serverName << ":" << controlPort << endl;
-            udpControl.Write( "123", 3 );
-            udpControl.Shutdown();
-        }
+        udpControl.SendTo( *m_addr, "1234", 4 );
 
         return true;
     }

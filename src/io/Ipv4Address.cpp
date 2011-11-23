@@ -56,29 +56,28 @@ bool Ipv4Address::IsValid() const
 
     The address must already be known to be valid or the string "(invalid address)" is returned.
 
-    @param [out] host string representation of host name. Could be numeric IP or a resolved name.
+    @param [out] host string representation of host name. Resolved name or numeric IP if it can't be resolved.
 */
 void Ipv4Address::GetHostName( std::string& host ) const
 {
-    const sockaddr* addr = reinterpret_cast<const sockaddr*>(&m_addr);
+    GetHostNameInfo( host, 0 );
+}
 
-    int size = 16;
-    char* buffer = new char[ size ];
-    int err = getnameinfo( addr, sizeof(m_addr), buffer, size, 0, 0, NI_NUMERICHOST );
+/**
+    Return numeric string representation of this address, for example "127.0.0.1".
 
-    // If the buffer is too small keep growing and retrying until it is ok:
-    while ( err == EAI_OVERFLOW )
-    {
-        size *= 2;
-        delete [] buffer;
-        buffer = new char[ size ];
-        err = getnameinfo( addr, sizeof(m_addr), buffer, size, 0, 0, NI_NUMERICHOST );
-    }
+    The address must already be known to be valid or the string "(invalid address)" is returned.
 
-    if ( err == 0 )
-    {
-        host = buffer;
-    }
+    @param [out] host string representation of numeric IP.
+*/
+void Ipv4Address::GetHostAddress( std::string& host ) const
+{
+    GetHostNameInfo( host, NI_NUMERICHOST );
+}
+
+uint16_t Ipv4Address::GetPort() const
+{
+    return ntohs( ( reinterpret_cast<const sockaddr_in*>(&m_addr) )->sin_port );
 }
 
 /**
@@ -104,6 +103,32 @@ void Ipv4Address::GetHostByName( const char* hostname, int portNumber )
         addr->sin_family = AF_INET;
         memcpy( &addr->sin_addr.s_addr, host->h_addr, host->h_length );
         addr->sin_port = htons( portNumber );
+    }
+}
+
+/**
+    Private function which gets the host name info using getnameinfo().
+*/
+void Ipv4Address::GetHostNameInfo( std::string& host, int nameInfoFlags ) const
+{
+    const sockaddr* addr = reinterpret_cast<const sockaddr*>(&m_addr);
+
+    int size = 16;
+    char* buffer = new char[ size ];
+    int err = getnameinfo( addr, sizeof(m_addr), buffer, size, 0, 0, nameInfoFlags );
+
+    // If the buffer is too small keep growing and retrying until it is ok:
+    while ( err == EAI_OVERFLOW )
+    {
+        size *= 2;
+        delete [] buffer;
+        buffer = new char[ size ];
+        err = getnameinfo( addr, sizeof(m_addr), buffer, size, 0, 0, nameInfoFlags );
+    }
+
+    if ( err == 0 )
+    {
+        host = buffer;
     }
 }
 
