@@ -6,7 +6,7 @@
 class PuppybotServer
 {
 public:
-    PuppybotServer ( int port );
+    PuppybotServer ( uint16_t port );
     virtual ~PuppybotServer ();
 
     void Listen();
@@ -18,6 +18,7 @@ private:
     TcpSocket*  m_server;
     TcpSocket*  m_con;
     UdpSocket*  m_udpChannel;
+    uint16_t    m_port;
 
     void PostConnectionSetup();
     void SendHandshakePacket();

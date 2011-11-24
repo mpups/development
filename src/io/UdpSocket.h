@@ -3,8 +3,6 @@
 
 #include "Socket.h"
 
-
-// fwd decl:
 class Ipv4Address;
 
 /**
@@ -22,6 +20,7 @@ public:
     virtual ~UdpSocket ();
 
     int SendTo( const Ipv4Address& addr, const char* message, size_t size );
+    int ReceiveFrom( char* message, size_t size, Ipv4Address* addr = 0 );
 };
 
 #endif /* GLK_UDP_SOCKET_H */

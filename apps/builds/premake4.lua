@@ -56,7 +56,7 @@ solution 'apps'
         files { SRC .. 'puppybot/*.cpp' }
 
         configuration {}
-        links { 'robolib' }
+        links { 'robolib_d' }
         links ( GLK_LINKS )
         links { LINKS }
 
@@ -68,7 +68,7 @@ if ( not CONFIGURING_ARM ) then
         files { SRC .. 'puppybot/*.cpp' }
 
         configuration {}
-        links { 'robolib' }
+        links { 'robolib_d' }
         links ( GLK_LINKS )
         links { LINKS }
 end

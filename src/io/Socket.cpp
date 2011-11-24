@@ -114,8 +114,8 @@ bool Socket::Connect( const Ipv4Address& addr )
 **/
 int Socket::Read( char* message, size_t maxBytes )
 {
-    int n = read( m_socket, message, maxBytes );
-    if ( n == -1 && errno == EAGAIN )
+    int n = recv( m_socket, message, maxBytes, MSG_NOSIGNAL );
+    if ( n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK) )
     {
         // For non-blocking IO just return zero bytes were available.
         // Otherwise we return the error (-1)
@@ -134,7 +134,7 @@ int Socket::Read( char* message, size_t maxBytes )
 int Socket::Write( const char* message, size_t size )
 {
     int n = send( m_socket, message, size, MSG_NOSIGNAL );
-    if ( n == -1 && errno == EAGAIN )
+    if ( n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK) )
     {
         n = 0;
     }

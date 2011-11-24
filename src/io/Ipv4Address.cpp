@@ -80,6 +80,12 @@ uint16_t Ipv4Address::GetPort() const
     return ntohs( ( reinterpret_cast<const sockaddr_in*>(&m_addr) )->sin_port );
 }
 
+void Ipv4Address::SetPort( uint16_t port )
+{
+    sockaddr_in* addr = reinterpret_cast<sockaddr_in*>(&m_addr);
+    addr->sin_port = htons( port );
+}
+
 /**
     Resolve an address from a host name and port number.
 

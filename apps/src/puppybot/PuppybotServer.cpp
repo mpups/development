@@ -1,11 +1,12 @@
 #include "PuppybotServer.h"
 
-PuppybotServer::PuppybotServer ( int port )
+PuppybotServer::PuppybotServer ( uint16_t port )
 :
-    m_udpChannel (0)
+    m_udpChannel (0),
+    m_port (port)
 {
     m_server = new TcpSocket();
-    m_server->Bind( port );
+    m_server->Bind( m_port );
 }
 
 PuppybotServer::~PuppybotServer ()
@@ -22,7 +23,6 @@ void PuppybotServer::Listen()
     
     if ( m_con )
     {
-        m_con->SetBlocking( false );
         m_con->GetPeerAddress( m_clientAddress );
         PostConnectionSetup();
     }
@@ -35,28 +35,35 @@ const Ipv4Address& PuppybotServer::GetClientAddress()
 
 void PuppybotServer::PostConnectionSetup()
 {
+    // test tcp:
+    m_con->Write( "welcome", 7 );
+    char msg[8] = "";
+    int n = m_con->Read( msg, 6 );
+    msg[n] = '\0';
+    std::cerr << "Read msg: " << msg << std::endl;
+
     // Create a connected udp channel for low latency packets:
     delete m_udpChannel;
     m_udpChannel = new UdpSocket();
 
     // For UDP we can use the same port as TCP.
-    if ( m_udpChannel->Bind( m_clientAddress.GetPort() ) )
+    if ( m_udpChannel->Bind( m_port ) )
     {
-        char msg[] = "####";
-        std::cerr << "Waiting to receive UDP message..." << std::endl;
+        char msg[] = "########";
+        std::cerr << "Waiting to receive UDP message on port " << m_port << std::endl;
         int bytes = m_udpChannel->Read( msg, 4 );
-        std::cerr << "Received a " << bytes << "byte msg on UDP channel: " << msg << std::endl;
+        msg[bytes] = '\0';
+        std::cerr << "Received a " << bytes << " byte msg on UDP channel: " << msg << std::endl;
     }
     else
     {
-        std::cerr << "Could not open UDP channel on port " << m_clientAddress.GetPort() << std::endl;
+        std::cerr << "Error: Could not open UDP channel." << std::endl;
     }
 
     SendHandshakePacket();
 }
 
 /**
-    
 */
 void PuppybotServer::SendHandshakePacket()
 {

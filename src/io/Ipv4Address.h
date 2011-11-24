@@ -25,6 +25,8 @@ public:
     void GetHostAddress( std::string& ) const;
     uint16_t GetPort() const;
 
+    void SetPort( uint16_t );
+
 private:
     sockaddr_storage m_addr;
 

@@ -19,8 +19,11 @@ int main( int argc, char** argv )
     PuppybotClient client;
     client.Connect( serverAddress );
 
-    // Spawn a communiations thread:
+    std::string host;
+    serverAddress.GetHostName( host );
+    std::cerr << "Connected to PuppyBot '" << host << "' on port " << serverAddress.GetPort() << std::endl;
 
+    // Spawn a communications thread:
     return EXIT_SUCCESS;
 }
 

@@ -139,3 +139,4 @@ void TestIpv4Address()
     Ipv4Address copy( localhost );
     ASSERT_TRUE( localhost.IsValid() );
 }
+
