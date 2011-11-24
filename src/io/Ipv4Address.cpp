@@ -124,7 +124,7 @@ void Ipv4Address::GetHostNameInfo( std::string& host, int nameInfoFlags ) const
     int err = getnameinfo( addr, sizeof(m_addr), buffer, size, 0, 0, nameInfoFlags );
 
     // If the buffer is too small keep growing and retrying until it is ok:
-    while ( err == EAI_OVERFLOW )
+    while ( err == EAI_OVERFLOW && size < 512 )
     {
         size *= 2;
         delete [] buffer;
@@ -136,6 +136,8 @@ void Ipv4Address::GetHostNameInfo( std::string& host, int nameInfoFlags ) const
     {
         host = buffer;
     }
+
+    delete [] buffer;
 }
 
 /**
