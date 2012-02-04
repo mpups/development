@@ -14,12 +14,11 @@ INCLUDE_DIRS = {
 }
 
 LIB_DIRS = {
-    '../../glk/builds/linux_build/debug',
-    '../../glk/builds/linux_build/release',
+    '/usr/local/glk/lib'
 }
 
 BUILD_OPTIONS = { '-msse -msse2' }
-LINK_OPTIONS = {}
+LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' }
 
 OPENCV_LINKS = { 'ml', 'cvaux','highgui', 'cv', 'cxcore' }
 OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }

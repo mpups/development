@@ -51,7 +51,7 @@ void PuppybotServer::PostConnectionSetup()
     {
         char msg[] = "########";
         std::cerr << "Waiting to receive UDP message on port " << m_port << std::endl;
-        int bytes = m_udpChannel->Read( msg, 4 );
+        int bytes = m_udpChannel->Read( msg, 6 );
         msg[bytes] = '\0';
         std::cerr << "Received a " << bytes << " byte msg on UDP channel: " << msg << std::endl;
     }
