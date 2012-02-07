@@ -45,6 +45,7 @@ private:
     int16_t* m_button;
     int16_t* m_axis;
     GLK::MessageQueue<ButtonEvent> m_buttonEvents;
+    volatile bool m_terminate;
 };
 
 #endif // ROBO_JOYSTICK_H

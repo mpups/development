@@ -295,7 +295,7 @@ bool UnicapCamera::OpenDevice()
         m_guid = devices[0].model_id;
         m_vendor = GLK::String( devices[0].vendor_name );
         m_model = GLK::String( devices[0].model_name );
-        fprintf( stderr, "\nUnicap: Opened camera with GUID %llu\n", m_guid );
+        fprintf( stderr, "\nUnicap: Opened camera with GUID %lu\n", m_guid );
         
         EnumerateProperties();
         return true;

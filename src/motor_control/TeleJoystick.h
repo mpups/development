@@ -35,6 +35,7 @@ private:
     Socket&     m_socket;
     DiffDrive*  m_drive;
     int32_t     m_failedReads;
+    volatile bool m_terminate;
 };
 
 #endif // TELE_JOYSTICK_H

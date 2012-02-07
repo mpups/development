@@ -14,7 +14,8 @@ Joystick::Joystick( JoystickDevice_t device )
 :
     m_button        (0),
     m_axis          (0),
-    m_buttonEvents (32)
+    m_buttonEvents  (32),
+    m_terminate     (false)
 {
     m_joy = open( device, O_RDONLY );
     fprintf( stderr,"Opened %s: %d\n", device, m_joy );
@@ -37,7 +38,7 @@ Joystick::~Joystick()
 {
     if ( m_joy > 0 )
     {
-        Thread::RequestTermination();
+        m_terminate = true;
         Thread::Join();
 
         close( m_joy );
@@ -79,7 +80,7 @@ void Joystick::Run()
     pfds.revents = 0;
     struct js_event e;
     ButtonEvent button;
-    while ( !TerminationRequested() )
+    while ( m_terminate == false )
     {
         int val = poll( &pfds, 1, m_POLL_TIMEOUT_MS );
         assert( val >= 0 );

@@ -4,7 +4,7 @@
 TARGET_DIR   = 'linux_build'
 
 INCLUDE_DIRS = {
-    '../../glk/include',
+    '/usr/local/glk/include',
     '/usr/include/lua5.1',
     '/usr/include/freetype2',
     '/usr/include/gtest',

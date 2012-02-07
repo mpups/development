@@ -5,7 +5,8 @@
 TeleJoystick::TeleJoystick( Socket& socket )
 :
     m_socket    ( socket ),
-    m_drive     ( 0 )
+    m_drive     ( 0 ),
+    m_terminate (false)
 {
     Start();
 }
@@ -20,7 +21,7 @@ TeleJoystick::TeleJoystick( Socket& socket, DiffDrive* drive )
 
 TeleJoystick::~TeleJoystick()
 {
-    Stop();
+    m_terminate = true;
 }
 
 void TeleJoystick::Run()
@@ -32,7 +33,7 @@ void TeleJoystick::Run()
 
     int data[3] = { 0, 0, 1 };
 
-    while ( !TerminationRequested() && timeSinceLastCommand_secs < taskTimeout_secs )
+    while ( !m_terminate && timeSinceLastCommand_secs < taskTimeout_secs )
     {
         int timeoutCount = 0;
         int r = 0;
