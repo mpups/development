@@ -7,7 +7,7 @@ ARM_DEPLOYMENT = '/home/mark/code/beagle_builds/deploy'
 TOOLCHAIN = 'arm-angstrom-linux-gnueabi-'
 
 INCLUDE_DIRS = {
-    '../../glk/include',
+    '/usr/local/glk/include',
     ARM_DEPLOYMENT .. '/include',
     ARM_DEPLOYMENT .. '/include/unicap',
     ARM_DEPLOYMENT .. '/include/freetype2'

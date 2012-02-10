@@ -26,7 +26,6 @@ solution 'apps'
 
     buildoptions ( BUILD_OPTIONS )
     linkoptions ( LINK_OPTIONS )
-    linkoptions { '-Wl,-rpath,/usr/local/lib/glk/' }
     flags { 'NoExceptions','NoRTTI','ExtraWarnings','NoPCH' }
 
     includedirs { INCLUDE_DIRS }
