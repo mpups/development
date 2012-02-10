@@ -29,7 +29,7 @@ public:
     virtual void Render();
     virtual void TimerExpired( int id );
 
-    void Key( char c );
+    void Key( GLK::Key c );
     bool WasUpdated();
     void Activated();
     void Deactivated();

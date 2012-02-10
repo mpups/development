@@ -310,31 +310,31 @@ void CameraWindow::Render()
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
 
-void CameraWindow::Key( char c )
+void CameraWindow::Key( GLK::Key k )
 {
-    switch (c)
+    switch (k)
     {
-        case 13: // RETURN computes calibration
+        case KeyReturn: // RETURN computes calibration
             m_calibration->ComputeCalibration();
         break;
 
-        case 32: // SPACE saves the calibration image
+        case KeySpace: // SPACE saves the calibration image
             m_calibration->AddCalibrationImage( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), m_lum );
         break;
 
-        case 'u': // Toggle display of original or undistorted image
+        case Keyu: // Toggle display of original or undistorted image
             m_showUndistorted = !m_showUndistorted;
         break;
 
-        case 's': // Save the calibration result
+        case Keys: // Save the calibration result
             m_calibration->Print( stdout );
         break;
 
-        case 'p': // Save an image
+        case Keyp: // Save an image
             WritePgm( "shot.pgm", m_lum, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
         break;
 
-        case 't': // start tracking points using optical flow
+        case Keyt: // start tracking points using optical flow
         {
             m_klt->DetectFeatures( m_lum );
             m_tracking = true;
@@ -342,7 +342,7 @@ void CameraWindow::Key( char c )
         break;
 
         default:
-            fprintf( stderr, "%d\n", c );
+            fprintf( stderr, "%d\n", k );
         break;
     }
 }
