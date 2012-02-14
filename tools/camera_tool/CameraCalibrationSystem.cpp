@@ -60,15 +60,18 @@ void CameraCalibrationSystem::AddCalibrationImage( uint32_t w, uint32_t h, const
     if ( m_foundAll )
     {
         // all found so refine their positions:
-        cvFindCornerSubPix( img, m_corners, m_numCorners, cvSize(3,3), cvSize(-1,-1), cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03 ) );       
-                
+        cvFindCornerSubPix( img, m_corners, m_numCorners, cvSize(3,3), cvSize(-1,-1), cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03 ) );
+
         // Add image to calibration list:
         m_calibrationImages.AddBack( img );
+
+        fprintf( stderr, "Added calibration image (found %d corners).\n", m_numCorners );
     }
     else
     {
         // This image is no good for calibration so delete it:
         cvReleaseImage( &img );
+        fprintf( stderr, "No chess-board found.\n" );
     }
 }
 
@@ -88,7 +91,7 @@ void CameraCalibrationSystem::ComputeCalibration()
     CvSize imageSize = cvSize( m_calibrationImages.GetFirst()->width, m_calibrationImages.GetFirst()->height );
     uint32_t pointCount = m_hzCorners*m_vtCorners;
   
-    fprintf( stderr, "\nAttempting calibration with %d images of %d points...", imageCount, pointCount );
+    fprintf( stderr, "\nAttempting calibration with %d images of %d points...\n", imageCount, pointCount );
 
     CvMat* imagePoints  = cvCreateMat( 1, imageCount*pointCount, CV_32FC2 );
     CvMat* objectPoints = cvCreateMat( 1, imageCount*pointCount, CV_32FC3 );
@@ -99,7 +102,7 @@ void CameraCalibrationSystem::ComputeCalibration()
     {
         CvPoint2D32f* pImgPoints = reinterpret_cast<CvPoint2D32f*>( imagePoints->data.fl ) + (i * pointCount);
         IplImage* img = itr.Next();        
-        int foundAll = cvFindChessboardCorners( img, cvSize(7,7), pImgPoints, &m_numCorners, CV_CALIB_CB_ADAPTIVE_THRESH );
+        int foundAll = cvFindChessboardCorners( img, cvSize( m_hzCorners, m_vtCorners ), pImgPoints, &m_numCorners, CV_CALIB_CB_ADAPTIVE_THRESH );
         assert( foundAll ); // We checked each image had all corners detected when we saved it!
         cvFindCornerSubPix( img, pImgPoints, m_numCorners, cvSize(3,3), cvSize(-1,-1), cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03 ) );
 
@@ -169,7 +172,9 @@ void CameraCalibrationSystem::ComputeCalibration()
     cvReleaseMat( &objectPoints );
     cvReleaseMat( &imagePoints );
 
-    m_numCorners = 0; 
+    m_numCorners = 0;
+
+    fprintf( stderr, "\t...done.\n");
 }
 
 /**
@@ -203,6 +208,15 @@ bool CameraCalibrationSystem::Calibrated()
     return m_undistortX != 0;
 }
 
+/**
+    @return true if the calibration system found and ordered all corners in the last image
+    it was given, false otherwise.
+*/
+bool CameraCalibrationSystem::FoundAll() const
+{
+    return m_foundAll;
+}
+
 void CameraCalibrationSystem::Print( FILE* fp )
 {
     if ( m_distCoeff )
@@ -214,4 +228,24 @@ void CameraCalibrationSystem::Print( FILE* fp )
         fprintf( fp, "camera.residual=%f\n", m_avgError );
     }
 }
+
+void CameraCalibrationSystem::ToString( char* info, int size )
+{
+    if ( m_distCoeff )
+    {
+        float k1 = m_distCoeff->data.db[0];
+        float k2 = m_distCoeff->data.db[1];
+        float k3 = m_distCoeff->data.db[4];
+
+        int n = snprintf( info, size, "\nCalibration result (average error = %f pixels):\nk1, k2, k3 = %f, %f, %f\n", m_avgError, k1, k2, k3 );
+
+        if ( n >= size )
+        {
+            return;
+        }
+
+        snprintf( info + n, size - n, "cx, cy = %f, %f\nfx, fy = %f, %f", m_cameraMatrix->data.db[2],m_cameraMatrix->data.db[5],m_cameraMatrix->data.db[0], m_cameraMatrix->data.db[4] );
+    }
+}
+
 

@@ -89,7 +89,7 @@ bool CameraWindow::InitGL()
         assert( glGetError() == GL_NO_ERROR );
 
         // Setup calibration system:
-        m_calibration = new CameraCalibrationSystem( 8, 8, 23 );
+        m_calibration = new CameraCalibrationSystem( 10, 7, 23 );
 
         // Setup a tracker:
         m_klt = new KltTracker( 256, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
@@ -187,6 +187,19 @@ void CameraWindow::TimerExpired( int id )
 {
 }
 
+/**
+    Used with CalibrationSystem::VisitCorners() to render detected corner locations.
+*/
+struct CornerPlotter
+{
+    CornerPlotter( int camWidth, int camHeight ) : w(camWidth), h(camHeight) {};
+    void Visit( CvPoint2D32f corner ) { glVertex2f( corner.x/w, corner.y/h); };
+
+    int w;
+    int h;
+};
+template void CameraCalibrationSystem::VisitCorners( CornerPlotter& plotter ) const;
+
 void CameraWindow::Render()
 {
     glMatrixMode(GL_PROJECTION);
@@ -220,7 +233,7 @@ void CameraWindow::Render()
 
     glDisable( GL_TEXTURE_2D );
 
-    if ( 1 )//TODO: m_foundAll )
+    if ( m_calibration->FoundAll() )
     {
         glColor3f( 0.f, 1.f, 0.f ); // green
     }
@@ -234,11 +247,9 @@ void CameraWindow::Render()
     glEnable( GL_BLEND );
     glBegin( GL_POINTS );
     {
-/*   TODO:     for ( int i=0; i<m_numCorners; ++i )
-        {
-            glVertex2f( m_corners[i].x/m_camera->GetFrameWidth(), m_corners[i].y/m_camera->GetFrameHeight());
-        }
-*/
+        CornerPlotter plotter( m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
+        m_calibration->VisitCorners( plotter );
+
         if ( m_klt )
         {
             glColor3f( 0.f, 1.f, 0.f );
@@ -296,14 +307,15 @@ void CameraWindow::Render()
 
     glTranslatef(4,80,0);
     glColor3f( 1.f, 1.f, 1.f );
-    char info[1024];
-    //int n =
-        sprintf( info, "Inter-frame time: %ums\nTime waiting for frame: %ums\n", m_interFrameTime_ms, m_waitTime_ms );
-    /*if ( m_distCoeff )
+
+    const int bufferSize = 1024;
+    char info[bufferSize];
+    int n = snprintf( info, bufferSize, "Inter-frame time: %ums\nTime waiting for frame: %ums\n", m_interFrameTime_ms, m_waitTime_ms );
+    if ( n < bufferSize )
     {
-        n += sprintf( info + n, "\nCalibration result (average error = %f pixels):\nk1, k2, k3 = %f, %f, %f\n", m_avgError, m_distCoeff->data.db[0], m_distCoeff->data.db[1], m_distCoeff->data.db[4] );
-        sprintf( info + n, "cx, cy = %f, %f\nfx, fy = %f, %f", m_cameraMatrix->data.db[2],m_cameraMatrix->data.db[5],m_cameraMatrix->data.db[0], m_cameraMatrix->data.db[4] );
-    } */   
+        m_calibration->ToString( info+n, bufferSize-n );
+    }
+
     m_font->RenderString( info );
 
     SwapBuffers();
@@ -341,8 +353,11 @@ void CameraWindow::Key( GLK::Key k )
         }
         break;
 
+        case KeyEscape:
+            GlWindow::Quit(0);
+        break;
+
         default:
-            fprintf( stderr, "%d\n", k );
         break;
     }
 }

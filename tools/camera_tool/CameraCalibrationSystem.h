@@ -24,6 +24,12 @@ public:
     bool Calibrated();
 
     void Print( FILE* fp );
+    void ToString( char* info, int charBufferSize );
+
+    template <class T>
+    void VisitCorners( T& visitor ) const;
+
+    bool FoundAll() const;
 
 private:
     const uint32_t m_hzCorners;
@@ -41,6 +47,14 @@ private:
     float  m_avgError;
     IplImage* m_undistortX;
     IplImage* m_undistortY;
+};
+
+template <class T>
+inline void CameraCalibrationSystem::VisitCorners( T& visitor ) const {
+    for ( int i=0; i<m_numCorners; ++i )
+    {
+        visitor.Visit( m_corners[i] );
+    }
 };
 
 #endif // CALIBRATION_SYSTEM_H
