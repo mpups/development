@@ -100,7 +100,7 @@ bool CameraWindow::InitGL()
         m_klt = new KltTracker( 256, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
 
         // Test - setup opencv video writer:
-        m_videoWriter = cvCreateVideoWriter( "test.avi", CV_FOURCC('M','J','P','G'), 30, cvSize(m_camera->GetFrameWidth(), m_camera->GetFrameHeight()), 1);
+        m_videoWriter = cvCreateVideoWriter( "test.avi", CV_FOURCC('I','Y','U', 'V'), 30, cvSize(m_camera->GetFrameWidth(), m_camera->GetFrameHeight()), 1);
     }
     else
     {
@@ -157,9 +157,9 @@ bool CameraWindow::Update( unsigned int )
 
         m_camera->ExtractLuminanceImage( m_lum );
 
-        GLK::Timer tmr;
+        //GLK::Timer tmr;
         m_camera->ExtractRgbImage( m_rgb );
-        fprintf(stderr,"YUV conversion: %lu us\n", tmr.GetMicroSeconds() );
+        //fprintf(stderr,"YUV conversion: %lu us\n", tmr.GetMicroSeconds() );
         
         // Create an IPL image and write it to the video file.
         IplImage* img = cvCreateImage( cvSize(m_camera->GetFrameWidth(), m_camera->GetFrameHeight()), IPL_DEPTH_8U, 3 );
