@@ -5,17 +5,20 @@
 /**
     Fill an IplImage from the specified buffer.
     The IplImage must have already been created
-    with the correct width and height.
+    with the correct width, height, and channels.
 **/
 void FillIplImage( const uint8_t* buffer, IplImage* img )
 {
     uint8_t* pImg = reinterpret_cast<uint8_t*>( img->imageData );
-    unsigned int jump = img->widthStep - img->width;
+    unsigned int jump = img->widthStep - (img->width*img->nChannels);
     for ( int r=0; r<img->height; ++r )
     {
         for ( int c=0; c<img->width; ++c )
         {
-            *pImg++ = *buffer++;
+            for ( int ch=0; ch<img->nChannels; ++ch )
+            {
+                *pImg++ = *buffer++;
+            }
         }
         pImg += jump;
     }
@@ -24,17 +27,20 @@ void FillIplImage( const uint8_t* buffer, IplImage* img )
 /**
     Spill an IplImage into the specified buffer.
     The buffer must have already been created
-    with the correct width and height.
+    with the correct width, height, and channels.
 **/
 void SpillIplImage( const IplImage* img, uint8_t* buffer )
 {
     uint8_t* pImg = reinterpret_cast<uint8_t*>( img->imageData );
-    unsigned int jump = img->widthStep - img->width;
+    unsigned int jump = img->widthStep - (img->width*img->nChannels);
     for ( int r=0; r<img->height; ++r )
     {
         for ( int c=0; c<img->width; ++c )
         {
-            *buffer++ = *pImg++;
+            for ( int ch=0; ch<img->nChannels; ++ch )
+            {
+                *buffer++ = *pImg++;
+            }
         }
         pImg += jump;
     }
