@@ -1,6 +1,6 @@
 #include "CameraCalibrationSystem.h"
 
-#include "opencv_utils.h"
+#include <RoboLibOpenCv.h>
 
 /**
     Initialise the camera calibration system.

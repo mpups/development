@@ -6,7 +6,7 @@
 #include <glkcore.h>
 #include <glk.h>
 #include <RoboLib.h>
-#include <cv.h>
+#include <RoboLibOpenCv.h>
 
 // fwd decls:
 class KltTracker;
@@ -14,7 +14,10 @@ class CameraCalibrationSystem;
 
 /**
     A simple window app that can display a live camera feed,
-    save calibration images and compute the camera calibration.
+    save calibration images and compute the camera calibration,
+    save snap-shots and record (lossless) video.
+
+    Also has the option to run the OpenCV implementation of the KLT tracker.
 **/
 class CameraWindow : public GLK::GlWindow, public GLK::KeyboardHandler
 {

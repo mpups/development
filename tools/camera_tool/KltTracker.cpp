@@ -1,6 +1,6 @@
 #include "KltTracker.h"
 
-#include "opencv_utils.h"
+#include <RoboLibOpenCv.h>
 
 #include <stdio.h>
 

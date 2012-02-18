@@ -47,7 +47,7 @@ solution 'tools'
                 links { 'robolib_prof', 'glk_prof', 'glkcore_prof' }
 
         configuration {}
-                links {	'pthread', 'rt', 'Xrender', 'X11', 'GL', 'freetype', 'lua5.1', 'dc1394', 'cxcore', 'cv', 'unicap' }
+                links { LINKS }
 
     project 'motor-console'
         kind 'ConsoleApp'
@@ -64,5 +64,5 @@ solution 'tools'
                 links { 'glk_prof', 'glkcore_prof', 'robolib_prof' }
 
         configuration {}
-                links {	'pthread', 'rt', 'Xrender', 'X11', 'GL', 'freetype', 'lua5.1', 'dc1394', 'cxcore', 'cv', 'unicap' }
+                links {	LINKS }
 

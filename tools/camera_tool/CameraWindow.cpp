@@ -3,9 +3,11 @@
 #include "CameraWindow.h"
 #include "CameraCalibrationSystem.h"
 #include "KltTracker.h"
-#include "opencv_utils.h"
 
 #include <assert.h>
+
+#include <cv.h>
+#include <highgui.h>
 
 using namespace GLK;
 
@@ -93,6 +95,9 @@ bool CameraWindow::InitGL()
 
         // Setup a tracker:
         m_klt = new KltTracker( 256, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
+
+        // Test - setup opencv video writer:
+        CvVideoWriter* m_videoWriter = cvCreateVideoWriter( "test.avi", CV_FOURCC('M','J','P','G'), 30, cvSize(m_camera->GetFrameWidth(), m_camera->GetFrameHeight()), 0);
     }
     else
     {

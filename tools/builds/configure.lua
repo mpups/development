@@ -24,4 +24,4 @@ LIB_DIRS = {
 
 BUILD_OPTIONS = { '-msse -msse2' }
 LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' }
-LINKS = { 'lua5.1', 'freetype', 'pthread', 'rt', 'cxcore', 'cvaux', 'unicap' }
+LINKS = { 'pthread', 'rt', 'Xrender', 'X11', 'GL', 'freetype', 'lua5.1', 'dc1394', 'cxcore', 'cv', 'highgui', 'unicap' }
