@@ -26,6 +26,7 @@ public:
 
     virtual void ExtractLuminanceImage( uint8_t* ) = 0;
     virtual void ExtractRgbImage( uint8_t* ) = 0;
+    virtual void ExtractBgrImage( uint8_t* ) = 0;
 };
 
 #endif // CAMERA_CAPTURE_H

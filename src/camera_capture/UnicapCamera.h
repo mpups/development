@@ -39,6 +39,7 @@ public:
 
     void ExtractLuminanceImage( uint8_t* );
     void ExtractRgbImage( uint8_t* );
+    void ExtractBgrImage( uint8_t* img );
 
 private:
     bool OpenDevice();

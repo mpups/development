@@ -268,6 +268,21 @@ void UnicapCamera::ExtractRgbImage( uint8_t* dest )
 
 }
 
+void UnicapCamera::ExtractBgrImage( uint8_t* dest )
+{
+    // Just extract RGB then swap channels:
+    ExtractRgbImage( dest );
+    uint32_t n = m_width*m_height;
+    uint8_t tmp;
+    while ( n-- )
+    {
+        tmp = *(dest);
+        *dest = *(dest+2);
+        *(dest+2) = tmp;
+        dest += 3;
+    }
+}
+
 /**
     Opens the first device in the unicap enumeration list.
 **/

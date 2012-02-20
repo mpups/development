@@ -281,3 +281,8 @@ void Dc1394Camera::ExtractRgbImage( uint8_t* img )
     assert( 0 ); // not implemented yet!
 }
 
+void Dc1394Camera::ExtractBgrImage( uint8_t* img )
+{
+    assert( 0 ); // not implemented yet!
+}
+
