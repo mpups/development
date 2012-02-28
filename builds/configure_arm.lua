@@ -14,8 +14,8 @@ INCLUDE_DIRS = {
 }
 
 LIB_DIRS = {
-    '../../glk/builds/beagle_build/debug',
-    '../../glk/builds/beagle_build/release',
+    '../../glk/premake/beagle_build/debug',
+    '../../glk/premake/beagle_build/release',
     ARM_DEPLOYMENT .. '/lib',
 }
 

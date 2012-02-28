@@ -1,5 +1,5 @@
 All Robolib source code and executables:
-Copyright (c) Mark PUpilli, 2010-2011
+Copyright (c) Mark PUpilli, 2010-2012, All Rights Reserved 
 
 src: Core modules for Robolib.
 
