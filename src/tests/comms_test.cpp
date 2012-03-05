@@ -1,6 +1,10 @@
 #include "../../include/RoboLib.h"
 #include <glkcore.h>
 
+#ifndef ARM_BUILD
+#include <glk.h>
+#endif
+
 #include <math.h>
 
 const int IMG_WIDTH = 320;
@@ -35,7 +39,7 @@ void runClient( int argc, char** argv )
 {
     fprintf( stderr, "Client process here...\n" );
 #ifndef ARM_BUILD
-    ImageWindow display; // Used to display images received from robot.
+    GLK::ImageWindow display; // Used to display images received from robot.
 #endif
 
     // Try to access the joystick:
@@ -83,7 +87,8 @@ void runClient( int argc, char** argv )
                         // Show the image by posting pointer to the ImageWindow object:
                         if ( display.IsRunning() )
                         {                           
-                            display.PostImage( image, IMG_WIDTH, IMG_HEIGHT, ImageWindow::FixedAspectRatio );
+                            display.PostImage( GLK::ImageWindow::FixedAspectRatio,
+                                                IMG_WIDTH, IMG_HEIGHT, image );
                         }
 #endif
                         n = 0;

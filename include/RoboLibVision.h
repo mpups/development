@@ -5,7 +5,6 @@
 
 #include "../src/camera_capture/CameraCapture.h"
 #include "../src/camera_capture/UnicapCamera.h"
-#include "../src/visualisation/ImageWindow.h"
 
 #ifndef ARM_BUILD
 #include "../src/camera_capture/Dc1394Camera.h"
