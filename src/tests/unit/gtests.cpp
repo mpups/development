@@ -8,13 +8,21 @@
 #include <gtest/gtest.h>
 
 #include "NetworkingTests.h"
+#include "ImageTests.h"
 
 TEST( io, networking )
 {
-    TestIpv4Address();
-    TestTcp();
-    TestUdp();
+    //TestIpv4Address();
+    //TestTcp();
+    //TestUdp();
 }   
+
+TEST( vision, image )
+{
+    robo::TestImage();
+    robo::TestImageFill();
+    robo::SadTest();
+}
 
 /**
     Runs all the tests listed above.    

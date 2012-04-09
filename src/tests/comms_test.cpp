@@ -39,7 +39,7 @@ void runClient( int argc, char** argv )
 {
     fprintf( stderr, "Client process here...\n" );
 #ifndef ARM_BUILD
-    GLK::ImageWindow display; // Used to display images received from robot.
+    GLK::ImageWindow display(320,240); // Used to display images received from robot.
 #endif
 
     // Try to access the joystick:
