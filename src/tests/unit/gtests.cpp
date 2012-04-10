@@ -12,9 +12,9 @@
 
 TEST( io, networking )
 {
-    //TestIpv4Address();
-    //TestTcp();
-    //TestUdp();
+    TestIpv4Address();
+    TestTcp();
+    TestUdp();
 }   
 
 TEST( vision, image )

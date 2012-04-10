@@ -137,6 +137,11 @@ void SadTest()
         pos = region2.pos;
         matchError = Sad8x8( realImage, pos, patch );
         EXPECT_EQ( 0, matchError );
+
+        // test mismatch increases SAD:
+        pos.x += 1;
+        missError = Sad8x8( realImage, pos, patch );
+        EXPECT_GT( missError, matchError );
     }
 }
 
