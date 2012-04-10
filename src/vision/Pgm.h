@@ -9,23 +9,21 @@
 namespace robo
 {
 
-bool WritePgm( const char* fileName, const Image<uint8_t>& image )
-{
-    FILE* fp = fopen( fileName, "w" );
-    assert( fp != 0 );
-    if ( fp )
-    {
-        fprintf( fp, "P5 %d %d 255\n", image.Width(), image.Height() );
+/**
+    Write a pgm file from the specified image. This will overwrite
+    any existing file with the same file name.
 
-        for ( uint32_t i=0; i<image.Height(); ++i ) {
-            fwrite( image[i], sizeof(uint8_t), image.Width(), fp );
-        }
-        fclose( fp );
-        return true;
-    }
+    @param fileName name of resulting file.
+    @param image image to write.
+*/
+bool WritePgm( const char* fileName, const Image<uint8_t>& image );
 
-    return false;
-}
+/**
+    Read a pgm file with the specified fileName.
+
+    The image will be (re-)allocated to the correct size.
+*/
+bool ReadPgm( const char* fileName, Image<uint8_t>& image );
 
 } // end of namespace robo
 

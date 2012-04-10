@@ -89,19 +89,17 @@ void Image<T>::Allocate( uint32_t width, uint32_t height )
     m_height = height;
 
     const uint32_t alignmentInBytes = DEFAULT_ALIGNMENT_BYTES;
-    uint32_t rowSizeBytes = width * sizeof(T);
+    m_stride = m_width * sizeof(T);
 
     // Compute the padding in bytes:
-    uint32_t rem = rowSizeBytes % alignmentInBytes;
-
+    uint32_t rem = m_stride % alignmentInBytes;
     if ( rem != 0 )
     {
-        rowSizeBytes += alignmentInBytes - rem;
+        m_stride += alignmentInBytes - rem;
     }
 
-    m_stride = rowSizeBytes;
-
     free( m_data );
+    m_data = 0;
     int err = posix_memalign( reinterpret_cast<void**>(&m_data), alignmentInBytes, m_stride*height );
     assert( err == 0 );
 }

@@ -8,6 +8,9 @@
 
 #include "Image.h"
 
+namespace robo
+{
+
 struct RgbPixel
 {
     uint8_t r,g,b,a;
@@ -21,6 +24,8 @@ struct RgbaPixel
 typedef Image<uint8_t> GreyImage;
 typedef Image<RgbPixel> RgbImage;
 typedef Image<RgbaPixel> RgbaImage;
+
+} // end of namespace robo
 
 #endif /* __IMAGE_TYPES_H__ */
 

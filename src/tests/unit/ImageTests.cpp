@@ -9,6 +9,7 @@
 #include "../../vision/Image.h"
 #include "../../vision/Pgm.h"
 #include "../../vision/ImageProcessing.h"
+#include "../../vision/ImageTypes.h"
 
 namespace robo
 {
@@ -44,6 +45,11 @@ void TestImage()
         Image<uint16_t> shortImg2;
         shortImg2.Allocate(9,17);
         EXPECT_EQ( 32, shortImg2.m_stride );
+
+        // test re-allocation:
+        shortImg2.Allocate(32,32);
+        EXPECT_EQ( 32, shortImg2.Width() );
+        EXPECT_EQ( 32, shortImg2.Height() );
     }
 }
 
@@ -74,7 +80,7 @@ void SadTest()
     image.Fill( 0 );
 
     // Fill in an 8 pixel square:
-    AlignedBox region = { {20,20}, 8, 8 };
+    const AlignedBox region = { {20,20}, 8, 8 };
     image.Fill( region, 0xff );
     EXPECT_EQ( 0x0, image[region.pos.y-1][region.pos.x-1] );
     EXPECT_EQ( 0xff, image[region.pos.y][region.pos.x] );
@@ -82,16 +88,23 @@ void SadTest()
     EXPECT_EQ( 0x0, image[region.pos.y+region.h][region.pos.x+region.w] );
     EXPECT_EQ( 0x0, image[image.Height()-1][image.Width()-1] );
 
+    // Write then read back the image:
+    bool writeOk = WritePgm( "sad_image.pgm", image );
+    ASSERT_TRUE( writeOk );
+    bool readOk = ReadPgm( "sad_image.pgm", image );
+    ASSERT_EQ( 0x0, image[region.pos.y-1][region.pos.x-1] );
+    ASSERT_EQ( 0xff, image[region.pos.y][region.pos.x] );
+    ASSERT_EQ( 0xff, image[region.pos.y+region.h-1][region.pos.x+region.w-1] );
+    ASSERT_EQ( 0x0, image[region.pos.y+region.h][region.pos.x+region.w] );
+    ASSERT_EQ( 0x0, image[image.Height()-1][image.Width()-1] );
+    ASSERT_TRUE( readOk );
     WritePgm( "sad_image.pgm", image );
 
     // Extract a patch description:
     Image<uint8_t> patch;
-    region.w = 8;
-    region.h = 8;
     patch.CopyFrom( region, image );
     EXPECT_EQ( 0xff, patch[0][0] );
     EXPECT_EQ( 0xff, patch[7][7] );
-
     WritePgm( "sad_patch.pgm", patch );
 
     // Now compute the sum-of-absolute differences with the patch perfectly aligned:
@@ -113,6 +126,18 @@ void SadTest()
     pos.y = 30;
     uint32_t missError = Sad8x8( image, pos, patch );
     EXPECT_EQ( 8*8*255, missError );
+
+    // Test on a real image:
+    {
+        GreyImage realImage;
+        readOk = ReadPgm( "../../src/tests/unit/data/temple.pgm", realImage );
+        EXPECT_TRUE( readOk );
+        const AlignedBox region2 = { {191,286}, 8, 8 };
+        patch.CopyFrom( region2, realImage );
+        pos = region2.pos;
+        matchError = Sad8x8( realImage, pos, patch );
+        EXPECT_EQ( 0, matchError );
+    }
 }
 
 } // end of namespace robo
