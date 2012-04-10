@@ -8,10 +8,14 @@
 
 #include "../../vision/Image.h"
 #include "../../vision/Pgm.h"
+#include "../../vision/ImageProcessing.h"
 
 namespace robo
 {
 
+/**
+    Test image allocation and row data alignment.
+*/
 void TestImage()
 {
     // Test stride alignment:
@@ -43,6 +47,9 @@ void TestImage()
     }
 }
 
+/**
+    Basic test of image 'fill' functions.
+*/
 void TestImageFill()
 {
     Image<uint16_t> shortImg;
@@ -57,14 +64,17 @@ void TestImageFill()
     }
 }
 
+/**
+    Basic test of SAD matching.
+*/
 void SadTest()
 {
     Image<uint8_t> image;
     image.Allocate( 640, 480 );
     image.Fill( 0 );
 
-    // Fill in a 10 pixel square:
-    AlignedBox region = { {20,20}, 10, 10 };
+    // Fill in an 8 pixel square:
+    AlignedBox region = { {20,20}, 8, 8 };
     image.Fill( region, 0xff );
     EXPECT_EQ( 0x0, image[region.pos.y-1][region.pos.x-1] );
     EXPECT_EQ( 0xff, image[region.pos.y][region.pos.x] );
@@ -76,15 +86,33 @@ void SadTest()
 
     // Extract a patch description:
     Image<uint8_t> patch;
-    region.pos.x -= 4;
-    region.pos.y -= 4;
     region.w = 8;
     region.h = 8;
     patch.CopyFrom( region, image );
-    EXPECT_EQ( 0, patch[3][3] );
-    EXPECT_EQ( 0xff, patch[4][4] );
+    EXPECT_EQ( 0xff, patch[0][0] );
+    EXPECT_EQ( 0xff, patch[7][7] );
 
     WritePgm( "sad_patch.pgm", patch );
+
+    // Now compute the sum-of-absolute differences with the patch perfectly aligned:
+    PixelCoord pos = region.pos;
+    uint32_t matchError = Sad8x8( image, pos, patch );
+    EXPECT_EQ( 0, matchError );
+
+    // And do the same when the patch is out by one column/row:
+    pos.x += 1;
+    uint32_t colError = Sad8x8( image, pos, patch );
+    pos.x -= 1;
+    pos.y += 1;
+    uint32_t rowError = Sad8x8( image, pos, patch );
+    EXPECT_EQ( 8*255, colError );
+    EXPECT_EQ( 8*255, rowError );
+
+    // Again, when total misalignment:
+    pos.x = 30;
+    pos.y = 30;
+    uint32_t missError = Sad8x8( image, pos, patch );
+    EXPECT_EQ( 8*8*255, missError );
 }
 
 } // end of namespace robo

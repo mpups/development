@@ -15,6 +15,10 @@
 namespace robo
 {
 
+/**
+    This provides a base class for images of generic pixel type.
+    Common image types are typedef'd at the end of the header file.
+*/
 template <class T>
 class Image
 {
@@ -36,6 +40,9 @@ public:
     // Access row pointers:
     const T* operator [] ( uint32_t i ) const { return reinterpret_cast<const T*>( m_data + i*m_stride ); };
     T* operator [] ( uint32_t i ) { return reinterpret_cast<T*>( m_data + i*m_stride ); };
+
+    const uint8_t* PixelPtr( const PixelCoord& pos ) const { return m_data + pos.y*m_stride + pos.x; };
+    uint8_t* PixelPtr( const PixelCoord& pos ) { return m_data + pos.y*m_stride + pos.x; };
 
     void Fill( const T& value );
     void Fill( const AlignedBox& box, const T& value );
@@ -120,10 +127,10 @@ template <class T>
 void Image<T>::Fill( const AlignedBox& box, const T& value )
 {
     uint8_t* rowPtr = reinterpret_cast<uint8_t*>( (*this)[box.pos.y] + box.pos.x );
-    for ( uint32_t j=box.h; j>0; --j )
+    for ( uint32_t j=box.h; j!=0; --j )
     {
         T* typedPtr = reinterpret_cast<T*>( rowPtr );
-        for ( uint32_t i=box.w; i>0; --i )
+        for ( uint32_t i=box.w; i!=0; --i )
         {
             *typedPtr = value;
             ++typedPtr;
@@ -146,11 +153,11 @@ void Image<T>::CopyFrom( const AlignedBox& box, const Image<T>& srcImage )
 
     const uint8_t* srcRowPtr = reinterpret_cast<const uint8_t*>( srcImage[box.pos.y] + box.pos.x );
     uint8_t* dstRowPtr = m_data;
-    for ( uint32_t j=m_height; j>0; --j )
+    for ( uint32_t j=m_height; j!=0; --j )
     {
         const T* srcTypedPtr = reinterpret_cast<const T*>( srcRowPtr );
         T* dstTypedPtr = reinterpret_cast<T*>( dstRowPtr );
-        for ( uint32_t i=m_width; i>0; --i )
+        for ( uint32_t i=m_width; i!=0; --i )
         {
             *dstTypedPtr = *srcTypedPtr;
             ++dstTypedPtr;
