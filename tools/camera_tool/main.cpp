@@ -7,15 +7,12 @@
 using namespace GLK;
 
 /**
-    Program for controlling robot-motors using lua script console.
+    Program for displaying camera feed and also acts as a basic calibration tool.
 **/
 int main( int argc, char** argv )
 {
-    // start console
     CameraWindow win( String("Camera Tool") );
-
-    win.Show();    
+    win.Show();
     win.StartEventLoop();
-
     return EXIT_SUCCESS;
 }

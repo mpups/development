@@ -49,6 +49,21 @@ solution 'tools'
         configuration {}
                 links { LINKS }
 
+    project 'image-proc-lab'
+        kind 'ConsoleApp'
+
+        files { '../image-proc-lab/*.cpp' }
+
+        configuration 'debug'
+                links { 'robolib_d', 'glk_d', 'glkcore_d' }
+        configuration { 'release' }
+                links { 'robolib', 'glk', 'glkcore' }
+        configuration { 'profile' }
+                links { 'robolib_prof', 'glk_prof', 'glkcore_prof' }
+
+        configuration {}
+                links { LINKS }
+
     project 'motor-console'
         kind 'ConsoleApp'
 

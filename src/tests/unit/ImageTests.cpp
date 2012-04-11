@@ -11,6 +11,10 @@
 #include "../../vision/ImageProcessing.h"
 #include "../../vision/ImageTypes.h"
 
+#include <string>
+
+std::string g_dataPath = "../../src/tests/unit/data/";
+
 namespace robo
 {
 
@@ -130,7 +134,8 @@ void SadTest()
     // Test on a real image:
     {
         GreyImage realImage;
-        readOk = ReadPgm( "../../src/tests/unit/data/temple.pgm", realImage );
+        std::string imageFilePath = g_dataPath + "temple.pgm";
+        readOk = ReadPgm( imageFilePath.c_str(), realImage );
         EXPECT_TRUE( readOk );
         const AlignedBox region2 = { {191,286}, 8, 8 };
         patch.CopyFrom( region2, realImage );

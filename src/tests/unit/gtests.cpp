@@ -25,7 +25,7 @@ TEST( vision, image )
 }
 
 /**
-    Runs all the tests listed above.    
+    Runs all the tests listed above.
 **/
 int main( int argc, char** argv )
 {
