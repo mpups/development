@@ -32,26 +32,11 @@ int main( int argc, char** argv )
     int err = posix_memalign( (void**)&lum, 16, m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t) );
     assert( err == 0 );
 
-    // Create some corner detector threads:
-    robo::FastCornerThread m_cornerDetectThread1;
-    robo::FastCornerThread m_cornerDetectThread2;
-
-    // Setup the jobs (they never change):
-    assert( m_camera->GetFrameHeight() > 6 );
-    robo::FastCornerThread::Job cornerJob1;
-    cornerJob1.w = m_camera->GetFrameWidth();
-    cornerJob1.h = (m_camera->GetFrameHeight()/2) + 3;
-    cornerJob1.stride = m_camera->GetFrameWidth();
-    cornerJob1.threshold = 33;
-    cornerJob1.buffer = lum;
-
-    int yOffsetJob2 = (m_camera->GetFrameHeight()/2) - 3;
-    robo::FastCornerThread::Job cornerJob2;
-    cornerJob2.w = m_camera->GetFrameWidth();
-    cornerJob2.h = (m_camera->GetFrameHeight()/2) + 3;
-    cornerJob2.stride = m_camera->GetFrameWidth();
-    cornerJob2.threshold = 33;
-    cornerJob2.buffer = lum + ( cornerJob2.stride * yOffsetJob2 );
+    robo::LoadBalancingCornerDetector m_detector(
+                m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), // w,h
+                m_camera->GetFrameWidth(), // stride
+                lum // image data
+            );
 
     GLK::Timer timer;
     std::vector< robo::PixelCoord > detectedCorners;
@@ -62,23 +47,20 @@ int main( int argc, char** argv )
         m_camera->ExtractLuminanceImage( lum );
 
         timer.Reset();
-        m_cornerDetectThread1.PostJob( cornerJob1 );
-        m_cornerDetectThread2.PostJob( cornerJob2 );
-        detectedCorners.clear();
-        m_cornerDetectThread1.RetrieveResults( detectedCorners );
-        m_cornerDetectThread2.RetrieveResults( detectedCorners, 0, yOffsetJob2 );
+        m_detector.Detect( 33, detectedCorners );
         uint64_t detectTime = timer.GetMicroSeconds();
         std::cout << "Feature detection time := " << detectTime << "us" << std::endl;
 
         // Update visualisation:
         display.Clear();
-        display.Add( robo::AnnotatedImage::Line( robo::AnnotatedImage::Point(0,240), robo::AnnotatedImage::Point(640,240) ) );
+        uint32_t split = m_detector.GetSplitHeight();
+        display.Add( robo::AnnotatedImage::Line( robo::AnnotatedImage::Point(0,split), robo::AnnotatedImage::Point(640,split) ) );
         for ( size_t c=0;c<detectedCorners.size();++c)
         {
             display.Add( robo::AnnotatedImage::Point( detectedCorners[c].x, detectedCorners[c].y ) );
         }
 
-        display.PostImage( GLK::ImageWindow::ScaleToFit, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), lum );
+        display.PostImage( GLK::ImageWindow::FixedAspectRatio, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), lum );
 
         m_camera->DoneFrame();
     }

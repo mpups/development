@@ -7,6 +7,7 @@
 #include "../src/camera_capture/UnicapCamera.h"
 #include "../src/vision/Image.h"
 #include "../src/vision/FastCornerThread.h"
+#include "../src/vision/LoadBalancingCornerDetector.h"
 
 // These are not intended to be used on embedded ARM systems yet:
 #ifndef ARM_BUILD

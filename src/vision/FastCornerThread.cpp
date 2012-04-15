@@ -54,8 +54,10 @@ void FastCornerThread::PostJob( const Job& j )
     @param results Results are appended to this vector.
     @param offsetX added to x-coordinate of detected corners.
     @param offsetY added to y-coordinate of detected corners.
+
+    @return the number of corners detected.
 */
-void FastCornerThread::RetrieveResults( std::vector<PixelCoord>& results, int offsetX, int offsetY )
+uint32_t FastCornerThread::RetrieveResults( std::vector<PixelCoord>& results, int offsetX, int offsetY )
 {
     WaitForResults();
 
@@ -66,7 +68,10 @@ void FastCornerThread::RetrieveResults( std::vector<PixelCoord>& results, int of
     }
     free( m_corners );
 
+    int cornerCount = m_count;
     SignalResultsRetrieved();
+
+    return cornerCount;
 }
 
 /**

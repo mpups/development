@@ -8,6 +8,8 @@
 
 #include <glkcore.h>
 
+#include <stdint.h>
+
 extern "C"
 {
 #include "../third_party/fast-C-src-2.1/fast.h"
@@ -45,7 +47,7 @@ public:
     virtual ~FastCornerThread();
 
     void PostJob( const Job& j );
-    void RetrieveResults( std::vector<PixelCoord>&, int offsetX=0, int offsetY=0 );
+    uint32_t RetrieveResults( std::vector<PixelCoord>&, int offsetX=0, int offsetY=0 );
 
     virtual void Run();
 
