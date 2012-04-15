@@ -50,7 +50,7 @@ solution 'robolib'
         
     project 'robolib'
         kind 'StaticLib'
-        files { SRC .. '**.h', SRC .. '**.cpp' }
+        files { SRC .. '**.h', SRC .. '**.cpp', SRC .. '**.c' }
         excludes { SRC .. 'sse/test/*' }
         excludes { SRC .. 'tests/**' }
         excludes { SRC .. 'sse/*' }
