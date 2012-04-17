@@ -1,7 +1,5 @@
 // Copyright (c) 2010 Mark Pupilli, All Rights Reserved.
 
-#include <glkcore.h>
-#include <glk.h>
 #include "CameraWindow.h"
 
 using namespace GLK;

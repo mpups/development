@@ -1,9 +1,12 @@
 // Copyright (c) 2012 Mark Pupilli, All Rights Reserved.
 
-#include <glkcore.h>
-#include <glk.h>
+#define __STDC_CONSTANT_MACROS
+#define __STDC_LIMIT_MACROS
 
 #include <RoboLib.h>
+
+#include <glkcore.h>
+#include <glk.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -31,6 +34,27 @@ int main( int argc, char** argv )
     uint8_t* lum;
     int err = posix_memalign( (void**)&lum, 16, m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t) );
     assert( err == 0 );
+
+    // TEST video:
+    if ( argc >1 )
+    {
+        LibAvCapture video( argv[1] );
+
+        if ( !video.IsOpen() )
+        {
+            std::cerr << "Couldn't open video-file: " << argv[1] << std::endl;
+        }
+        else
+        {
+            while( display.IsRunning() && video.GetFrame() )
+            {
+                video.ExtractLuminanceImage( lum, video.GetFrameWidth() );
+                display.PostImage( GLK::ImageWindow::FixedAspectRatio, video.GetFrameWidth(), video.GetFrameHeight(), lum );
+
+                video.DoneFrame();
+            }
+        }
+    }
 
     robo::LoadBalancingCornerDetector m_detector(
                 m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), // w,h

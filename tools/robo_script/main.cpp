@@ -1,7 +1,7 @@
+#include <RoboLib.h>
+
 #include <glkcore.h>
 #include <glk.h>
-
-#include <RoboLib.h>
 
 /**
     Program for controlling robot-motors using lua script console.

@@ -3,10 +3,11 @@
 #ifndef CAMERA_WINDOW_H
 #define CAMERA_WINDOW_H
 
-#include <glkcore.h>
-#include <glk.h>
 #include <RoboLib.h>
 #include <RoboLibOpenCv.h>
+
+#include <glkcore.h>
+#include <glk.h>
 
 // fwd decls:
 class KltTracker;

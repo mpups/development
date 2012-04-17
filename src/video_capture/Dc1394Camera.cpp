@@ -36,7 +36,7 @@ bool Dc1394Camera::OpenDevice()
         {
             m_camera = dc1394_camera_new( ms_video, list->ids[0].guid );    assert( m_camera != 0 );
             m_guid = list->ids[0].guid;
-            fprintf( stderr, "dc1394: Initialised camera with GUID %llu\n", m_guid );
+            fprintf( stderr, "dc1394: Initialised camera with GUID %lu\n", m_guid );
             rval = true;        
         }
 

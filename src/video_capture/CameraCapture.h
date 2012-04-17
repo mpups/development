@@ -1,6 +1,8 @@
 #ifndef CAMERA_CAPTURE_H
 #define CAMERA_CAPTURE_H
 
+#include <stdint.h>
+
 /**
     Abstract interface for all camera capture devices.
 **/
