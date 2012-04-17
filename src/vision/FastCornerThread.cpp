@@ -7,7 +7,7 @@ namespace robo
 
 FastCornerThread::FastCornerThread()
 :
-    m_fastFunction ( fast9_detect ),
+    m_fastFunction ( fast9_detect_nonmax ),
     m_thread( *this ),
     m_jobQueue ( 2 ),
     m_done ( 0 )
@@ -61,14 +61,13 @@ uint32_t FastCornerThread::RetrieveResults( std::vector<PixelCoord>& results, in
 {
     WaitForResults();
 
-    for ( int c=0;c<m_count;++c)
+    for ( int c=0;c<m_corners.size();++c)
     {
         PixelCoord p = { m_corners[c].x + offsetX, m_corners[c].y + offsetY };
         results.push_back( p );
     }
-    free( m_corners );
 
-    int cornerCount = m_count;
+    int cornerCount = m_corners.size();
     SignalResultsRetrieved();
 
     return cornerCount;
@@ -84,12 +83,7 @@ void FastCornerThread::Run()
         m_jobQueue.Read( &m_job, 1 );
         if ( m_job.w > 0 )
         {
-            m_corners = m_fastFunction
-                        (
-                            m_job.buffer, m_job.w, m_job.h, m_job.stride,
-                            m_job.threshold, &m_count
-                        );
-
+            m_fastFunction( m_job.buffer, m_job.w, m_job.h, m_job.stride, m_job.threshold, m_corners );
             SignalResultsReady();
             WaitForRetrieval();
         }

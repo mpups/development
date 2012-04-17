@@ -10,10 +10,7 @@
 
 #include <stdint.h>
 
-extern "C"
-{
-#include "../third_party/fast-C-src-2.1/fast.h"
-}
+#include "../third_party/fast-C-src-2.1/fast.hpp"
 
 namespace robo
 {
@@ -56,7 +53,7 @@ protected:
     void StopThread();
 
 private:
-    typedef xy* (*fast_func_type)(const unsigned char*, int, int, int, int, int*);
+    typedef void (*fast_func_type)(const unsigned char*, int, int, int, int, std::vector<Corner>&);
 
     void SignalResultsReady();
     void WaitForResults();
@@ -64,8 +61,7 @@ private:
     void WaitForRetrieval();
 
     Job m_job;
-    int m_count;
-    xy* m_corners;
+    std::vector<Corner> m_corners;
     fast_func_type m_fastFunction;
 
     GLK::Thread m_thread;
