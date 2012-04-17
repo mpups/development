@@ -24,11 +24,11 @@ public:
     Dc1394Camera();
     ~Dc1394Camera();
 
-    bool IsAvailable() const;
+    bool IsOpen() const;
     void StartCapture();
     void StopCapture();
 
-    void GetFrame();
+    bool GetFrame();
     void DoneFrame();
     int32_t GetFrameWidth() const;
     int32_t GetFrameHeight() const;
@@ -38,9 +38,9 @@ public:
     const char*   GetVendor() const;
     const char*   GetModel() const;
 
-    void ExtractLuminanceImage( uint8_t* );
-    void ExtractRgbImage( uint8_t* img );
-    void ExtractBgrImage( uint8_t* );
+    void ExtractLuminanceImage( uint8_t*, int stride );
+    void ExtractRgbImage( uint8_t* img, int stride );
+    void ExtractBgrImage( uint8_t*, int stride );
 
 private:
     bool OpenDevice();

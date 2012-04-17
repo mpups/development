@@ -21,7 +21,7 @@ int main( int argc, char** argv )
 {
     boost::scoped_ptr<CameraCapture> m_camera( new UnicapCamera() );
 
-    if ( m_camera->IsAvailable() == false )
+    if ( m_camera->IsOpen() == false )
     {
         return EXIT_FAILURE;
     }
@@ -68,7 +68,7 @@ int main( int argc, char** argv )
     while ( display.IsRunning() )
     {
         m_camera->GetFrame();
-        m_camera->ExtractLuminanceImage( lum );
+        m_camera->ExtractLuminanceImage( lum, m_camera->GetFrameWidth() );
 
         timer.Reset();
         m_detector.Detect( 33, detectedCorners );

@@ -71,7 +71,7 @@ UnicapCamera::~UnicapCamera()
 /**
     @returns true if the device was opened and setup successfully, false otherwise.
 */
-bool UnicapCamera::IsAvailable() const
+bool UnicapCamera::IsOpen() const
 {
     return m_handle != 0;
 }
@@ -105,10 +105,13 @@ void UnicapCamera::StopCapture()
     Blocks until a frame is captured.
 
     You must call DoneFrame() after each call to GetFrame().
+
+    @return true if capture was successful.
 **/
-void UnicapCamera::GetFrame()
+bool UnicapCamera::GetFrame()
 {
     m_frameReady.Acquire();
+    return true;
 }
 
 /**
@@ -149,7 +152,10 @@ const char* UnicapCamera::GetModel() const
     return m_model.cStr();
 }
 
-void UnicapCamera::ExtractLuminanceImage( uint8_t* lumImg )
+/**
+    @todo bug - stride is not used - should use swscale library anyway
+*/
+void UnicapCamera::ExtractLuminanceImage( uint8_t* lumImg, int stride )
 {
     uint32_t n = (m_width*m_height)*2/4;
     unsigned char* pImg = m_buffer;
@@ -223,7 +229,7 @@ void UnicapCamera::ExtractLuminanceImage( uint8_t* lumImg )
     } while (--n);
 }*/
 
-void UnicapCamera::ExtractRgbImage( uint8_t* dest )
+void UnicapCamera::ExtractRgbImage( uint8_t* dest, int stride )
 {
     uint32_t n = (m_width*m_height)*2/4;
     unsigned char* source = m_buffer;
@@ -268,10 +274,10 @@ void UnicapCamera::ExtractRgbImage( uint8_t* dest )
 
 }
 
-void UnicapCamera::ExtractBgrImage( uint8_t* dest )
+void UnicapCamera::ExtractBgrImage( uint8_t* dest, int stride )
 {
     // Just extract RGB then swap channels:
-    ExtractRgbImage( dest );
+    ExtractRgbImage( dest, stride );
     uint32_t n = m_width*m_height;
     uint8_t tmp;
     while ( n-- )

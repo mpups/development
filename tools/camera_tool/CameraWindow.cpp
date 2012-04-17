@@ -27,7 +27,7 @@ CameraWindow::CameraWindow( String title )
 {
     m_camera = new UnicapCamera();
   
-    if ( m_camera->IsAvailable() )
+    if ( m_camera->IsOpen() )
     {
         // set window title:
         title += ':';
@@ -66,12 +66,12 @@ bool CameraWindow::InitGL()
 {
     bool ok = true;
 
-    if ( m_camera->IsAvailable() )
+    if ( m_camera->IsOpen() )
     {
         m_camera->StartCapture();
         m_camera->GetFrame();
-        m_camera->ExtractLuminanceImage( m_lum );
-        m_camera->ExtractBgrImage( m_rgb );
+        m_camera->ExtractLuminanceImage( m_lum, m_camera->GetFrameWidth() );
+        m_camera->ExtractBgrImage( m_rgb, m_camera->GetFrameWidth()*3 );
         m_camera->DoneFrame();
 
         // Set window size to match camera: 
@@ -129,7 +129,7 @@ bool CameraWindow::InitGL()
 
 void CameraWindow::DestroyGL()
 {
-    if ( m_camera->IsAvailable() )
+    if ( m_camera->IsOpen() )
     {
         m_camera->StopCapture();
 
@@ -149,16 +149,16 @@ bool CameraWindow::Update( unsigned int )
 {
     bool captured = false;
 
-    if ( m_camera->IsAvailable() )
+    if ( m_camera->IsOpen() )
     {
         GLK::Timer waitTimer;
         m_camera->GetFrame();
         m_waitTime_ms = waitTimer.GetMicroSeconds() / 1000;
 
-        m_camera->ExtractLuminanceImage( m_lum );
+        m_camera->ExtractLuminanceImage( m_lum, m_camera->GetFrameWidth() );
 
         //GLK::Timer tmr;
-        m_camera->ExtractBgrImage( m_rgb );
+        m_camera->ExtractBgrImage( m_rgb, 3*m_camera->GetFrameWidth() );
         //fprintf(stderr,"YUV conversion: %lu us\n", tmr.GetMicroSeconds() );
         
         // Create an IPL image and write it to the video file.

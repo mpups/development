@@ -116,7 +116,7 @@ Dc1394Camera::~Dc1394Camera()
 
 @return true if the camera was initialised succefully, false otherwise.
 **/
-bool Dc1394Camera::IsAvailable() const
+bool Dc1394Camera::IsOpen() const
 {
     return m_camera != 0;
 }
@@ -148,14 +148,17 @@ void Dc1394Camera::StopCapture()
     DMA buffer from filling.
 
     Do not call GetFrame() while transmission is stopped or it will block forever.
+
+    @return true if capture was successful.
 **/
-void Dc1394Camera::GetFrame()
+bool Dc1394Camera::GetFrame()
 {
     assert( m_transmitting );
 
     int err = dc1394_capture_dequeue( m_camera, DC1394_CAPTURE_POLICY_WAIT, &m_frame );
     assert( err == 0 );
     m_captured = true;
+    return err == 0;
 }
 
 /**
@@ -232,8 +235,10 @@ const char* Dc1394Camera::GetModel() const
 
     GetFrameWidth() x GetFrameHeight() pixels (bytes) will be extracted
     so @p lum must point to enough storage.
+
+    @todo bug - stride is not used - should use swscale library anyway
 **/
-void Dc1394Camera::ExtractLuminanceImage( uint8_t* lumImg )
+void Dc1394Camera::ExtractLuminanceImage( uint8_t* lumImg, int stride )
 {
     assert( m_captured ); // error to call when no frame captured
 
@@ -276,12 +281,12 @@ void Dc1394Camera::ExtractLuminanceImage( uint8_t* lumImg )
     }    
 }
 
-void Dc1394Camera::ExtractRgbImage( uint8_t* img )
+void Dc1394Camera::ExtractRgbImage( uint8_t* img, int stride )
 {
     assert( 0 ); // not implemented yet!
 }
 
-void Dc1394Camera::ExtractBgrImage( uint8_t* img )
+void Dc1394Camera::ExtractBgrImage( uint8_t* img, int stride )
 {
     assert( 0 ); // not implemented yet!
 }

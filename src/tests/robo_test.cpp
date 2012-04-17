@@ -25,7 +25,7 @@ int main( int argc, char** argv )
     UnicapCamera camera;
     MotionMind motors( "/dev/ttyUSB0" );
 
-    if ( camera.IsAvailable() && motors.Available() )
+    if ( camera.IsOpen() && motors.Available() )
     {
         // Got them!
         GLK::String title( "" );
@@ -52,7 +52,7 @@ int main( int argc, char** argv )
         {    
             camera.GetFrame();
             double timeStamp = camera.GetFrameTimestamp() / 1000000.0;
-            camera.ExtractLuminanceImage( m_lum );
+            camera.ExtractLuminanceImage( m_lum, camera.GetFrameWidth() );
             camera.DoneFrame();
             
             // Save the captured images to a file:

@@ -75,7 +75,7 @@ void RobotServer::PostConnectionSetup()
     // Setup camera:
     m_camera = new UnicapCamera();
     size_t imageBufferSize = m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t);
-    if ( m_camera->IsAvailable() )
+    if ( m_camera->IsOpen() )
     {
         m_camera->StartCapture();
         int err = posix_memalign( (void**)&m_lum, 16, imageBufferSize );
@@ -137,7 +137,7 @@ void RobotServer::RunCommsLoop()
             if ( m_camera && (bytesToSend == 0) )
             {
                 m_camera->GetFrame();
-                m_camera->ExtractLuminanceImage( m_lum );
+                m_camera->ExtractLuminanceImage( m_lum, m_camera->GetFrameWidth() );
                 m_camera->DoneFrame();
                 
                 IplImage* cvImage = cvCreateImage( cvSize(640,480), IPL_DEPTH_8U, 1 );
