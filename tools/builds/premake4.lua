@@ -11,7 +11,7 @@ solution 'tools'
 	location( TARGET_DIR )
 	targetdir( TARGET_DIR )
 	language 'C++'
-	flags { 'NoExceptions','NoRTTI','ExtraWarnings' }
+	flags { 'NoExceptions','ExtraWarnings' }
 
     includedirs ( INCLUDE_DIRS )
     libdirs( LIB_DIRS )

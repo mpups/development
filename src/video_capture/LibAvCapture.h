@@ -14,10 +14,12 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#include "Capture.h"
+
 /**
     Class which uses libavcodec to read video streams from a video file.
 */
-class LibAvCapture
+class LibAvCapture : public Capture
 {
 public:
     LibAvCapture( const char* videoFile );
@@ -35,6 +37,9 @@ public:
     void ExtractBgrImage( uint8_t* data, int stride );
 
     static void InitLibAvCodec();
+
+protected:
+    void FrameConversion( PixelFormat format, uint8_t* data, int stride );
 
 private:
     AVFormatContext* m_formatContext;

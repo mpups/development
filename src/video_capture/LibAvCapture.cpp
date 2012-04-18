@@ -166,13 +166,29 @@ uint64_t LibAvCapture::GetFrameTimestamp() const
     return m_avFrame->pts; // @todo this is not correct - needs to be converted from 'time_base' units
 }
 
+void LibAvCapture::ExtractLuminanceImage( uint8_t* data, int stride )
+{
+    FrameConversion( PIX_FMT_GRAY8, data, stride );
+}
+
+void LibAvCapture::ExtractRgbImage( uint8_t* data, int stride )
+{
+    FrameConversion( PIX_FMT_RGB24, data, stride );
+}
+
+void LibAvCapture::ExtractBgrImage( uint8_t* data, int stride )
+{
+    FrameConversion( PIX_FMT_BGR24, data, stride );
+}
+
 /**
-    Uses swscale library to do the appropriate conversion.
+    Uses swscale library to convert the most recently read frame to
+    the specified format.
 
     @param data pointer to buffer that must be large enough to hold the data
     @param stride number of bytes to jump between rows in data.
 */
-void LibAvCapture::ExtractLuminanceImage( uint8_t* data, int stride )
+void LibAvCapture::FrameConversion( PixelFormat format, uint8_t* data, int stride )
 {
     const int w = m_codecContext->width;
     const int h = m_codecContext->height;
@@ -180,12 +196,12 @@ void LibAvCapture::ExtractLuminanceImage( uint8_t* data, int stride )
     // Re-use the current conversion context if we can:
     m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
                                     w, h, m_codecContext->pix_fmt, 
-                                    w, h, PIX_FMT_GRAY8,
+                                    w, h, format,
                                     SWS_FAST_BILINEAR, 0, 0, 0 );
 
     if( m_imageConversionContext != 0 )
     {
-        sws_scale( m_imageConversionContext, m_avFrame->data, m_avFrame->linesize, 0, m_codecContext->height, &data, &stride );
+        sws_scale( m_imageConversionContext, m_avFrame->data, m_avFrame->linesize, 0, h, &data, &stride );
     }
 }
 

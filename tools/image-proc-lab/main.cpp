@@ -16,80 +16,89 @@ extern "C"
 }
 
 /*
+    Capture from a live feed or video file and do some image processing:
 */
 int main( int argc, char** argv )
 {
-    boost::scoped_ptr<CameraCapture> m_camera( new UnicapCamera() );
+    boost::scoped_ptr<Capture> capture;
+    CameraCapture* camera = 0;
 
-    if ( m_camera->IsOpen() == false )
+    if ( argc > 1 )
     {
+        // Try to capture from video file:
+        capture.reset( new LibAvCapture( argv[1] ) );
+        if ( false == capture->IsOpen() )
+        {
+            std::cerr << "Coult not open video-file: " << argv[1] << std::endl;
+        }
+    }
+    else
+    {
+        // Try to capture from camera:
+        capture.reset( new UnicapCamera() );
+        camera = reinterpret_cast<CameraCapture*>( capture.get() );
+    }
+
+    if ( capture->IsOpen() == false )
+    {
+        std::cerr << "Error: no video source." << std::endl; 
         return EXIT_FAILURE;
     }
 
-    m_camera->StartCapture();
+    if ( camera )
+    {
+        camera->StartCapture();
+    }
 
-    robo::AnnotatedImage display( m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
+    robo::AnnotatedImage display( capture->GetFrameWidth(), capture->GetFrameHeight() );
     display.SetWindowName( "Image Processing Lab" );
 
     uint8_t* lum;
-    int err = posix_memalign( (void**)&lum, 16, m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t) );
+    int err = posix_memalign( (void**)&lum, 16, capture->GetFrameWidth() * capture->GetFrameHeight() * sizeof(uint8_t) );
     assert( err == 0 );
 
-    // TEST video:
-    if ( argc >1 )
-    {
-        LibAvCapture video( argv[1] );
-
-        if ( !video.IsOpen() )
-        {
-            std::cerr << "Couldn't open video-file: " << argv[1] << std::endl;
-        }
-        else
-        {
-            while( display.IsRunning() && video.GetFrame() )
-            {
-                video.ExtractLuminanceImage( lum, video.GetFrameWidth() );
-                display.PostImage( GLK::ImageWindow::FixedAspectRatio, video.GetFrameWidth(), video.GetFrameHeight(), lum );
-
-                video.DoneFrame();
-            }
-        }
-    }
-
     robo::LoadBalancingCornerDetector m_detector(
-                m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), // w,h
-                m_camera->GetFrameWidth(), // stride
+                capture->GetFrameWidth(), capture->GetFrameHeight(), // w,h
+                capture->GetFrameWidth(), // stride
                 lum // image data
             );
 
     GLK::Timer timer;
     std::vector< robo::PixelCoord > detectedCorners;
 
-    while ( display.IsRunning() )
-    {
-        m_camera->GetFrame();
-        m_camera->ExtractLuminanceImage( lum, m_camera->GetFrameWidth() );
+    double totalDetectTime_us = 0.0;
+    double frames = 0.0;
 
+    while ( display.IsRunning() && capture->GetFrame() )
+    {
         timer.Reset();
+        capture->ExtractLuminanceImage( lum, capture->GetFrameWidth() );
+        totalDetectTime_us += timer.GetMicroSeconds();
+
         m_detector.Detect( 33, detectedCorners );
-        uint64_t detectTime = timer.GetMicroSeconds();
-        std::cout << "Feature detection time := " << detectTime << "us" << std::endl;
 
         // Update visualisation:
         display.Clear();
         uint32_t split = m_detector.GetSplitHeight();
-        display.Add( robo::AnnotatedImage::Line( robo::AnnotatedImage::Point(0,split), robo::AnnotatedImage::Point(640,split) ) );
+        display.Add( robo::AnnotatedImage::Line( robo::AnnotatedImage::Point(0,split), robo::AnnotatedImage::Point(capture->GetFrameWidth(),split) ) );
         for ( size_t c=0;c<detectedCorners.size();++c)
         {
             display.Add( robo::AnnotatedImage::Point( detectedCorners[c].x, detectedCorners[c].y ) );
         }
 
-        display.PostImage( GLK::ImageWindow::FixedAspectRatio, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), lum );
+        display.PostImage( GLK::ImageWindow::FixedAspectRatio, capture->GetFrameWidth(), capture->GetFrameHeight(), lum );
 
-        m_camera->DoneFrame();
+        capture->DoneFrame();
+
+        frames += 1.0;
     }
 
-    m_camera->StopCapture();
+    std::cout << "Total Feature detection time := " << totalDetectTime_us/frames << "us" << std::endl;
+
+    if ( camera )
+    {
+        camera->StopCapture();
+    }
 
     display.WaitForClose();
 
