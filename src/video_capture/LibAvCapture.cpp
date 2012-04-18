@@ -33,7 +33,7 @@ LibAvCapture::LibAvCapture( const char* videoFile )
 {
     InitLibAvCodec();
 
-    m_open = av_open_input_file( &m_formatContext, videoFile, NULL, 0, NULL) == 0;
+    m_open = avformat_open_input( &m_formatContext, videoFile, 0, 0) == 0;
     if ( m_open == false )
     {
         return;

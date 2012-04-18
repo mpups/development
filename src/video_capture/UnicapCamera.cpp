@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include <assert.h>
 
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+}
+
 /**
     This gets called in the context of unicap's capture thread when a new frame arrives.
     It then makes a copy of the capture buffer and signals a semaphore that an image is ready.
@@ -47,7 +52,8 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
             unicap_status_t status = unicap_set_format( m_handle, &format );
             assert( SUCCESS( status ) );
 
-            m_buffer = new uint8_t[ format.buffer_size ];
+            int err = posix_memalign( (void**)&m_buffer, 16, format.buffer_size );
+
             m_width  = format.size.width;
             m_height = format.size.height;
         }
@@ -65,7 +71,7 @@ UnicapCamera::~UnicapCamera()
         unicap_close( m_handle );
     }
 
-    delete [] m_buffer;
+    free( m_buffer );
 }
 
 /**
@@ -155,16 +161,32 @@ const char* UnicapCamera::GetModel() const
 /**
     @todo bug - stride is not used - should use swscale library anyway
 */
-void UnicapCamera::ExtractLuminanceImage( uint8_t* lumImg, int stride )
+void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
 {
+    /*const int w = m_width;
+    const int h = m_height;
+    const int srcStride = w*2;
+
+    SwsContext* m_imageConversionContext = 0;
+    m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
+                                    w, h, PIX_FMT_YUYV422,
+                                    w, h, PIX_FMT_GRAY8,
+                                    SWS_FAST_BILINEAR, 0, 0, 0 );
+
+    if( m_imageConversionContext != 0 )
+    {
+        sws_scale( m_imageConversionContext, &m_buffer, &srcStride, 0, h, &data, &stride );
+        sws_freeContext( m_imageConversionContext );
+    }*/
+
     uint32_t n = (m_width*m_height)*2/4;
     unsigned char* pImg = m_buffer;
 
     do
     {
-        *lumImg++ = *pImg;
+        *data++ = *pImg;
         pImg += 2;
-        *lumImg++ = *pImg;
+        *data++ = *pImg;
         pImg += 2;
     } while (--n);
 }

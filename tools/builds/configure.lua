@@ -23,5 +23,5 @@ LIB_DIRS = {
 }
 
 BUILD_OPTIONS = { '-msse -msse2' }
-LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' }
+LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' } -- -rpath,/home/mark/Downloads/ffmpeg/test_install/lib' }
 LINKS = { 'pthread', 'rt', 'Xrender', 'X11', 'GL', 'freetype', 'lua5.1', 'dc1394', 'cxcore', 'cv', 'highgui', 'unicap', 'avcodec', 'avformat', 'avutil', 'swscale' }

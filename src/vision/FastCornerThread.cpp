@@ -61,7 +61,7 @@ uint32_t FastCornerThread::RetrieveResults( std::vector<PixelCoord>& results, in
 {
     WaitForResults();
 
-    for ( int c=0;c<m_corners.size();++c)
+    for ( unsigned int c=0;c<m_corners.size();++c)
     {
         PixelCoord p = { m_corners[c].x + offsetX, m_corners[c].y + offsetY };
         results.push_back( p );
