@@ -9,13 +9,12 @@
 
 extern "C" {
 #include <unicap.h>
+#include <libswscale/swscale.h>
 }
 
 #include <glkcore.h>
 
 #include "CameraCapture.h"
-
-struct SwsContext;
 
 /**
     Class for accessing USB cameras through libunicap.
@@ -44,6 +43,9 @@ public:
     void ExtractLuminanceImage( uint8_t*, int );
     void ExtractRgbImage( uint8_t*, int );
     void ExtractBgrImage( uint8_t* img, int stride );
+
+protected:
+    void FrameConversion( PixelFormat format, uint8_t* data, int stride );
 
 private:
     bool OpenDevice();

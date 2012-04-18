@@ -3,11 +3,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-}
-
 /**
     This gets called in the context of unicap's capture thread when a new frame arrives.
     It then makes a copy of the capture buffer and signals a semaphore that an image is ready.
@@ -43,6 +38,7 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
         unicap_format_t format;
         memset( &format, 0, sizeof(format) );
 
+        // Try to get YUYV422 format.
         bool success = FindFormat( 640, 480, 0x56595559, format );
         if ( success )
         {
@@ -201,61 +197,48 @@ void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
 
 void UnicapCamera::ExtractRgbImage( uint8_t* dest, int stride )
 {
-    uint32_t n = (m_width*m_height)*2/4;
-    unsigned char* source = m_buffer;
-
-    do
-    {
-      uint8_t y1, y2, u, v;
-      int c1, c2, d, dg, db, e, er, eg;
-      int ir, ig, ib;
-            
-      y1 = *source++;
-      u  = *source++;
-      y2 = *source++;
-      v  = *source++;
-      
-      c1 = (y1-16)*298;
-      c2 = (y2-16)*298;
-      d  = u-128;
-      dg = 100 * d;
-      db = 516 * d;
-      e  = v-128;
-      er = 409 * e;
-      eg = 208 * e;
-
-      ir = (c1 + er + 128)>>8;
-      ig = (c1 - dg - eg + 128 )>>8;
-      ib = (c1 + db)>>8;
-      
-      *dest++ = (uint8_t) ( ir > 255 ? 255 : ( ir < 0 ? 0 : ir ) );
-      *dest++ = (uint8_t) ( ig > 255 ? 255 : ( ig < 0 ? 0 : ig ) );
-      *dest++ = (uint8_t) ( ib > 255 ? 255 : ( ib < 0 ? 0 : ib ) );
-            
-      ir = (c2 + er + 128)>>8;
-      ig = (c2 - dg - eg + 128 )>>8;
-      ib = (c2 + db)>>8;
-
-      *dest++ = (uint8_t) ( ir > 255 ? 255 : ( ir < 0 ? 0 : ir ) );
-      *dest++ = (uint8_t) ( ig > 255 ? 255 : ( ig < 0 ? 0 : ig ) );
-      *dest++ = (uint8_t) ( ib > 255 ? 255 : ( ib < 0 ? 0 : ib ) );
-
-    } while (--n);
-
+    FrameConversion( PIX_FMT_RGB24, dest, stride );
 }
 
+/**
+    @note It seems that conversion to BGR is 2x faster than to RGB. BGR is also
+    preferred format for OpenGL and OpenCV so this method is recommended.
+*/
 void UnicapCamera::ExtractBgrImage( uint8_t* dest, int stride )
 {
-    // Just extract RGB then swap channels:
-    ExtractRgbImage( dest, stride );
-    uint32_t n = m_width*m_height;
-    uint8_t tmp;
-    while ( n-- )
+    FrameConversion( PIX_FMT_BGR24, dest, stride );
+}
+
+/**
+    Uses swscale library to convert the most recently captured frame to
+    the specified format.
+
+    @note It is currently assumed the output image will be the same size as that grabbed from
+    the camera.
+
+    @param data pointer to buffer that must be large enough to hold the data.
+    @param stride number of bytes to jump between rows in data.
+
+    @todo - conversion assumes camera image is YUYV422 - need to detect and choose format appropriately.
+*/
+void UnicapCamera::FrameConversion( PixelFormat format, uint8_t* data, int stride )
+{
+    const int w = m_width;
+    const int h = m_height;
+    const int srcStride = w*2;
+    uint8_t* srcPlanes[4] = { m_buffer, 0, 0, 0 };
+    int srcStrides[4] = { srcStride, 0, 0, 0 };
+    uint8_t* dstPlanes[4] = { data, 0, 0, 0 };
+    int dstStrides[4] = { stride, 0, 0, 0 };
+
+    m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
+                                    w, h, PIX_FMT_YUYV422,
+                                    w, h, format,
+                                    SWS_FAST_BILINEAR, 0, 0, 0 );
+
+    if( m_imageConversionContext != 0 )
     {
-        tmp = *(dest);
-        *dest = *(dest+2);
-        *(dest+2) = tmp;
-        dest += 3;
+        sws_scale( m_imageConversionContext, srcPlanes, srcStrides, 0, h, dstPlanes, dstStrides );
     }
 }
 

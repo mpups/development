@@ -173,8 +173,8 @@ bool CameraWindow::Update( unsigned int )
         //fprintf(stderr,"lum tex2d: %llu us\n", tmr.GetMicroSeconds() );
 
         //tmr.Reset();
-        //glBindTexture( GL_TEXTURE_2D, m_rgbTex );
-        //glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), GL_RGB, GL_UNSIGNED_BYTE, m_rgb );
+        glBindTexture( GL_TEXTURE_2D, m_rgbTex );
+        glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), GL_BGR, GL_UNSIGNED_BYTE, m_rgb );
         //fprintf(stderr,"rgb tex2d: %llu us\n", tmr.GetMicroSeconds() );    
 
         if ( m_showUndistorted && m_calibration->Calibrated() )
@@ -227,6 +227,7 @@ void CameraWindow::Render()
     // Render the image from the camera:
     glViewport( 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
     glBindTexture( GL_TEXTURE_2D, m_lumTex );
+glBindTexture( GL_TEXTURE_2D, m_rgbTex );
     glEnable( GL_TEXTURE_2D );
 
     glBegin( GL_QUADS );
