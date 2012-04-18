@@ -15,6 +15,8 @@ extern "C" {
 
 #include "CameraCapture.h"
 
+struct SwsContext;
+
 /**
     Class for accessing USB cameras through libunicap.
 
@@ -60,6 +62,8 @@ private:
     GLK::String     m_model;
     volatile uint64_t m_time;
     volatile bool   m_captureFrame;
+
+    SwsContext* m_imageConversionContext;
 };
 
 #endif // UNICAP_CAMERA_H

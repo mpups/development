@@ -192,6 +192,8 @@ void LibAvCapture::FrameConversion( PixelFormat format, uint8_t* data, int strid
 {
     const int w = m_codecContext->width;
     const int h = m_codecContext->height;
+    uint8_t* dstPlanes[4] = { data, 0, 0, 0 };
+    int dstStrides[4] = { stride, 0, 0, 0 };
 
     // Re-use the current conversion context if we can:
     m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
@@ -201,7 +203,7 @@ void LibAvCapture::FrameConversion( PixelFormat format, uint8_t* data, int strid
 
     if( m_imageConversionContext != 0 )
     {
-        sws_scale( m_imageConversionContext, m_avFrame->data, m_avFrame->linesize, 0, h, &data, &stride );
+        sws_scale( m_imageConversionContext, m_avFrame->data, m_avFrame->linesize, 0, h, dstPlanes, dstStrides );
     }
 }
 

@@ -16,6 +16,7 @@ INCLUDE_DIRS = {
 }
 
 LIB_DIRS = {
+    '/home/mark/tmp_installs/lib', -- has to come first so libav links to my own installation
     '/usr/lib',
     '/usr/local/lib',
     '/usr/local/glk/lib',
@@ -23,5 +24,5 @@ LIB_DIRS = {
 }
 
 BUILD_OPTIONS = { '-msse -msse2' }
-LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' } -- -rpath,/home/mark/Downloads/ffmpeg/test_install/lib' }
+LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/home/mark/tmp_installs/lib' }
 LINKS = { 'pthread', 'rt', 'Xrender', 'X11', 'GL', 'freetype', 'lua5.1', 'dc1394', 'cxcore', 'cv', 'highgui', 'unicap', 'avcodec', 'avformat', 'avutil', 'swscale' }

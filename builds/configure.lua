@@ -23,7 +23,7 @@ LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' }
 OPENCV_LINKS = { 'ml', 'cvaux','highgui', 'cv', 'cxcore' }
 OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }
 SYSTEM_LINKS = { 'pthread', 'rt' }
-LINKS = { 'lua5.1', 'freetype', 'unicap' }
+LINKS = { 'lua5.1', 'freetype', 'unicap', 'swscale' }
 
 GLK_LINKS = { 'glk', 'glkcore' }
 

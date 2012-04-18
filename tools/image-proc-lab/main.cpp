@@ -66,6 +66,7 @@ int main( int argc, char** argv )
     GLK::Timer timer;
     std::vector< robo::PixelCoord > detectedCorners;
 
+    double totalImageConversionTime_us = 0.0;
     double totalDetectTime_us = 0.0;
     double frames = 0.0;
 
@@ -73,9 +74,11 @@ int main( int argc, char** argv )
     {
         timer.Reset();
         capture->ExtractLuminanceImage( lum, capture->GetFrameWidth() );
-        totalDetectTime_us += timer.GetMicroSeconds();
+        totalImageConversionTime_us += timer.GetMicroSeconds();
 
+        timer.Reset();
         m_detector.Detect( 33, detectedCorners );
+        totalDetectTime_us += timer.GetMicroSeconds();
 
         // Update visualisation:
         display.Clear();
@@ -93,7 +96,8 @@ int main( int argc, char** argv )
         frames += 1.0;
     }
 
-    std::cout << "Total Feature detection time := " << totalDetectTime_us/frames << "us" << std::endl;
+    std::cout << "Total Feature detection time := " << totalDetectTime_us << " us" << std::endl;
+    std::cout << "Image Conversion time per frame := " << totalImageConversionTime_us/frames << " us" << std::endl;
 
     if ( camera )
     {

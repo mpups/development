@@ -33,7 +33,8 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
 :
     m_frameReady        ( 0 ),
     m_buffer            ( 0 ),
-    m_time              ( -1 )
+    m_time              ( -1 ),
+    m_imageConversionContext (0)
 {
     if ( OpenDevice() )
     {
@@ -72,6 +73,11 @@ UnicapCamera::~UnicapCamera()
     }
 
     free( m_buffer );
+
+    if ( m_imageConversionContext != 0 )
+    {
+        sws_freeContext( m_imageConversionContext );
+    }
 }
 
 /**
@@ -166,8 +172,11 @@ void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
     /*const int w = m_width;
     const int h = m_height;
     const int srcStride = w*2;
+    uint8_t* srcPlanes[4] = { m_buffer, 0, 0, 0 };
+    int srcStrides[4] = { srcStride, 0, 0, 0 };
+    uint8_t* dstPlanes[4] = { data, 0, 0, 0 };
+    int dstStrides[4] = { stride, 0, 0, 0 };
 
-    SwsContext* m_imageConversionContext = 0;
     m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
                                     w, h, PIX_FMT_YUYV422,
                                     w, h, PIX_FMT_GRAY8,
@@ -175,8 +184,7 @@ void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
 
     if( m_imageConversionContext != 0 )
     {
-        sws_scale( m_imageConversionContext, &m_buffer, &srcStride, 0, h, &data, &stride );
-        sws_freeContext( m_imageConversionContext );
+        sws_scale( m_imageConversionContext, srcPlanes, srcStrides, 0, h, dstPlanes, dstStrides );
     }*/
 
     uint32_t n = (m_width*m_height)*2/4;
@@ -190,66 +198,6 @@ void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
         pImg += 2;
     } while (--n);
 }
-
-/*
-  u -= 128;
-  v -= 128;
-  b = y + (454*u >> 8);
-  g = y - (88*u >> 8) - (183*v >> 8);
-  r = y + (359*v >> 8);
-  if(b<0)b=0;
-  if(b>255)b=255;
-  if(g<0)g=0;
-  if(g>255)g=255;
-  if(r<0)r=0;
-  if(r>255)r=255;
-*/
-/*void UnicapCamera::ExtractRgbImage( uint8_t* img )
-{
-    uint32_t n = (m_width*m_height)*2/4;
-    unsigned char* pImg = m_buffer;
-
-    int32_t y1, y2, u, v, r, g, b, tmp_r, tmp_g, tmp_b;
-    do
-    {
-        y1 = *pImg++;
-        u  = *pImg++;
-        y2 = *pImg++;
-        v  = *pImg++;
-
-        b = (454*(u-128) >> 8);
-        g = (183*(v-128) >> 8) + (88*(u-128) >> 8);
-        r = (359*(v-128) >> 8);
-
-        tmp_r = r + y1;
-        tmp_g = y1 - g;
-        tmp_b = b + y1;        
-        if ( tmp_r < 0 )   tmp_r = 0;
-        if ( tmp_r > 255 ) tmp_r = 255;       
-        if ( tmp_g < 0 )   tmp_g = 0;
-        if ( tmp_g > 255 ) tmp_g = 255; 
-        if ( tmp_b < 0 )   tmp_b = 0;
-        if ( tmp_b > 255 ) tmp_b = 255; 
-
-        *img++ = tmp_r;
-        *img++ = tmp_g;
-        *img++ = tmp_b;
-
-        tmp_r = r + y2;
-        tmp_g = y2 - g;
-        tmp_b = b + y2;    
-        if ( tmp_r < 0 )   tmp_r = 0;
-        if ( tmp_r > 255 ) tmp_r = 255;       
-        if ( tmp_g < 0 )   tmp_g = 0;
-        if ( tmp_g > 255 ) tmp_g = 255;
-        if ( tmp_b < 0 )   tmp_b = 0;
-        if ( tmp_b > 255 ) tmp_b = 255;
-
-        *img++ = tmp_r;
-        *img++ = tmp_g;
-        *img++ = tmp_b;
-    } while (--n);
-}*/
 
 void UnicapCamera::ExtractRgbImage( uint8_t* dest, int stride )
 {
