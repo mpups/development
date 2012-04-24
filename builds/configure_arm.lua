@@ -19,7 +19,7 @@ LIB_DIRS = {
     ARM_DEPLOYMENT .. '/lib',
 }
 
-DEFINES = { 'ARM_BUILD' }
+DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
 BUILD_OPTIONS = { '-mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
 LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib' }
 

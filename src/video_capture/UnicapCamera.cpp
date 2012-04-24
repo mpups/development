@@ -12,13 +12,13 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
     assert( event == UNICAP_EVENT_NEW_FRAME );
 
     UnicapCamera* camera = reinterpret_cast<UnicapCamera*>( data );
-    
+
     if ( camera->m_captureFrame )
     {
         memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
         camera->m_time = buffer->fill_time.tv_sec * 1000000;
         camera->m_time += buffer->fill_time.tv_usec;
-        
+
         camera->m_captureFrame = false;
         camera->m_frameReady.Release();
     }
@@ -34,7 +34,7 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
     if ( OpenDevice() )
     {
         assert( m_handle != 0 );
-        
+
         unicap_format_t format;
         memset( &format, 0, sizeof(format) );
 
@@ -43,9 +43,9 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
         if ( success )
         {
             fprintf( stderr, "Format '%s': %dx%dx%d (%x)\n", format.identifier, format.size.width, format.size.height, format.bpp, format.fourcc );
-            
+
             format.buffer_type = UNICAP_BUFFER_TYPE_SYSTEM;
-                        
+
             unicap_status_t status = unicap_set_format( m_handle, &format );
             assert( SUCCESS( status ) );
 
@@ -165,24 +165,6 @@ const char* UnicapCamera::GetModel() const
 */
 void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
 {
-    /*const int w = m_width;
-    const int h = m_height;
-    const int srcStride = w*2;
-    uint8_t* srcPlanes[4] = { m_buffer, 0, 0, 0 };
-    int srcStrides[4] = { srcStride, 0, 0, 0 };
-    uint8_t* dstPlanes[4] = { data, 0, 0, 0 };
-    int dstStrides[4] = { stride, 0, 0, 0 };
-
-    m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
-                                    w, h, PIX_FMT_YUYV422,
-                                    w, h, PIX_FMT_GRAY8,
-                                    SWS_FAST_BILINEAR, 0, 0, 0 );
-
-    if( m_imageConversionContext != 0 )
-    {
-        sws_scale( m_imageConversionContext, srcPlanes, srcStrides, 0, h, dstPlanes, dstStrides );
-    }*/
-
     uint32_t n = (m_width*m_height)*2/4;
     unsigned char* pImg = m_buffer;
 
@@ -232,8 +214,7 @@ void UnicapCamera::FrameConversion( PixelFormat format, uint8_t* data, int strid
     int dstStrides[4] = { stride, 0, 0, 0 };
 
     m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
-                                    w, h, PIX_FMT_YUYV422,
-                                    w, h, format,
+                                    w, h, PIX_FMT_YUYV422, w, h, format,
                                     SWS_FAST_BILINEAR, 0, 0, 0 );
 
     if( m_imageConversionContext != 0 )
@@ -270,7 +251,7 @@ bool UnicapCamera::OpenDevice()
         m_vendor = GLK::String( devices[0].vendor_name );
         m_model = GLK::String( devices[0].model_name );
         fprintf( stderr, "\nUnicap: Opened camera with GUID %lu\n", m_guid );
-        
+
         EnumerateProperties();
         return true;
     }
@@ -283,7 +264,7 @@ bool UnicapCamera::OpenDevice()
 
 /**
     Find a format which matches the spec.
-    
+
     If successful then return value is true and result will contain the desired format (currently the first one found).
 **/
 bool UnicapCamera::FindFormat( int width, int height, unsigned int fourcc, unicap_format_t& result )
@@ -351,7 +332,7 @@ void UnicapCamera::EnumerateProperties()
     {
        fprintf( stderr, "Falure: Could not turn on auto-exposure!\n" );
     }*/
-    
+
     status = unicap_set_property_manual( m_handle, "Autogain" );
     status = unicap_set_property_value( m_handle, "Autogain", 1.0 );
     if ( SUCCESS( status ) )
@@ -360,18 +341,17 @@ void UnicapCamera::EnumerateProperties()
     }
     else
     {
-       fprintf( stderr, "Falure: Could not turn on auto-gain!\n" );
+       fprintf( stderr, "Failure: Could not turn on auto-gain!\n" );
     }
-    
+
     do
     {
         status = unicap_enumerate_properties( m_handle, 0, &property, count );
         fprintf ( stderr, "Property %d : %s", count, property.identifier );
         fprintf( stderr, " ( value := %f, category := %s)\n ", property.value, property.category );
-         
-        count += 1;
-        
-    } while ( SUCCESS(status) );
 
+        count += 1;
+
+    } while ( SUCCESS(status) );
 }
 

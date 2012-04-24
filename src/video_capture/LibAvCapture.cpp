@@ -200,8 +200,7 @@ void LibAvCapture::FrameConversion( PixelFormat format, uint8_t* data, int strid
 
     // Re-use the current conversion context if we can:
     m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
-                                    w, h, m_codecContext->pix_fmt, 
-                                    w, h, format,
+                                    w, h, m_codecContext->pix_fmt, w, h, format,
                                     SWS_FAST_BILINEAR, 0, 0, 0 );
 
     if( m_imageConversionContext != 0 )

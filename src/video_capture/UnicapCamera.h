@@ -3,8 +3,6 @@
 #ifndef UNICAP_CAMERA_H
 #define UNICAP_CAMERA_H
 
-#define __STDC_CONSTANT_MACROS
-#define __STDC_LIMIT_MACROS
 #include <stdint.h>
 
 extern "C" {

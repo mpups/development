@@ -11,6 +11,7 @@ end
 append( LINKS, OPENCV_LINKS )
 append( LINKS, OPENGL_LINKS )
 append( LINKS, SYSTEM_LINKS )
+append( LINKS, FFMPEG_LINKS )
 --for i,v in pairs(LINKS) do print(i,v) end
 
 SRC = '../src/'
@@ -104,5 +105,6 @@ end
         configuration {}
         links { 'robolib' }
         links ( SYSTEM_LINKS )
+        links ( FFMPEG_LINKS )
         links ( 'gtest' )
 
