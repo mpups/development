@@ -17,6 +17,7 @@ solution 'tools'
     libdirs( LIB_DIRS )
     buildoptions ( BUILD_OPTIONS )
     linkoptions ( LINK_OPTIONS )
+    defines { DEFINES }
 
     configuration 'debug'
         defines { 'DEBUG' }

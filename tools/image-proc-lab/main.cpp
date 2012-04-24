@@ -1,8 +1,5 @@
 // Copyright (c) 2012 Mark Pupilli, All Rights Reserved.
 
-#define __STDC_CONSTANT_MACROS
-#define __STDC_LIMIT_MACROS
-
 #include <RoboLib.h>
 
 #include <glkcore.h>

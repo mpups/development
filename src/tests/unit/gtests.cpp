@@ -9,13 +9,20 @@
 
 #include "NetworkingTests.h"
 #include "ImageTests.h"
+#include "VideoTests.h"
 
 TEST( io, networking )
 {
     TestIpv4Address();
     TestTcp();
     TestUdp();
-}   
+}
+
+TEST( io, video )
+{
+    TestVideoWrite();
+    TestVideoRead();
+}
 
 TEST( vision, image )
 {

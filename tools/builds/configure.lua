@@ -26,3 +26,7 @@ LIB_DIRS = {
 BUILD_OPTIONS = { '-msse -msse2' }
 LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/home/mark/tmp_installs/lib' }
 LINKS = { 'pthread', 'rt', 'Xrender', 'X11', 'GL', 'freetype', 'lua5.1', 'dc1394', 'cxcore', 'cv', 'highgui', 'unicap', 'avcodec', 'avformat', 'avutil', 'swscale' }
+
+-- need these defines because ffmpeg libs use C99 standard macros which are not in any C++ standards.
+DEFINES = { '__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
+

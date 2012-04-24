@@ -7,7 +7,7 @@ namespace robo
 
 FastCornerThread::FastCornerThread()
 :
-    m_fastFunction ( fast9_detect_nonmax ),
+    m_fastFunction ( fast9_detect ),
     m_thread( *this ),
     m_jobQueue ( 2 ),
     m_done ( 0 )
