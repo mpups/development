@@ -3,7 +3,8 @@
 #ifndef CAMERA_CALIBRATION_SYSTEM_H
 #define CAMERA_CALIBRATION_SYSTEM_H
 
-#include <cv.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 
 #include <glkcore.h>
 

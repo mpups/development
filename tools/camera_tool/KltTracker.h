@@ -3,7 +3,7 @@
 #ifndef KLT_TRACKER_H
 #define KLT_TRACKER_H
 
-#include <cv.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 /**
     Wrapper for OpenCV's KLT tracking code.

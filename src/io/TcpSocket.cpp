@@ -66,14 +66,14 @@ bool TcpSocket::Listen( int queueSize )
 TcpSocket* TcpSocket::Accept()
 {
     TcpSocket* newClient;
-    int socket;    
-    setsockopt( m_socket, SOL_SOCKET, SO_REUSEADDR, &socket, sizeof(int) );
+    int reuse = 1;
+    setsockopt( m_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int) );
     
     struct sockaddr_in addr;
     memset( (void*)&addr, 0, sizeof(sockaddr_in) );
     
     socklen_t clientSize = sizeof(addr);
-    socket = accept( m_socket, (struct sockaddr*)&addr, &clientSize );
+    int socket = accept( m_socket, (struct sockaddr*)&addr, &clientSize );
     if ( socket != -1 )
     {
         newClient = new TcpSocket( socket );

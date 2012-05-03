@@ -9,18 +9,19 @@ INCLUDE_DIRS = {
     '/usr/include/freetype2',
     '/usr/include/gtest',
     '/usr/include/',
-    '/usr/include/unicap',
-    '/usr/include/opencv'
+    '/usr/include/unicap'
 }
 
 LIB_DIRS = {
-    '/usr/local/glk/lib'
+    '/usr/lib',
+    '/usr/local/glk/lib',
+    '/usr/lib/x86_64-linux-gnu'
 }
 
 BUILD_OPTIONS = { '-msse -msse2' }
 LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' }
 
-OPENCV_LINKS = { 'ml', 'cvaux','highgui', 'cv', 'cxcore' }
+OPENCV_LINKS = { 'opencv_imgproc','opencv_calib3d','opencv_highgui', 'opencv_core' }
 OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }
 SYSTEM_LINKS = { 'pthread', 'rt' }
 LINKS = { 'lua5.1', 'freetype', 'unicap' }

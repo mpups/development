@@ -6,8 +6,7 @@
 
 #include <assert.h>
 
-#include <cv.h>
-#include <highgui.h>
+#include <opencv/highgui.h>
 
 using namespace GLK;
 
