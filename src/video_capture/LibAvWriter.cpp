@@ -2,9 +2,10 @@
 
 #include "LibAvCapture.h"
 
-#include <ctype.h>
-
 #include <iostream>
+
+#include <ctype.h>
+#include <assert.h>
 
 /**
     Static method returns an 32-bit integer representing the four character code (fourcc).
@@ -26,18 +27,20 @@ int32_t LibAvWriter::FourCc( char c1, char c2, char c3, char c4 )
 /**
     Static method for choosing optimal encoding pixel format.
 
+    @note PixelFormat is a enum defiend by ffmpeg (in pixfmt.h).
+
     @param is the CodecID to be used
-    @param inputFormat the pixel format the data will be supplied in
+    @param inputFormat the pixel format the data will be supplied in.
     @return a good choice of encoder format
 */
-int32_t LibAvWriter::ChooseCodecFormat( CodecID id, int32_t inputFormat )
+PixelFormat LibAvWriter::ChooseCodecFormat( CodecID id, PixelFormat inputFormat )
 {
-    int32_t pixelFormat = PIX_FMT_YUV420P;
+    PixelFormat pixelFormat = PIX_FMT_YUV420P;
 
     switch ( id )
     {
         case CODEC_ID_FFV1:
-        pixelFormat = PIX_FMT_YUV420P;
+        pixelFormat = PIX_FMT_YUV422P;
         break;
 
         case CODEC_ID_RAWVIDEO:
@@ -47,6 +50,8 @@ int32_t LibAvWriter::ChooseCodecFormat( CodecID id, int32_t inputFormat )
         default:
         break;
     }
+
+    return pixelFormat;
 }
 
 /**
@@ -57,6 +62,7 @@ int32_t LibAvWriter::ChooseCodecFormat( CodecID id, int32_t inputFormat )
 LibAvWriter::LibAvWriter( const char* videoFile )
 :
     m_formatContext (0),
+    m_imageConversionContext (0),
     m_open ( false )
 {
     LibAvCapture::InitLibAvCodec();
@@ -91,6 +97,20 @@ LibAvWriter::LibAvWriter( const char* videoFile )
 
 LibAvWriter::~LibAvWriter()
 {
+    if ( m_imageConversionContext != 0 )
+    {
+        sws_freeContext( m_imageConversionContext );
+    }
+
+    if ( m_videoStream != 0 )
+    {
+        avcodec_close( m_videoStream->codec );
+    }
+
+    if ( m_formatContext != 0 )
+    {
+        avformat_free_context( m_formatContext );
+    }
 }
 
 bool LibAvWriter::IsOpen() const
@@ -116,29 +136,79 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
         if ( codecId == CODEC_ID_NONE )
         {
             std::cerr << "Could not get codec Id" << std::endl;
+        }
+        else
+        {
+            m_videoStream = av_new_stream( m_formatContext, 0 );
+            if ( m_videoStream != 0 )
+            {
+                AVCodecContext* codecContext = m_videoStream->codec;
+                codecContext->codec_id = codecId;
+                codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
+                codecContext->codec_tag = fourcc;
+                codecContext->bit_rate_tolerance = codecContext->bit_rate;
+                codecContext->pix_fmt = ChooseCodecFormat( codecId, PIX_FMT_GRAY8 ); //@todo hard coded to grey-scale input at moment
+
+                assert( width%2 == 0 );
+                assert( height%2 == 0 );
+                codecContext->width = width;
+                codecContext->height = height;
+                codecContext->time_base.num = 1;
+                if ( fps == 0) { fps = 1; }
+                codecContext->time_base.den = fps;
+
+                av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
+
+                m_codec = avcodec_find_encoder( codecId );
+                // We don't check result of above because the following fails gracefully if m_codec==null
+                int err = avcodec_open2( codecContext, m_codec, 0 );
+                if ( err == 0 )
+                {
+                    success = true;
+                }
+            }
+        }
+    }
+
+    if ( success )
+    {
+        int err = url_fopen( &m_formatContext->pb, m_formatContext->filename, URL_WRONLY );
+        if ( err < 0 )
+        {
             success = false;
         }
         else
         {
-            AVStream* videoStream = av_new_stream( m_formatContext, 0 );
-            if ( videoStream != 0 )
-            {
-                AVCodecContext* codecContext = videoStream->codec;
-                codecContext->codec_id = codecId;
-                codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
-
-                av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
-
-                success = true;
-            }
+            av_write_header( m_formatContext );
         }
+    }
+    else
+    {
+        //@todo free m_videoStream ?
     }
 
     return success;
 }
 
+/**
+    Write a grey frame to the video-file.
+
+    @note If the width and height of the image data do not match those of the stream, the image will be scaled.
+*/
 bool LibAvWriter::PutGreyFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride )
 {
-    return false;
+    bool success = false;
+    AVCodecContext* codecContext = m_videoStream->codec;
+
+    m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
+                                    width, height, PIX_FMT_GRAY8, codecContext->width, codecContext->height, codecContext->pix_fmt,
+                                    SWS_FAST_BILINEAR, 0, 0, 0 );
+
+    if ( m_imageConversionContext != 0 )
+    {
+        success = true;
+    }
+
+    return success;
 }
 

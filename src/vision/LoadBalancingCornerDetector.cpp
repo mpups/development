@@ -9,10 +9,11 @@ namespace robo
 
 LoadBalancingCornerDetector::LoadBalancingCornerDetector( uint32_t width, uint32_t height, uint32_t stride, uint8_t* buffer )
 :
-    m_height( height ),
-    m_splitHeight( height / 2 ),
-    m_cornerCount1( 0 ),
-    m_cornerCount2( 0 )
+    m_height            ( height ),
+    m_splitHeight       ( height / 2 ),
+    m_cornerCount1      ( 0 ),
+    m_cornerCount2      ( 0 ),
+    m_balancingEnabled  (true)
 {
     // Setup the jobs:
     assert( height > 32 );
@@ -29,6 +30,25 @@ LoadBalancingCornerDetector::LoadBalancingCornerDetector( uint32_t width, uint32
 
 LoadBalancingCornerDetector::~LoadBalancingCornerDetector()
 {
+}
+
+/**
+    Turn off the load balancing algorithm. It is enabled by default.
+
+    @todo Reset the split so that each thread processes
+    an equal amount of data after calling this.
+*/
+void LoadBalancingCornerDetector::DisableBalancing()
+{
+    m_balancingEnabled = false;
+}
+
+/**
+    Turn on the load balancing algorithm. It is enabled by default.
+*/
+void LoadBalancingCornerDetector::EnableBalancing()
+{
+    m_balancingEnabled = true;
 }
 
 /**
@@ -53,7 +73,10 @@ void LoadBalancingCornerDetector::Detect( int threshold, std::vector< PixelCoord
     m_cornerDetectThread2.PostJob( m_cornerJob2 );
 
     int oldOffset = m_yOffsetJob2; // need to record this because ReBalance changes it.
-    ReBalance(); // Lags one frame behind but not noticeable, and we may aswell do it while we are waiting for jobs to finish.
+    if ( m_balancingEnabled )
+    {
+        ReBalance(); // Lags one frame behind but not noticeable, and we may aswell do it while we are waiting for jobs to finish.
+    }
 
     // Get the results:
     results.clear();
@@ -71,7 +94,7 @@ void LoadBalancingCornerDetector::ReBalance()
     const uint32_t thresh = (m_cornerCount1 + m_cornerCount2) / 5;
 
     // Don't split too close to image top/bottom:
-    uint32_t border = m_height / 20;
+    uint32_t border = m_height / 3;
     if ( border < 16 )
     {
         border = 16;

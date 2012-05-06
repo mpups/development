@@ -9,8 +9,9 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
 }
+
+#include "FrameConverter.h"
 
 #include "Capture.h"
 
@@ -46,7 +47,7 @@ private:
     AVFrame*         m_avFrame;
     int              m_videoStream;
     AVPacket         m_packet;
-    SwsContext*      m_imageConversionContext;
+    FrameConverter   m_converter;
     bool m_open;
 };
 

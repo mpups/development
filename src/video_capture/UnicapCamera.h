@@ -7,8 +7,9 @@
 
 extern "C" {
 #include <unicap.h>
-#include <libswscale/swscale.h>
 }
+
+#include "FrameConverter.h"
 
 #include <glkcore.h>
 
@@ -63,7 +64,7 @@ private:
     volatile uint64_t m_time;
     volatile bool   m_captureFrame;
 
-    SwsContext* m_imageConversionContext;
+    FrameConverter m_converter;
 };
 
 #endif // UNICAP_CAMERA_H

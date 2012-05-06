@@ -28,8 +28,7 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
 :
     m_frameReady        ( 0 ),
     m_buffer            ( 0 ),
-    m_time              ( -1 ),
-    m_imageConversionContext (0)
+    m_time              ( -1 )
 {
     if ( OpenDevice() )
     {
@@ -69,11 +68,6 @@ UnicapCamera::~UnicapCamera()
     }
 
     free( m_buffer );
-
-    if ( m_imageConversionContext != 0 )
-    {
-        sws_freeContext( m_imageConversionContext );
-    }
 }
 
 /**
@@ -213,14 +207,8 @@ void UnicapCamera::FrameConversion( PixelFormat format, uint8_t* data, int strid
     uint8_t* dstPlanes[4] = { data, 0, 0, 0 };
     int dstStrides[4] = { stride, 0, 0, 0 };
 
-    m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
-                                    w, h, PIX_FMT_YUYV422, w, h, format,
-                                    SWS_FAST_BILINEAR, 0, 0, 0 );
-
-    if( m_imageConversionContext != 0 )
-    {
-        sws_scale( m_imageConversionContext, srcPlanes, srcStrides, 0, h, dstPlanes, dstStrides );
-    }
+    m_converter.Configure( w, h, PIX_FMT_YUYV422, w, h, format );
+    m_converter.Convert( srcPlanes, srcStrides, 0, h, dstPlanes, dstStrides );
 }
 
 /**

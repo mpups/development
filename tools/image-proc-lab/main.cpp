@@ -60,6 +60,8 @@ int main( int argc, char** argv )
                 lum // image data
             );
 
+    m_detector.DisableBalancing();
+
     GLK::Timer timer;
     std::vector< robo::PixelCoord > detectedCorners;
 

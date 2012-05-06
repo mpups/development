@@ -28,7 +28,6 @@ LibAvCapture::LibAvCapture( const char* videoFile )
 :
     m_formatContext ( 0 ),
     m_codecContext  ( 0 ),
-    m_imageConversionContext ( 0 ),
     m_open ( false )
 {
     InitLibAvCodec();
@@ -95,10 +94,6 @@ LibAvCapture::~LibAvCapture()
 {
     if ( m_open )
     {
-        if ( m_imageConversionContext != 0 )
-        {
-            sws_freeContext( m_imageConversionContext );
-        }
         av_free( m_avFrame );
         avcodec_close( m_codecContext );
         av_close_input_file( m_formatContext );
@@ -198,14 +193,7 @@ void LibAvCapture::FrameConversion( PixelFormat format, uint8_t* data, int strid
     uint8_t* dstPlanes[4] = { data, 0, 0, 0 };
     int dstStrides[4] = { stride, 0, 0, 0 };
 
-    // Re-use the current conversion context if we can:
-    m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
-                                    w, h, m_codecContext->pix_fmt, w, h, format,
-                                    SWS_FAST_BILINEAR, 0, 0, 0 );
-
-    if( m_imageConversionContext != 0 )
-    {
-        sws_scale( m_imageConversionContext, m_avFrame->data, m_avFrame->linesize, 0, h, dstPlanes, dstStrides );
-    }
+    m_converter.Configure( w, h, m_codecContext->pix_fmt, w, h, format );
+    m_converter.Convert( m_avFrame->data, m_avFrame->linesize, 0, h, dstPlanes, dstStrides );
 }
 

@@ -15,6 +15,9 @@ void TestVideoWrite()
 
     bool streamCreated = writer.AddVideoStream( 320,240,30, LibAvWriter::FourCc( 'F','F','V','1') );
     ASSERT_TRUE( streamCreated );
+
+    bool frameWritten = writer.PutGreyFrame( 0, 640, 480, 480 );
+    ASSERT_TRUE( frameWritten );
 }
 
 void TestVideoRead()
