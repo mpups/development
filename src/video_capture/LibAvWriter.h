@@ -9,8 +9,9 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
 }
+
+#include "FrameConverter.h"
 
 /**
     Class which uses libavcodec to write video streams to a video file.
@@ -30,12 +31,19 @@ public:
     static int32_t FourCc( char, char, char, char );
     static PixelFormat ChooseCodecFormat( CodecID id, PixelFormat inputFormat );
 
+protected:
+    void WriteCodecFrame();
+
 private:
     AVOutputFormat*  m_outputFormat;
     AVFormatContext* m_formatContext;
     AVStream*        m_videoStream;
     AVCodec*         m_codec;
-    SwsContext*      m_imageConversionContext;
+    AVFrame          m_codecFrame;
+
+    FrameConverter   m_converter;
+    uint8_t*         m_encodingBuffer;
+
     bool    m_open;
 };
 

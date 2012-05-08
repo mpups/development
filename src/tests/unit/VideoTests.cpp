@@ -16,8 +16,21 @@ void TestVideoWrite()
     bool streamCreated = writer.AddVideoStream( 320,240,30, LibAvWriter::FourCc( 'F','F','V','1') );
     ASSERT_TRUE( streamCreated );
 
-    bool frameWritten = writer.PutGreyFrame( 0, 640, 480, 480 );
-    ASSERT_TRUE( frameWritten );
+    if ( streamCreated )
+    {
+        uint8_t* buffer;
+        int err = posix_memalign( (void**)&buffer, 16, 640*480 );
+        ASSERT_EQ( 0, err );
+
+        for ( int i=0;i<256;++i)
+        {
+            memset( buffer, i, 640*480 );
+            bool frameWritten = writer.PutGreyFrame( buffer, 640, 480, 480 );
+            ASSERT_TRUE( frameWritten );
+        }
+
+        free( buffer );
+    }
 }
 
 void TestVideoRead()

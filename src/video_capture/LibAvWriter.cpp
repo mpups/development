@@ -40,7 +40,12 @@ PixelFormat LibAvWriter::ChooseCodecFormat( CodecID id, PixelFormat inputFormat 
     switch ( id )
     {
         case CODEC_ID_FFV1:
+        case CODEC_ID_HUFFYUV:
         pixelFormat = PIX_FMT_YUV422P;
+        break;
+
+        case CODEC_ID_MJPEG:
+        pixelFormat = PIX_FMT_YUVJ420P;
         break;
 
         case CODEC_ID_RAWVIDEO:
@@ -61,8 +66,9 @@ PixelFormat LibAvWriter::ChooseCodecFormat( CodecID id, PixelFormat inputFormat 
 */
 LibAvWriter::LibAvWriter( const char* videoFile )
 :
-    m_formatContext (0),
-    m_imageConversionContext (0),
+    m_formatContext  (0),
+    m_codec          (0),
+    m_encodingBuffer (0),
     m_open ( false )
 {
     LibAvCapture::InitLibAvCodec();
@@ -92,25 +98,27 @@ LibAvWriter::LibAvWriter( const char* videoFile )
 
     snprintf( m_formatContext->filename, sizeof(m_formatContext->filename), "%s", videoFile );
 
+    m_encodingBuffer = reinterpret_cast<uint8_t*>( av_malloc( FF_MIN_BUFFER_SIZE ) );
+
     m_open = true;
 }
 
 LibAvWriter::~LibAvWriter()
 {
-    if ( m_imageConversionContext != 0 )
-    {
-        sws_freeContext( m_imageConversionContext );
-    }
-
     if ( m_videoStream != 0 )
     {
         avcodec_close( m_videoStream->codec );
+        avpicture_free( reinterpret_cast<AVPicture*>( &m_codecFrame ) );
     }
 
     if ( m_formatContext != 0 )
     {
+        av_write_trailer( m_formatContext );
+        url_fclose( m_formatContext->pb );
         avformat_free_context( m_formatContext );
     }
+
+    av_free( m_encodingBuffer );
 }
 
 bool LibAvWriter::IsOpen() const
@@ -157,11 +165,15 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
                 if ( fps == 0) { fps = 1; }
                 codecContext->time_base.den = fps;
 
+                avcodec_get_frame_defaults( &m_codecFrame );
+                int err = avpicture_alloc( reinterpret_cast<AVPicture*>( &m_codecFrame ), codecContext->pix_fmt, codecContext->width, codecContext->height );
+                assert( err == 0 );
+
                 av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
 
                 m_codec = avcodec_find_encoder( codecId );
                 // We don't check result of above because the following fails gracefully if m_codec==null
-                int err = avcodec_open2( codecContext, m_codec, 0 );
+                err = avcodec_open2( codecContext, m_codec, 0 );
                 if ( err == 0 )
                 {
                     success = true;
@@ -200,15 +212,39 @@ bool LibAvWriter::PutGreyFrame( uint8_t* buffer, uint32_t width, uint32_t height
     bool success = false;
     AVCodecContext* codecContext = m_videoStream->codec;
 
-    m_imageConversionContext = sws_getCachedContext( m_imageConversionContext,
-                                    width, height, PIX_FMT_GRAY8, codecContext->width, codecContext->height, codecContext->pix_fmt,
-                                    SWS_FAST_BILINEAR, 0, 0, 0 );
-
-    if ( m_imageConversionContext != 0 )
+    if ( m_converter.Configure( width, height, PIX_FMT_GRAY8,
+                                codecContext->width, codecContext->height, codecContext->pix_fmt )
+       )
     {
+        uint8_t* srcPlanes[4] = { buffer, 0, 0, 0 };
+        int srcStrides[4] = { stride, 0, 0, 0 };
+        m_converter.Convert( srcPlanes, srcStrides, 0, height, m_codecFrame.data, m_codecFrame.linesize );
+        WriteCodecFrame();
         success = true;
     }
 
     return success;
+}
+
+/**
+    Write the current codec picture to the current stream.
+*/
+void LibAvWriter::WriteCodecFrame()
+{
+    AVCodecContext* codecContext = m_videoStream->codec;
+    int bytes = avcodec_encode_video( codecContext, m_encodingBuffer, FF_MIN_BUFFER_SIZE, &m_codecFrame );
+    if ( bytes > 0 )
+    {
+        AVPacket pkt;
+        av_init_packet( &pkt );
+        pkt.stream_index = m_videoStream->index;
+        pkt.data = m_encodingBuffer;
+        pkt.size = FF_MIN_BUFFER_SIZE;
+        if ( codecContext->coded_frame->key_frame )
+        {
+            pkt.flags |= AV_PKT_FLAG_KEY;
+        }
+        av_write_frame( m_formatContext, &pkt );
+    }
 }
 
