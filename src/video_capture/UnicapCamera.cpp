@@ -155,7 +155,7 @@ const char* UnicapCamera::GetModel() const
 }
 
 /**
-    @todo bug - stride is not used - should use swscale library anyway
+    @todo bug - stride is not used.
 */
 void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
 {

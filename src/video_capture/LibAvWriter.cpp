@@ -169,7 +169,7 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
                 int err = avpicture_alloc( reinterpret_cast<AVPicture*>( &m_codecFrame ), codecContext->pix_fmt, codecContext->width, codecContext->height );
                 assert( err == 0 );
 
-                av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
+                //av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
 
                 m_codec = avcodec_find_encoder( codecId );
                 // We don't check result of above because the following fails gracefully if m_codec==null

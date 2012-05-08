@@ -1,10 +1,11 @@
 #include "VideoTests.h"
 
 #include "../../video_capture/LibAvWriter.h"
+#include "../../video_capture/LibAvCapture.h"
 
 #include <gtest/gtest.h>
 
-void TestVideoWrite()
+void TestVideo()
 {
     // test fourcc code generation:
     int32_t fourcc = LibAvWriter::FourCc( 'y','u','y','v' );
@@ -13,7 +14,7 @@ void TestVideoWrite()
     LibAvWriter writer( "test.avi" );
     ASSERT_TRUE( writer.IsOpen() );
 
-    bool streamCreated = writer.AddVideoStream( 320,240,30, LibAvWriter::FourCc( 'F','F','V','1') );
+    bool streamCreated = writer.AddVideoStream( 320,240,30, LibAvWriter::FourCc( 'F','F','V','1' ) );
     ASSERT_TRUE( streamCreated );
 
     if ( streamCreated )
@@ -26,13 +27,23 @@ void TestVideoWrite()
         {
             memset( buffer, i, 640*480 );
             bool frameWritten = writer.PutGreyFrame( buffer, 640, 480, 480 );
-            ASSERT_TRUE( frameWritten );
+            EXPECT_TRUE( frameWritten );
+        }
+
+        // Now try to read back the same video
+        LibAvCapture reader( "test.avi" );
+        ASSERT_TRUE( reader.IsOpen() );
+
+        for ( unsigned int i=0;i<256;++i)
+        {
+            reader.GetFrame();
+            reader.ExtractLuminanceImage( buffer, 640 );
+            EXPECT_EQ( buffer[0], i );
+            //std::cout << "Timestamp := " << reader.GetFrameTimestamp() << std::endl;
+            reader.DoneFrame();
         }
 
         free( buffer );
     }
 }
 
-void TestVideoRead()
-{
-}

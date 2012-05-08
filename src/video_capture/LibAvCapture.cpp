@@ -183,6 +183,7 @@ void LibAvCapture::ExtractBgrImage( uint8_t* data, int stride )
     @note It is currently assumed the output image will be the same size as the
     video frame read from the file.
 
+    @param format PixelFormat of output buffer - currently only supports single plane formats.
     @param data pointer to buffer that must be large enough to hold the data
     @param stride number of bytes to jump between rows in data.
 */

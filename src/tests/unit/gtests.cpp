@@ -20,8 +20,7 @@ TEST( io, networking )
 
 TEST( io, video )
 {
-    TestVideoWrite();
-    TestVideoRead();
+    TestVideo();
 }
 
 TEST( vision, image )
