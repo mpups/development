@@ -13,6 +13,8 @@ extern "C" {
 
 #include "FrameConverter.h"
 
+class LibAvVideoStream;
+
 /**
     Class which uses libavcodec to write video streams to a video file.
 */
@@ -37,10 +39,9 @@ protected:
 private:
     AVOutputFormat*  m_outputFormat;
     AVFormatContext* m_formatContext;
-    AVStream*        m_videoStream;
-    AVCodec*         m_codec;
     AVFrame          m_codecFrame;
 
+    LibAvVideoStream* m_stream;
     FrameConverter   m_converter;
     uint8_t*         m_encodingBuffer;
 

@@ -14,7 +14,7 @@ void TestVideo()
     LibAvWriter writer( "test.avi" );
     ASSERT_TRUE( writer.IsOpen() );
 
-    bool streamCreated = writer.AddVideoStream( 320,240,30, LibAvWriter::FourCc( 'F','F','V','1' ) );
+    bool streamCreated = writer.AddVideoStream( 320,240,60, LibAvWriter::FourCc( 'F','F','V','1' ) );
     ASSERT_TRUE( streamCreated );
 
     if ( streamCreated )
