@@ -26,8 +26,9 @@ LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib' }
 OPENCV_LINKS = { 'opencv_core', 'opencv_contrib' }
 OPENGL_LINKS = {}
 SYSTEM_LINKS = { 'pthread', 'rt' }
+FFMPEG_LINKS = { 'avcodec', 'avformat', 'swscale' }
 LINKS = { 'lua5.1', 'freetype', 'unicap' }
 
 GLK_LINKS = { 'glkcore' }
 
-CONFIGURING_ARM = 1
+CONFIGURING_ARM = true

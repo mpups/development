@@ -18,10 +18,12 @@ TEST( io, networking )
     TestUdp();
 }
 
+#ifndef ARM_BUILD
 TEST( io, video )
 {
     TestVideo();
 }
+#endif
 
 TEST( vision, image )
 {

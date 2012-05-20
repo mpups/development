@@ -2,6 +2,7 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
+--dofile( 'configure.lua' )
 dofile( 'configure.lua' )
 
 -- Append individual link groups together so we can use LINKS to link to all libs:
@@ -55,7 +56,11 @@ solution 'robolib'
         excludes { SRC .. 'sse/test/*' }
         excludes { SRC .. 'tests/**' }
         excludes { SRC .. 'sse/*' }
-        excludes { SRC .. 'camera_capture/Dc1394Camera.*' }
+        if ( CONFIGURING_ARM ) then
+            excludes { SRC .. 'video/Dc1394Camera.*' }
+            excludes { SRC .. 'visualisation/*' }
+            excludes { SRC .. 'video/LibAv*' }
+        end
 
         -- Exclude files which are platform specific:
         if ( PLATFORM == 'win32' ) then
@@ -89,7 +94,7 @@ solution 'robolib'
         links ( GLK_LINKS )
         links { LINKS }
 
-if ( not CONFIGURING_ARM == 1 ) then
+if ( not CONFIGURING_ARM ) then
     project 'sse-test'
         kind 'ConsoleApp'
         files { SRC .. 'sse/**.cpp' }
@@ -101,7 +106,9 @@ end
         kind 'ConsoleApp'
 
         files { SRC .. 'tests/unit/*.cpp' }
-
+        if ( CONFIGURING_ARM ) then
+            excludes { SRC .. 'tests/unit/VideoTests*' }
+        end
         configuration {}
         links { 'robolib' }
         links ( SYSTEM_LINKS )
