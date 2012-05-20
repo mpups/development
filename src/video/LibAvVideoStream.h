@@ -21,12 +21,16 @@ public:
 
     AVCodecContext* CodecContext();
     AVCodec* Codec();
+    uint32_t BufferSize() const;
+    uint8_t* Buffer();
 
     int Index() const;
 
 private:
     AVStream* m_stream;
     AVCodec*  m_codec;
+    uint32_t  m_bufferSize;
+    uint8_t*  m_encodingBuffer;
 };
 
 

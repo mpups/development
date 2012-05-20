@@ -29,21 +29,25 @@ public:
     bool AddVideoStream( uint32_t width, uint32_t height, uint32_t fps, int32_t fourcc );
 
     bool PutGreyFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
+    bool PutRgbFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
+    bool PutBgrFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
 
     static int32_t FourCc( char, char, char, char );
     static PixelFormat ChooseCodecFormat( CodecID id, PixelFormat inputFormat );
 
 protected:
+    bool PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format );
     void WriteCodecFrame();
 
 private:
+    static const int BUFFER_SIZE = FF_MIN_BUFFER_SIZE+(640*480*4);
+
     AVOutputFormat*  m_outputFormat;
     AVFormatContext* m_formatContext;
     AVFrame          m_codecFrame;
 
     LibAvVideoStream* m_stream;
     FrameConverter   m_converter;
-    uint8_t*         m_encodingBuffer;
 
     bool    m_open;
 };

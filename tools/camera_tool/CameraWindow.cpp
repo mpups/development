@@ -8,6 +8,8 @@
 
 #include <opencv/highgui.h>
 
+#include <RoboLibVision.h>
+
 using namespace GLK;
 
 CameraWindow::CameraWindow( String title )
@@ -58,7 +60,7 @@ CameraWindow::~CameraWindow()
     free( m_lum );
     free( m_rgb );
 
-    cvReleaseVideoWriter( &m_videoWriter );
+    delete m_videoWriter;
 }
 
 bool CameraWindow::InitGL()
@@ -98,8 +100,14 @@ bool CameraWindow::InitGL()
         // Setup a tracker:
         m_klt = new KltTracker( 256, m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
 
-        // Test - setup opencv video writer - use lossless ffv1 codec:
-        m_videoWriter = cvCreateVideoWriter( "test.avi", CV_FOURCC('F','F','V', '1'), 30, cvSize(m_camera->GetFrameWidth(), m_camera->GetFrameHeight()), 1);
+        // Test - setup video writer - use lossless ffv1 codec:
+        m_videoWriter = new LibAvWriter( "test.avi" );
+        assert ( m_videoWriter->IsOpen() );
+        if ( m_videoWriter->IsOpen() )
+        {
+            bool streamOk = m_videoWriter->AddVideoStream( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','F','V','1' ) );
+            assert( streamOk );
+        }
     }
     else
     {
@@ -162,9 +170,9 @@ bool CameraWindow::Update( unsigned int )
         
         // Create an IPL image and write it to the video file.
         IplImage* img = cvCreateImage( cvSize(m_camera->GetFrameWidth(), m_camera->GetFrameHeight()), IPL_DEPTH_8U, 3 );
-        FillIplImage( m_rgb, img );
-        cvWriteFrame( m_videoWriter, img );
-        cvReleaseImage( &img );
+
+        bool frameOK = m_videoWriter->PutBgrFrame( (uint8_t*)m_rgb, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 3*m_camera->GetFrameWidth() );
+        assert( frameOK );
 
         //tmr.Reset();
         glBindTexture( GL_TEXTURE_2D, m_lumTex );

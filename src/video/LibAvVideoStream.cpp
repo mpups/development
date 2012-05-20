@@ -14,7 +14,8 @@ extern "C" {
 */
 LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, uint32_t height, uint32_t fps, int32_t fourcc )
 :
-    m_stream    (0)
+    m_stream    (0),
+    m_encodingBuffer (0)
 {
     const AVCodecTag *tags[] = { avformat_get_riff_video_tags(), 0 };
     CodecID codecId = av_codec_get_id( tags, fourcc );
@@ -34,11 +35,15 @@ LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, ui
         CodecContext()->time_base.num = 1;
         if ( fps == 0) { fps = 1; }
         CodecContext()->time_base.den = fps;
+
+        m_bufferSize = width*height*4;
+        m_encodingBuffer = reinterpret_cast<uint8_t*>( av_malloc( m_bufferSize ) );
     }
 }
 
 LibAvVideoStream::~LibAvVideoStream()
 {
+    av_free( m_encodingBuffer );
     avcodec_close( m_stream->codec );
 }
 
@@ -55,6 +60,16 @@ AVCodecContext* LibAvVideoStream::CodecContext()
 AVCodec* LibAvVideoStream::Codec()
 {
     return m_codec;
+}
+
+uint32_t LibAvVideoStream::BufferSize() const
+{
+    return m_bufferSize;
+}
+
+uint8_t* LibAvVideoStream::Buffer()
+{
+    return m_encodingBuffer;
 }
 
 int LibAvVideoStream::Index() const

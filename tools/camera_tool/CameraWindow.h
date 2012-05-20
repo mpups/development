@@ -12,7 +12,7 @@
 // fwd decls:
 class KltTracker;
 class CameraCalibrationSystem;
-class CvVideoWriter;
+class LibAvWriter;
 
 /**
     A simple window app that can display a live camera feed,
@@ -61,7 +61,7 @@ private:
     bool m_tracking;
 
     // Saving Video
-    CvVideoWriter* m_videoWriter;
+    LibAvWriter* m_videoWriter;
 };
 
 #endif

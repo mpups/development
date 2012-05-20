@@ -69,7 +69,6 @@ LibAvWriter::LibAvWriter( const char* videoFile )
 :
     m_formatContext  (0),
     m_stream         (0),
-    m_encodingBuffer (0),
     m_open ( false )
 {
     LibAvCapture::InitLibAvCodec();
@@ -98,8 +97,6 @@ LibAvWriter::LibAvWriter( const char* videoFile )
 
     snprintf( m_formatContext->filename, sizeof(m_formatContext->filename), "%s", videoFile );
 
-    m_encodingBuffer = reinterpret_cast<uint8_t*>( av_malloc( 2*FF_MIN_BUFFER_SIZE ) );
-
     m_open = true;
 }
 
@@ -115,8 +112,6 @@ LibAvWriter::~LibAvWriter()
         url_fclose( m_formatContext->pb );
         avformat_free_context( m_formatContext );
     }
-
-    av_free( m_encodingBuffer );
 }
 
 bool LibAvWriter::IsOpen() const
@@ -181,10 +176,43 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
 */
 bool LibAvWriter::PutGreyFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride )
 {
+    return PutFrame( buffer, width, height, stride, PIX_FMT_GRAY8 );
+}
+
+/**
+    Write an RGB colour frame to the video file.
+
+    @note If the width and height of the image data do not match those of the stream, the image will be scaled.
+    @note If a colour video stream has not been setup then the video will be converted to greyscale.
+*/
+bool LibAvWriter::PutRgbFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride )
+{
+    return PutFrame( buffer, width, height, stride, PIX_FMT_RGB24 );
+}
+
+/**
+    Write an RGB colour frame to the video file.
+
+    @note If the width and height of the image data do not match those of the stream, the image will be scaled.
+    @note If a colour video stream has not been setup then the video will be converted to greyscale.
+*/
+bool LibAvWriter::PutBgrFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride )
+{
+    return PutFrame( buffer, width, height, stride, PIX_FMT_BGR24 );
+}
+
+/**
+    Write a frame with the specified pixel format to the video file.
+
+    The sws_scale library is used to convert the frame from the specified format to the format
+    required by the stream's codec.
+*/
+bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format )
+{
     bool success = false;
     AVCodecContext* codecContext = m_stream->CodecContext();
 
-    if ( m_converter.Configure( width, height, PIX_FMT_GRAY8,
+    if ( m_converter.Configure( width, height, format,
                                 codecContext->width, codecContext->height, codecContext->pix_fmt )
        )
     {
@@ -204,14 +232,14 @@ bool LibAvWriter::PutGreyFrame( uint8_t* buffer, uint32_t width, uint32_t height
 void LibAvWriter::WriteCodecFrame()
 {
     AVCodecContext* codecContext = m_stream->CodecContext();
-    int bytes = avcodec_encode_video( codecContext, m_encodingBuffer, 2*FF_MIN_BUFFER_SIZE, &m_codecFrame );
+    int bytes = avcodec_encode_video( codecContext, m_stream->Buffer(), BUFFER_SIZE, &m_codecFrame );
     if ( bytes > 0 )
     {
         AVPacket pkt;
         av_init_packet( &pkt );
         pkt.stream_index = m_stream->Index();
-        pkt.data = m_encodingBuffer;
-        pkt.size = FF_MIN_BUFFER_SIZE;
+        pkt.data = m_stream->Buffer();
+        pkt.size = m_stream->BufferSize();
         if ( codecContext->coded_frame->key_frame )
         {
             pkt.flags |= AV_PKT_FLAG_KEY;
@@ -219,4 +247,3 @@ void LibAvWriter::WriteCodecFrame()
         av_write_frame( m_formatContext, &pkt );
     }
 }
-

@@ -1,7 +1,7 @@
 #include "VideoTests.h"
 
-#include "../../video_capture/LibAvWriter.h"
-#include "../../video_capture/LibAvCapture.h"
+#include "../../video/LibAvWriter.h"
+#include "../../video/LibAvCapture.h"
 
 #include <gtest/gtest.h>
 
