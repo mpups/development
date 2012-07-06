@@ -49,7 +49,8 @@ void FastCornerThread::PostJob( const Job& j )
 
 /**
     If you do not call this after calling PostJob() then the corner detection
-    thread will block indefinitely.
+    thread will block indefinitely. The corners are returned in the same order
+    that they are detected (row scan order).
 
     @param results Results are appended to this vector.
     @param offsetX added to x-coordinate of detected corners.

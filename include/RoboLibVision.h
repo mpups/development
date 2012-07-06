@@ -8,6 +8,7 @@
 #include "../src/vision/Image.h"
 #include "../src/vision/FastCornerThread.h"
 #include "../src/vision/LoadBalancingCornerDetector.h"
+#include "../src/vision/FastCornerSearch.h"
 
 #include "../src/video/LibAvCapture.h"
 #include "../src/video/LibAvWriter.h"

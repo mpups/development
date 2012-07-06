@@ -105,7 +105,7 @@ bool CameraWindow::InitGL()
         assert ( m_videoWriter->IsOpen() );
         if ( m_videoWriter->IsOpen() )
         {
-            bool streamOk = m_videoWriter->AddVideoStream( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+            bool streamOk = m_videoWriter->AddVideoStream( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','F','V','1' ) );
             assert( streamOk );
         }
     }

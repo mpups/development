@@ -3,6 +3,10 @@
 #include "LibAvCapture.h"
 #include "LibAvVideoStream.h"
 
+extern "C" {
+#include <libavutil/mathematics.h>
+}
+
 #include <iostream>
 
 #include <ctype.h>
@@ -138,6 +142,7 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
             int err = avpicture_alloc( reinterpret_cast<AVPicture*>( &m_codecFrame ), m_stream->CodecContext()->pix_fmt, m_stream->CodecContext()->width, m_stream->CodecContext()->height );
             assert( err == 0 );
 
+            m_codecFrame.pts = 0;
             //av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
 
             // We don't check result of above because the following fails gracefully if m_codec==null
@@ -219,6 +224,7 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
         uint8_t* srcPlanes[4] = { buffer, 0, 0, 0 };
         int srcStrides[4] = { stride, 0, 0, 0 };
         m_converter.Convert( srcPlanes, srcStrides, 0, height, m_codecFrame.data, m_codecFrame.linesize );
+        m_codecFrame.pts += 1;
         WriteCodecFrame();
         success = true;
     }
@@ -240,6 +246,8 @@ void LibAvWriter::WriteCodecFrame()
         pkt.stream_index = m_stream->Index();
         pkt.data = m_stream->Buffer();
         pkt.size = m_stream->BufferSize();
+        pkt.pts = av_rescale_q( codecContext->coded_frame->pts, codecContext->time_base, m_stream->TimeBase() );
+
         if ( codecContext->coded_frame->key_frame )
         {
             pkt.flags |= AV_PKT_FLAG_KEY;

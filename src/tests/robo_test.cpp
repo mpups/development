@@ -51,7 +51,7 @@ int main( int argc, char** argv )
         for ( int i = 0; i<40; ++i )
         {    
             camera.GetFrame();
-            double timeStamp = camera.GetFrameTimestamp() / 1000000.0;
+            double timeStamp = camera.GetFrameTimestamp_us() / 1000000.0;
             camera.ExtractLuminanceImage( m_lum, camera.GetFrameWidth() );
             camera.DoneFrame();
             

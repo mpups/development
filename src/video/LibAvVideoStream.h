@@ -6,6 +6,10 @@
 
 #include <stdint.h>
 
+extern "C" {
+#include <libavutil/mathematics.h>
+}
+
 struct AVStream;
 struct AVFormatContext;
 struct AVCodec;
@@ -26,13 +30,14 @@ public:
 
     int Index() const;
 
+    AVRational TimeBase();
+
 private:
     AVStream* m_stream;
     AVCodec*  m_codec;
     uint32_t  m_bufferSize;
     uint8_t*  m_encodingBuffer;
 };
-
 
 #endif /* __LIB_AV_VIDEO_STREAM_H__ */
 

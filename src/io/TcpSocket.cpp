@@ -101,7 +101,7 @@ void TcpSocket::SetNagleBufferingOn()
                            );
     if ( result < 0 )
     {
-        fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );        
+        fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );
     }
 }
 
@@ -119,7 +119,7 @@ void TcpSocket::SetNagleBufferingOff()
                            );
     if ( result < 0 )
     {
-        fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );        
-    }      
+        fprintf( stderr, "SetSocketOpt failed: %s\n", strerror(errno) );
+    }
 }
 

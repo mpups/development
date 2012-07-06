@@ -26,7 +26,9 @@ LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, ui
     {
         CodecContext()->codec_id  = codecId;
         CodecContext()->codec_tag = fourcc;
-        CodecContext()->pix_fmt = LibAvWriter::ChooseCodecFormat( codecId, PIX_FMT_GRAY8 ); //@todo hard coded to grey-scale input at moment
+        CodecContext()->pix_fmt = LibAvWriter::ChooseCodecFormat( codecId, PIX_FMT_GRAY8 ); //@todo hard coded to grey-scale input at moment (but only affects raw video)
+        CodecContext()->bit_rate = 5000;
+        CodecContext()->bit_rate_tolerance = 1000;
 
         assert( width%2 == 0 );
         assert( height%2 == 0 );
@@ -52,6 +54,11 @@ bool LibAvVideoStream::IsValid() const
     return m_stream != 0;
 }
 
+/**
+    Return the codec context of the underlying video stream.
+
+    It is an error to call this if LibAvVideoStream::IsValid() returns false.
+*/
 AVCodecContext* LibAvVideoStream::CodecContext()
 {
     return m_stream->codec;
@@ -77,5 +84,14 @@ int LibAvVideoStream::Index() const
     return m_stream->index;
 }
 
+/**
+    Return the time base of the underlying video stream as an AVRational structure.
+
+    It is an error to call this if LibAvVideoStream::IsValid() returns false.
+*/
+AVRational LibAvVideoStream::TimeBase()
+{
+    return m_stream->time_base;
+}
 
 
