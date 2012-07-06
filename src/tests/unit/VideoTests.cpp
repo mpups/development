@@ -14,7 +14,7 @@ void TestVideo()
     LibAvWriter writer( "test.avi" );
     ASSERT_TRUE( writer.IsOpen() );
 
-    bool streamCreated = writer.AddVideoStream( 320,240,60, LibAvWriter::FourCc( 'F','F','V','1' ) );
+    bool streamCreated = writer.AddVideoStream( 320,240,30, LibAvWriter::FourCc( 'F','M','P','4' ) );
     ASSERT_TRUE( streamCreated );
 
     if ( streamCreated )
@@ -34,14 +34,17 @@ void TestVideo()
         LibAvCapture reader( "test.avi" );
         ASSERT_TRUE( reader.IsOpen() );
 
-        for ( unsigned int i=0;i<256;++i)
+        int decodedCount = 0;
+        while ( reader.GetFrame() )
         {
-            reader.GetFrame();
             reader.ExtractLuminanceImage( buffer, 640 );
-            EXPECT_EQ( buffer[0], i );
+            EXPECT_EQ( buffer[0], decodedCount );
             //std::cout << "Timestamp := " << reader.GetFrameTimestamp() << std::endl;
             reader.DoneFrame();
+            decodedCount += 1;
         }
+
+        EXPECT_EQ( 256, decodedCount );
 
         free( buffer );
     }

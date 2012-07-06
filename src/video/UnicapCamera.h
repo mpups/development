@@ -33,7 +33,7 @@ public:
     void DoneFrame();
     int32_t GetFrameWidth() const;
     int32_t GetFrameHeight() const;
-    uint64_t GetFrameTimestamp() const;
+    int64_t GetFrameTimestamp_us() const;
 
     uint64_t GetGuid() const;
     const char*   GetVendor() const;

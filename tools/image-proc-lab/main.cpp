@@ -83,9 +83,16 @@ int main( int argc, char** argv )
         display.Clear();
         uint32_t split = m_detector.GetSplitHeight();
         display.Add( robo::AnnotatedImage::Line( robo::AnnotatedImage::Point(0,split), robo::AnnotatedImage::Point(capture->GetFrameWidth(),split) ) );
-        for ( size_t c=0;c<detectedCorners.size();++c)
+
+        robo::FastCornerSearch search( detectedCorners );
+        std::vector<int> searchIndices;
+        robo::AlignedBox rect = { {50, 50}, 200, 100 };
+        search.GetRectIndices( rect, searchIndices );
+
+        for ( size_t c=0;c<searchIndices.size();++c)
         {
-            display.Add( robo::AnnotatedImage::Point( detectedCorners[c].x, detectedCorners[c].y ) );
+            int i = searchIndices[c];
+            display.Add( robo::AnnotatedImage::Point( detectedCorners[i].x, detectedCorners[i].y ) );
         }
 
         display.PostImage( GLK::ImageWindow::FixedAspectRatio, capture->GetFrameWidth(), capture->GetFrameHeight(), lum );
@@ -104,6 +111,8 @@ int main( int argc, char** argv )
     }
 
     display.WaitForClose();
+
+    free( lum );
 
     return EXIT_SUCCESS;
 }

@@ -134,7 +134,10 @@ int32_t UnicapCamera::GetFrameHeight() const
     return m_height;
 }
 
-uint64_t UnicapCamera::GetFrameTimestamp() const
+/**
+    @return the frame's timestamp in micro seconds.
+*/
+int64_t UnicapCamera::GetFrameTimestamp_us() const
 {
     return m_time;
 }

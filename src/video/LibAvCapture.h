@@ -29,7 +29,7 @@ public:
     void DoneFrame();
     int32_t GetFrameWidth() const;
     int32_t GetFrameHeight() const;
-    uint64_t GetFrameTimestamp() const;
+    int64_t GetFrameTimestamp_us() const;
 
     void ExtractLuminanceImage( uint8_t* data, int stride );
     void ExtractRgbImage( uint8_t* data, int stride );
@@ -46,7 +46,6 @@ private:
     AVCodec*         m_codec;
     AVFrame*         m_avFrame;
     int              m_videoStream;
-    AVPacket         m_packet;
     FrameConverter   m_converter;
     bool m_open;
 };

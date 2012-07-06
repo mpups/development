@@ -105,7 +105,7 @@ bool CameraWindow::InitGL()
         assert ( m_videoWriter->IsOpen() );
         if ( m_videoWriter->IsOpen() )
         {
-            bool streamOk = m_videoWriter->AddVideoStream( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','F','V','1' ) );
+            bool streamOk = m_videoWriter->AddVideoStream( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
             assert( streamOk );
         }
     }
@@ -113,9 +113,9 @@ bool CameraWindow::InitGL()
     {
         ok = false;
     }
-    
+
     fprintf( stderr, "OpenGL version: %s\n", glGetString( GL_VERSION ) );
-    
+
     glPointSize( 4.f );
 
     // setup a font for rendering:
@@ -164,25 +164,16 @@ bool CameraWindow::Update( unsigned int )
 
         m_camera->ExtractLuminanceImage( m_lum, m_camera->GetFrameWidth() );
 
-        //GLK::Timer tmr;
         m_camera->ExtractBgrImage( m_rgb, 3*m_camera->GetFrameWidth() );
-        //fprintf(stderr,"YUV conversion: %lu us\n", tmr.GetMicroSeconds() );
-        
-        // Create an IPL image and write it to the video file.
-        IplImage* img = cvCreateImage( cvSize(m_camera->GetFrameWidth(), m_camera->GetFrameHeight()), IPL_DEPTH_8U, 3 );
 
         bool frameOK = m_videoWriter->PutBgrFrame( (uint8_t*)m_rgb, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 3*m_camera->GetFrameWidth() );
         assert( frameOK );
 
-        //tmr.Reset();
         glBindTexture( GL_TEXTURE_2D, m_lumTex );
         glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), GL_LUMINANCE, GL_UNSIGNED_BYTE, m_lum );
-        //fprintf(stderr,"lum tex2d: %llu us\n", tmr.GetMicroSeconds() );
 
-        //tmr.Reset();
         glBindTexture( GL_TEXTURE_2D, m_rgbTex );
         glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), GL_BGR, GL_UNSIGNED_BYTE, m_rgb );
-        //fprintf(stderr,"rgb tex2d: %llu us\n", tmr.GetMicroSeconds() );    
 
         if ( m_showUndistorted && m_calibration->Calibrated() )
         {
@@ -195,8 +186,8 @@ bool CameraWindow::Update( unsigned int )
             m_klt->Track( m_lum );
         }
 
-        m_interFrameTime_ms = (m_camera->GetFrameTimestamp() - m_lastTimestamp) / 1000;
-        m_lastTimestamp = m_camera->GetFrameTimestamp();
+        m_interFrameTime_ms = (m_camera->GetFrameTimestamp_us() - m_lastTimestamp) / 1000;
+        m_lastTimestamp = m_camera->GetFrameTimestamp_us();
         m_camera->DoneFrame();        
         captured = true;
     }

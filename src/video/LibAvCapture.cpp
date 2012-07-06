@@ -2,6 +2,10 @@
 
 #include <assert.h>
 
+extern "C" {
+#include <libavutil/mathematics.h>
+}
+
 /**
     Static member to register all codecs with libav.
     This is not thread safe.
@@ -22,7 +26,7 @@ void LibAvCapture::InitLibAvCodec()
     @param videoFile video file in a valid format (please see libavcodec docs on your platform for supported formats).
 
     @note This calls the static member InitLibAvCodec() so is not thread safe. If you are using this
-    class in a multi-threded system then call InitLibAvCodec() manually in your start up code before launching the multi-threaded components.
+    class in a multi-threaded system then call InitLibAvCodec() manually in your start up code before launching the multi-threaded components.
 */
 LibAvCapture::LibAvCapture( const char* videoFile )
 :
@@ -117,33 +121,54 @@ bool LibAvCapture::GetFrame()
         return false;
     }
 
+    bool success = false;
     int frameFinished;
-
-    while( av_read_frame( m_formatContext, &m_packet) >= 0 )
+    AVPacket packet;
+    int eof;
+    while( (eof = av_read_frame( m_formatContext, &packet)) == 0 )
     {
         // Is this a packet from the video stream?
-        if( m_packet.stream_index == m_videoStream )
+        if( packet.stream_index == m_videoStream )
         {
             // Decode video frame
-            avcodec_decode_video2( m_codecContext, m_avFrame, &frameFinished, &m_packet );
+            avcodec_decode_video2( m_codecContext, m_avFrame, &frameFinished, &packet );
 
             // Did we get a video frame?
             if( frameFinished )
             {
-                return true;
+                success = true;
+                av_free_packet( &packet );
+                break;
+            }
+        }
+
+        av_free_packet( &packet );
+    }
+
+    if ( success == false )
+    {
+        if ( m_codecContext->codec->capabilities & CODEC_CAP_DELAY )
+        {
+            // av_read_frame reached the end of input
+            // but there might be more buffered frames:
+            packet.data = 0;
+            packet.size = 0;
+            avcodec_decode_video2( m_codecContext, m_avFrame, &frameFinished, &packet );
+            if( frameFinished )
+            {
+                success = true;
             }
         }
     }
 
-    return false;
+    return success;
 }
 
 /**
-    Frees memory allocated during GetFrame(), hence not calling this will cause a memory leak.
+    Frees any resources allocated during GetFrame(), hence not calling this will cause a memory or resource leak.
 */
 void LibAvCapture::DoneFrame()
 {
-    av_free_packet( &m_packet );
 }
 
 int32_t LibAvCapture::GetFrameWidth() const
@@ -156,9 +181,19 @@ int32_t LibAvCapture::GetFrameHeight() const
     return m_codecContext->height;
 }
 
-uint64_t LibAvCapture::GetFrameTimestamp() const
+/**
+    @return the frame's timestamp in micro seconds. For video formats where no time stamp is available return -1.
+*/
+int64_t LibAvCapture::GetFrameTimestamp_us() const
 {
-    return m_avFrame->pts; // @todo this is not correct - needs to be converted from 'time_base' units
+    if ( m_avFrame->pts == AV_NOPTS_VALUE )
+    {
+        return -1; // no presentation timestamp provided by decoder
+    }
+
+    // Convert from the codec's timebase to microseconds:
+    int64_t pts = av_rescale_q( m_avFrame->pts, m_codecContext->time_base, (AVRational){1,1000000} );
+    return pts;
 }
 
 void LibAvCapture::ExtractLuminanceImage( uint8_t* data, int stride )
