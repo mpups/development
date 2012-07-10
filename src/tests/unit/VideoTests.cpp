@@ -27,7 +27,7 @@ void TestVideo()
         {
             memset( buffer, i, 640*480 );
             bool frameWritten = writer.PutGreyFrame( buffer, 640, 480, 480 );
-            EXPECT_TRUE( frameWritten );
+            ASSERT_TRUE( frameWritten );
         }
 
         // Now try to read back the same video
@@ -48,5 +48,16 @@ void TestVideo()
 
         free( buffer );
     }
+
+    // Check unused objects get cleaned up safely:
+    {
+        LibAvWriter unusedWriter( "this_file_should_not_be_created.txt" );
+        LibAvCapture reader( "test.avi" );
+    }
+    // Check no file opened after writer was destroyed:
+    struct stat info;
+    int err = stat( "this_file_should_not_be_created.txt", &info );
+    ASSERT_EQ( -1, err ); // should return -1 for non existent file
+    EXPECT_EQ( ENOENT, errno );
 }
 

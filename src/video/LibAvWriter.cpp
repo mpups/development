@@ -94,11 +94,6 @@ LibAvWriter::LibAvWriter( const char* videoFile )
 
     m_formatContext->oformat = m_outputFormat;
 
-    if ( av_set_parameters( m_formatContext, 0 ) < 0 )
-    {
-        return;
-    }
-
     snprintf( m_formatContext->filename, sizeof(m_formatContext->filename), "%s", videoFile );
 
     m_open = true;
@@ -106,14 +101,17 @@ LibAvWriter::LibAvWriter( const char* videoFile )
 
 LibAvWriter::~LibAvWriter()
 {
-    avpicture_free( reinterpret_cast<AVPicture*>( &m_codecFrame ) );
+    if ( m_stream && m_stream->IsValid() )
+    {
+        avpicture_free( reinterpret_cast<AVPicture*>( &m_codecFrame ) );
+        av_write_trailer( m_formatContext );
+        avio_close( m_formatContext->pb );
+    }
 
     delete m_stream;
 
     if ( m_formatContext != 0 )
     {
-        av_write_trailer( m_formatContext );
-        url_fclose( m_formatContext->pb );
         avformat_free_context( m_formatContext );
     }
 }
@@ -143,7 +141,7 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
             assert( err == 0 );
 
             m_codecFrame.pts = 0;
-            //av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
+            av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
 
             // We don't check result of above because the following fails gracefully if m_codec==null
             err = avcodec_open2( m_stream->CodecContext(), m_stream->Codec(), 0 );
@@ -156,14 +154,14 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
 
     if ( success )
     {
-        int err = url_fopen( &m_formatContext->pb, m_formatContext->filename, URL_WRONLY );
+        int err = avio_open( &m_formatContext->pb, m_formatContext->filename, AVIO_FLAG_WRITE );
         if ( err < 0 )
         {
             success = false;
         }
         else
         {
-            av_write_header( m_formatContext );
+            avformat_write_header( m_formatContext, 0 );
         }
     }
     else
@@ -225,8 +223,7 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
         int srcStrides[4] = { stride, 0, 0, 0 };
         m_converter.Convert( srcPlanes, srcStrides, 0, height, m_codecFrame.data, m_codecFrame.linesize );
         m_codecFrame.pts += 1;
-        WriteCodecFrame();
-        success = true;
+        success = WriteCodecFrame();
     }
 
     return success;
@@ -235,23 +232,30 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
 /**
     Write the current codec picture to the current stream.
 */
-void LibAvWriter::WriteCodecFrame()
+bool LibAvWriter::WriteCodecFrame()
 {
+    bool ok = false;
+
     AVCodecContext* codecContext = m_stream->CodecContext();
-    int bytes = avcodec_encode_video( codecContext, m_stream->Buffer(), BUFFER_SIZE, &m_codecFrame );
-    if ( bytes > 0 )
+    AVPacket pkt;
+    // Note : used to set pkt.stream_index but encode_video2 now seems to set it using the codec context.
+    pkt.data = m_stream->Buffer();
+    pkt.size = m_stream->BufferSize();
+    int packetOk;
+    int err = avcodec_encode_video2( codecContext, &pkt, &m_codecFrame, &packetOk );
+
+    if ( err == 0 )
     {
-        AVPacket pkt;
-        av_init_packet( &pkt );
-        pkt.stream_index = m_stream->Index();
-        pkt.data = m_stream->Buffer();
-        pkt.size = m_stream->BufferSize();
+        // Note:  not sure if we need to do this anymore as it gets set in encode_video2:
         pkt.pts = av_rescale_q( codecContext->coded_frame->pts, codecContext->time_base, m_stream->TimeBase() );
 
         if ( codecContext->coded_frame->key_frame )
         {
             pkt.flags |= AV_PKT_FLAG_KEY;
         }
-        av_write_frame( m_formatContext, &pkt );
+        ok = av_write_frame( m_formatContext, &pkt ) == 0;
     }
+
+    return ok;
 }
+

@@ -42,7 +42,7 @@ LibAvCapture::LibAvCapture( const char* videoFile )
         return;
     }
 
-    int foundStreamInfo = av_find_stream_info( m_formatContext );
+    int foundStreamInfo = avformat_find_stream_info( m_formatContext, 0 );
     if ( foundStreamInfo == -1)
     {
         m_open = false;
@@ -100,7 +100,8 @@ LibAvCapture::~LibAvCapture()
     {
         av_free( m_avFrame );
         avcodec_close( m_codecContext );
-        av_close_input_file( m_formatContext );
+        avformat_close_input( &m_formatContext );
+        //av_close_input_file( m_formatContext );
     }
 }
 

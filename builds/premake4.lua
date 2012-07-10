@@ -92,15 +92,25 @@ solution 'robolib'
         configuration {}
         links { 'robolib' }
         links ( GLK_LINKS )
-        links { LINKS }
+        links ( LINKS )
 
 if ( not CONFIGURING_ARM ) then
     project 'sse-test'
         kind 'ConsoleApp'
         files { SRC .. 'sse/**.cpp' }
         links ( GLK_LINKS )
-        links { LINKS }
+        links ( LINKS )
 end
+
+    project 'transcode'
+        kind 'ConsoleApp'
+        configuration {}
+        includedirs { "../include" }
+        files { SRC .. 'tests/tools/transcode.cpp' }
+        linkoptions ( LINK_OPTIONS )
+        links { 'robolib' }
+        links ( GLK_LINKS )
+        links ( LINKS )
 
     project 'gtests' -- unit tests
         kind 'ConsoleApp'

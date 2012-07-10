@@ -37,7 +37,7 @@ public:
 
 protected:
     bool PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format );
-    void WriteCodecFrame();
+    bool WriteCodecFrame();
 
 private:
     static const int BUFFER_SIZE = FF_MIN_BUFFER_SIZE+(640*480*4);

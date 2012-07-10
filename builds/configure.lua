@@ -4,6 +4,7 @@
 TARGET_DIR   = 'linux_build'
 
 INCLUDE_DIRS = {
+    '/home/mark/tmp_installs/include',
     '/usr/local/glk/include',
     '/usr/include/lua5.1',
     '/usr/include/freetype2',
@@ -13,13 +14,14 @@ INCLUDE_DIRS = {
 }
 
 LIB_DIRS = {
+    '/home/mark/tmp_installs/lib',
     '/usr/lib',
     '/usr/local/glk/lib',
     '/usr/lib/x86_64-linux-gnu'
 }
 
 BUILD_OPTIONS = { '-msse -msse2' }
-LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' }
+LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/home/mark/tmp_installs/lib' }
 
 OPENCV_LINKS = { 'opencv_imgproc','opencv_calib3d','opencv_highgui', 'opencv_core' }
 OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }

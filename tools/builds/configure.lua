@@ -4,6 +4,7 @@
 TARGET_DIR   = 'linux_build'
 
 INCLUDE_DIRS = {
+    '/home/mark/tmp_installs/include', -- has to come first so libav uses correct version of headers
     '/usr/local/glk/include',
     '../../include', -- Robolib includes.
     '/usr/include/lua5.1',
@@ -15,7 +16,7 @@ INCLUDE_DIRS = {
 }
 
 LIB_DIRS = {
-    --'/home/mark/tmp_installs/lib', -- has to come first so libav links to my own installation
+    '/home/mark/tmp_installs/lib', -- has to come first so libav links to my own installation
     '/usr/lib',
     '/usr/lib/x86_64-linux-gnu',
     '/usr/local/lib',
@@ -24,7 +25,7 @@ LIB_DIRS = {
 }
 
 BUILD_OPTIONS = { '-msse -msse2' }
-LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib' }
+LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/home/mark/tmp_installs/lib' }
 LINKS = { 'pthread', 'rt', 'Xrender', 'X11', 'GL', 'freetype', 'lua5.1', 'dc1394', 'opencv_imgproc', 'opencv_video', 'opencv_calib3d', 'opencv_core', 'unicap', 'avcodec', 'avformat', 'avutil', 'swscale' }
 
 -- need these defines because ffmpeg libs use C99 standard macros which are not in any C++ standards.
