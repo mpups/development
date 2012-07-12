@@ -1,6 +1,11 @@
 #include "LibAvCapture.h"
 
+#include "FFmpegCustomIO.h"
+
 #include <assert.h>
+
+#include <iostream>
+#include <stdint.h>
 
 extern "C" {
 #include <libavutil/mathematics.h>
@@ -21,22 +26,24 @@ void LibAvCapture::InitLibAvCodec()
 }
 
 /**
-    Construct a LibAvCapture object that is ready to read from the specified file.
+    Initialisation common to all constructors.
+    
+    Should only be called from within a constructor.
 
-    @param videoFile video file in a valid format (please see libavcodec docs on your platform for supported formats).
-
-    @note This calls the static member InitLibAvCodec() so is not thread safe. If you are using this
-    class in a multi-threaded system then call InitLibAvCodec() manually in your start up code before launching the multi-threaded components.
+    @param streamName usually a filename or URL.
 */
-LibAvCapture::LibAvCapture( const char* videoFile )
-:
-    m_formatContext ( 0 ),
-    m_codecContext  ( 0 ),
-    m_open ( false )
+void LibAvCapture::Init( const char* streamName )
 {
     InitLibAvCodec();
 
-    m_open = avformat_open_input( &m_formatContext, videoFile, 0, 0) == 0;
+    m_formatContext = avformat_alloc_context();
+
+    if ( m_customIO != 0 )
+    {
+        m_formatContext->pb = m_customIO->GetAVIOContext();
+    }
+
+    m_open = ( avformat_open_input( &m_formatContext, streamName, 0, 0) >= 0 );
     if ( m_open == false )
     {
         return;
@@ -66,6 +73,8 @@ LibAvCapture::LibAvCapture( const char* videoFile )
         return;
     }
 
+    //av_dump_format( m_formatContext, m_videoStream, m_formatContext->filename, 0 );
+
     // Get a pointer to the codec context for the video stream
     m_codecContext = m_formatContext->streams[m_videoStream]->codec;
 
@@ -94,14 +103,56 @@ LibAvCapture::LibAvCapture( const char* videoFile )
     m_avFrame = avcodec_alloc_frame();
 }
 
+/**
+    Construct a LibAvCapture object that is ready to read from the specified file.
+
+    @param videoFile video file in a valid format (please see libavcodec docs on your platform for supported formats).
+
+    @note This calls the static member InitLibAvCodec() so is not thread safe. If you are using this
+    class in a multi-threaded system then call InitLibAvCodec() manually in your start up code before launching the multi-threaded components.
+*/
+LibAvCapture::LibAvCapture( const char* videoFile )
+:
+    m_formatContext ( 0 ),
+    m_customIO      ( 0 ),
+    m_codecContext  ( 0 ),
+    m_open ( false )
+{
+    Init( videoFile );
+}
+
+/*
+    Construct a writer that will use custom I/O.
+
+    @param customIO the custom io object that must provide an AVIOContext
+    that is valid for output.
+*/
+LibAvCapture::LibAvCapture( FFMpegCustomIO& customIO )
+:
+    m_formatContext ( 0 ),
+    m_customIO      ( &customIO ),
+    m_codecContext  ( 0 ),
+    m_open ( false )
+{
+    Init( "FFMpegCustomIO" );
+}
+
 LibAvCapture::~LibAvCapture()
 {
     if ( m_open )
     {
         av_free( m_avFrame );
         avcodec_close( m_codecContext );
-        avformat_close_input( &m_formatContext );
-        //av_close_input_file( m_formatContext );
+
+        if ( m_customIO == 0 )
+        {
+            avformat_close_input( &m_formatContext );
+        }
+        else
+        {
+            avformat_free_context( m_formatContext );
+            m_formatContext = 0;
+        }
     }
 }
 

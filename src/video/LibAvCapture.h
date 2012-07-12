@@ -15,13 +15,19 @@ extern "C" {
 
 #include "Capture.h"
 
+class FFMpegCustomIO;
+
 /**
     Class which uses libavcodec to read video streams from a video file.
 */
 class LibAvCapture : public Capture
 {
+private:
+    void Init( const char* streamName );
+
 public:
     LibAvCapture( const char* videoFile );
+    LibAvCapture( FFMpegCustomIO& customIO );
     virtual ~LibAvCapture();
 
     bool IsOpen() const;
@@ -42,6 +48,7 @@ protected:
 
 private:
     AVFormatContext* m_formatContext;
+    FFMpegCustomIO*    m_customIO;
     AVCodecContext*  m_codecContext;
     AVCodec*         m_codec;
     AVFrame*         m_avFrame;

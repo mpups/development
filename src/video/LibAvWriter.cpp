@@ -2,12 +2,11 @@
 
 #include "LibAvCapture.h"
 #include "LibAvVideoStream.h"
+#include "FFmpegCustomIO.h"
 
 extern "C" {
 #include <libavutil/mathematics.h>
 }
-
-#include <iostream>
 
 #include <ctype.h>
 #include <assert.h>
@@ -65,25 +64,13 @@ PixelFormat LibAvWriter::ChooseCodecFormat( CodecID id, PixelFormat inputFormat 
 }
 
 /**
-    Opens video file for writing. Auto-detects format from filename extension.
-
-    @param videoFile File name to write - if the file exists it will be over-written.
+    Initialisation common to all constructors.
+    
+    Should only be called from within a constructor.
 */
-LibAvWriter::LibAvWriter( const char* videoFile )
-:
-    m_formatContext  (0),
-    m_stream         (0),
-    m_open ( false )
+void LibAvWriter::Init()
 {
     LibAvCapture::InitLibAvCodec();
-
-    // This guesses the container format (e.g. .avi, .ogg):
-    m_outputFormat = av_guess_format( 0, videoFile, 0 );
-
-    if ( m_outputFormat == 0 )
-    {
-        return;
-    }
 
     m_formatContext = avformat_alloc_context();
 
@@ -92,11 +79,63 @@ LibAvWriter::LibAvWriter( const char* videoFile )
         return;
     }
 
-    m_formatContext->oformat = m_outputFormat;
-
-    snprintf( m_formatContext->filename, sizeof(m_formatContext->filename), "%s", videoFile );
+    if ( m_customIO != 0 )
+    {
+        m_formatContext->pb = m_customIO->GetAVIOContext();
+    }
 
     m_open = true;
+}
+
+/**
+    Opens video file for writing. Auto-detects format from filename extension.
+
+    @param videoFile File name to write - if the file exists it will be over-written.
+*/
+LibAvWriter::LibAvWriter( const char* videoFile )
+:
+    m_formatContext  (0),
+    m_customIO       (0),
+    m_stream         (0),
+    m_open ( false )
+{
+    Init();
+    if ( m_open )
+    {
+        // This guesses the container format (e.g. .avi, .ogg):
+        m_outputFormat = av_guess_format( 0, videoFile, 0 );
+        if ( m_outputFormat == 0 )
+        {
+            m_open = false;
+            return;
+        }
+
+        m_formatContext->oformat = m_outputFormat;
+        snprintf( m_formatContext->filename, sizeof(m_formatContext->filename), "%s", videoFile );
+    }
+}
+
+/**
+    Construct a writer that will use custom I/O.
+
+    @param customIO the custom io object that must provide an AVIOContext
+    that is valid for output.
+*/
+LibAvWriter::LibAvWriter( FFMpegCustomIO& customIO )
+:
+    m_formatContext  (0),
+    m_customIO       (&customIO), // m_customIO ptr should not need to be deleted locally!
+    m_stream         (0),
+    m_open ( false )
+{
+    Init();
+    if ( m_open )
+    {
+        // This guesses the container format (e.g. .avi, .ogg):
+        m_outputFormat = av_guess_format( "avi", 0, 0 );
+        m_formatContext->oformat = m_outputFormat;
+        snprintf( m_formatContext->filename, sizeof(m_formatContext->filename), "%s", "FFMpegCustomIO" );
+    }
 }
 
 LibAvWriter::~LibAvWriter()
@@ -105,7 +144,11 @@ LibAvWriter::~LibAvWriter()
     {
         avpicture_free( reinterpret_cast<AVPicture*>( &m_codecFrame ) );
         av_write_trailer( m_formatContext );
-        avio_close( m_formatContext->pb );
+
+        if ( m_customIO == 0 )
+        {
+            avio_close( m_formatContext->pb );
+        }
     }
 
     delete m_stream;
@@ -141,7 +184,7 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
             assert( err == 0 );
 
             m_codecFrame.pts = 0;
-            av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
+            //av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
 
             // We don't check result of above because the following fails gracefully if m_codec==null
             err = avcodec_open2( m_stream->CodecContext(), m_stream->Codec(), 0 );
@@ -152,14 +195,20 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
         }
     }
 
+// @todo - can this be done elsewhere - what if we had more than 1 stream?
     if ( success )
     {
-        int err = avio_open( &m_formatContext->pb, m_formatContext->filename, AVIO_FLAG_WRITE );
-        if ( err < 0 )
+        // We don't need to call avio_open if we are using custom I/O:
+        if ( m_customIO == 0 )
         {
-            success = false;
+            int err = avio_open( &m_formatContext->pb, m_formatContext->filename, AVIO_FLAG_WRITE );
+            if ( err != 0 )
+            {
+                success = false;
+            }
         }
-        else
+
+        if ( success )
         {
             avformat_write_header( m_formatContext, 0 );
         }

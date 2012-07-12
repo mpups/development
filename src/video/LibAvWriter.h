@@ -14,14 +14,19 @@ extern "C" {
 #include "FrameConverter.h"
 
 class LibAvVideoStream;
+class FFMpegCustomIO;
 
 /**
     Class which uses libavcodec to write video streams to a video file.
 */
 class LibAvWriter
 {
+private:
+    void Init();
+
 public:
     LibAvWriter( const char* videoFile );
+    LibAvWriter( FFMpegCustomIO& customIO );
     virtual ~LibAvWriter();
 
     bool IsOpen() const;
@@ -44,6 +49,7 @@ private:
 
     AVOutputFormat*  m_outputFormat;
     AVFormatContext* m_formatContext;
+    FFMpegCustomIO*    m_customIO;
     AVFrame          m_codecFrame;
 
     LibAvVideoStream* m_stream;
