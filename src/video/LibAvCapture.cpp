@@ -134,7 +134,7 @@ LibAvCapture::LibAvCapture( FFMpegCustomIO& customIO )
     m_codecContext  ( 0 ),
     m_open ( false )
 {
-    Init( "FFMpegCustomIO" );
+    Init( m_customIO->GetStreamName() );
 }
 
 LibAvCapture::~LibAvCapture()

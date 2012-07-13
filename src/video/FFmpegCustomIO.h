@@ -28,6 +28,7 @@ public:
     FFMpegCustomIO() {};
     virtual ~FFMpegCustomIO() {};
     virtual AVIOContext* GetAVIOContext() = 0;
+    virtual const char* GetStreamName() = 0;
 };
 
 /**
@@ -45,6 +46,7 @@ public:
     FFMpegFileIO( const char* filename, bool input );
     virtual ~FFMpegFileIO();
     virtual AVIOContext* GetAVIOContext() { return m_io; };
+    virtual const char* GetStreamName();
 
     static const int BUFFER_SIZE = 32*1024;
 
@@ -52,6 +54,7 @@ private:
     FILE* m_fp;
     uint8_t* m_buffer;
     AVIOContext* m_io;
+    char m_fileName[64];
 };
 
 #endif /* __FFMPEG_CUSTOM_IO_H__ */
