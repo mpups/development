@@ -162,6 +162,7 @@ void Socket::SetBlocking( bool block )
 
     Will fail (returning false) if the socket is not connected or the peer does not have an Ipv4 address.
 
+    @param address the address of the connected peer if return value is true, undefined otherwise.
     @return true if an Ipv4 address was retrieved successfully, false otherwise.
 */
 bool Socket::GetPeerAddress( Ipv4Address& address )

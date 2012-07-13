@@ -104,10 +104,18 @@ end
 
     project 'transcode'
         kind 'ConsoleApp'
-        configuration {}
         includedirs { "../include" }
         files { SRC .. 'tests/tools/transcode.cpp' }
-        linkoptions ( LINK_OPTIONS )
+        configuration {}
+        links { 'robolib' }
+        links ( GLK_LINKS )
+        links ( LINKS )
+
+    project 'video-streaming'
+        kind 'ConsoleApp'
+        includedirs { "../include" }
+        files { SRC .. 'tests/tools/VideoStreaming.cpp' }
+        configuration {}
         links { 'robolib' }
         links ( GLK_LINKS )
         links ( LINKS )
