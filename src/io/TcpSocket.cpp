@@ -58,9 +58,9 @@ bool TcpSocket::Listen( int queueSize )
 
 /**
     Accept a connection from a bound socket.
-    
+
     This socket must be bound or null will be returned.
-    
+
     @return New client socket connection - or null on error or timeout.
 **/
 TcpSocket* TcpSocket::Accept()
@@ -82,7 +82,7 @@ TcpSocket* TcpSocket::Accept()
     {
         newClient = 0;
     }
-    
+
     return newClient;
 }
 

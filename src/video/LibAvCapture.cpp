@@ -43,7 +43,7 @@ void LibAvCapture::Init( const char* streamName )
         m_formatContext->pb = m_customIO->GetAVIOContext();
     }
 
-    m_open = ( avformat_open_input( &m_formatContext, streamName, 0, 0) >= 0 );
+    m_open = ( avformat_open_input( &m_formatContext, streamName, 0, 0 ) >= 0 );
     if ( m_open == false )
     {
         return;
@@ -73,7 +73,7 @@ void LibAvCapture::Init( const char* streamName )
         return;
     }
 
-    //av_dump_format( m_formatContext, m_videoStream, m_formatContext->filename, 0 );
+    av_dump_format( m_formatContext, m_videoStream, m_formatContext->filename, 0 );
 
     // Get a pointer to the codec context for the video stream
     m_codecContext = m_formatContext->streams[m_videoStream]->codec;

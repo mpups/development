@@ -184,7 +184,7 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
             assert( err == 0 );
 
             m_codecFrame.pts = 0;
-            //av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
+            av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
 
             // We don't check result of above because the following fails gracefully if m_codec==null
             err = avcodec_open2( m_stream->CodecContext(), m_stream->Codec(), 0 );
@@ -287,7 +287,7 @@ bool LibAvWriter::WriteCodecFrame()
 
     AVCodecContext* codecContext = m_stream->CodecContext();
     AVPacket pkt;
-    // Note : used to set pkt.stream_index but encode_video2 now seems to set it using the codec context.
+    // Note: used to set pkt.stream_index but encode_video2 now seems to set it using the codec context.
     pkt.data = m_stream->Buffer();
     pkt.size = m_stream->BufferSize();
     int packetOk;
@@ -295,7 +295,7 @@ bool LibAvWriter::WriteCodecFrame()
 
     if ( err == 0 )
     {
-        // Note:  not sure if we need to do this anymore as it gets set in encode_video2:
+        // Note: not sure if we need to do this anymore as it gets set in encode_video2:
         pkt.pts = av_rescale_q( codecContext->coded_frame->pts, codecContext->time_base, m_stream->TimeBase() );
 
         if ( codecContext->coded_frame->key_frame )

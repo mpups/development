@@ -27,7 +27,7 @@ friend int socket_write_packet( void* opaque, uint8_t* buffer, int size );
 friend int socket_read_packet( void* opaque, uint8_t* buffer, int size );
 
 public:
-    FFMpegSocketIO( TcpSocket& socket );
+    FFMpegSocketIO( TcpSocket& socket, bool sender );
     virtual ~FFMpegSocketIO();
     virtual AVIOContext* GetAVIOContext();
     virtual const char* GetStreamName();
