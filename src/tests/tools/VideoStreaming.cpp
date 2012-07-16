@@ -40,8 +40,7 @@ int streamVideo( TcpSocket& client )
         bool sentOk = true;
         while ( sentOk && camera.GetFrame() )
         {
-            camera.ExtractLuminanceImage( imageBuffer, stride );
-            sentOk = streamer.PutGreyFrame( imageBuffer, camera.GetFrameWidth(), camera.GetFrameHeight(), stride );
+            sentOk = streamer.PutYUYV422Frame( camera.UnsafeBufferAccess(), camera.GetFrameWidth(), camera.GetFrameHeight() );
             camera.DoneFrame();
         }
 
@@ -118,11 +117,18 @@ int runClient( int argc, char** argv )
 
         // Create a buffer for image data:
         uint8_t* imageBuffer;
-        int err = posix_memalign( (void**)&imageBuffer, 16, w * h * sizeof(uint8_t) );
+        int err = posix_memalign( (void**)&imageBuffer, 16, w * h * 3 * sizeof(uint8_t) );
         assert( err == 0 );
 
         // Setup a display window:
         robo::AnnotatedImage display( w, h );
+        GLK::ImageWindow::ImageData postData; // this struct describes the image data we post for display
+        postData.mode = GLK::ImageWindow::FixedAspectRatio;
+        postData.w = w;
+        postData.h = h;
+        postData.stride = w*3;
+        postData.ptr = imageBuffer;
+        postData.isColourBgr = true;
 
         GLK::Timer timer;
         int numFrames = 0;
@@ -132,9 +138,9 @@ int runClient( int argc, char** argv )
             gotFrame = streamer.GetFrame();
             if ( gotFrame )
             {
-                streamer.ExtractLuminanceImage( imageBuffer, w );
+                streamer.ExtractBgrImage( imageBuffer, w*3 );
                 streamer.DoneFrame();
-                display.PostImage( GLK::ImageWindow::FixedAspectRatio, w, h, imageBuffer );
+                display.PostImage( postData );
                 numFrames += 1;
             }
             else

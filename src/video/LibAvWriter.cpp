@@ -253,6 +253,11 @@ bool LibAvWriter::PutBgrFrame( uint8_t* buffer, uint32_t width, uint32_t height,
     return PutFrame( buffer, width, height, stride, PIX_FMT_BGR24 );
 }
 
+bool LibAvWriter::PutYUYV422Frame( uint8_t* buffer, uint32_t width, uint32_t height )
+{
+    return PutFrame( buffer, width, height, width*2, PIX_FMT_YUYV422 );
+}
+
 /**
     Write a frame with the specified pixel format to the video file.
 

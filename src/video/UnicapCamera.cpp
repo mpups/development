@@ -197,6 +197,18 @@ void UnicapCamera::ExtractBgrImage( uint8_t* dest, int stride )
 }
 
 /**
+    @returns the pointer to the internal image buffer which holds data in the format received from the camera.
+
+    This is only intended to be used for debugging and critical optimisations.
+
+    @note The returned buffer is only valid between the correspoding calls to GetFrame() and DoneFrame().
+*/
+uint8_t* UnicapCamera::UnsafeBufferAccess() const
+{
+    return m_buffer;
+}
+
+/**
     Uses swscale library to convert the most recently captured frame to
     the specified format.
 

@@ -277,8 +277,8 @@ void Dc1394Camera::ExtractLuminanceImage( uint8_t* lumImg, int stride )
     }
 
     default:
-        break;    
-    }    
+        break;
+    }
 }
 
 void Dc1394Camera::ExtractRgbImage( uint8_t* img, int stride )

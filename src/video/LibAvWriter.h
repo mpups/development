@@ -37,6 +37,8 @@ public:
     bool PutRgbFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
     bool PutBgrFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
 
+    bool PutYUYV422Frame( uint8_t* buffer, uint32_t width, uint32_t height );
+
     static int32_t FourCc( char, char, char, char );
     static PixelFormat ChooseCodecFormat( CodecID id, PixelFormat inputFormat );
 

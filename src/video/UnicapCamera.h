@@ -43,6 +43,8 @@ public:
     void ExtractRgbImage( uint8_t*, int );
     void ExtractBgrImage( uint8_t* img, int stride );
 
+    uint8_t* UnsafeBufferAccess() const;
+
 protected:
     void FrameConversion( PixelFormat format, uint8_t* data, int stride );
 
