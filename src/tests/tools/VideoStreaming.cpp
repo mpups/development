@@ -33,14 +33,15 @@ int streamVideo( TcpSocket& client )
         uint8_t* imageBuffer;
         int err = posix_memalign( (void**)&imageBuffer, 16, camera.GetFrameWidth() * camera.GetFrameHeight() * 3 * sizeof(uint8_t) );
         assert( err == 0 );
+        int stride = camera.GetFrameWidth();
 
         // Start capturing and transmitting images:
         camera.StartCapture();
         bool sentOk = true;
         while ( sentOk && camera.GetFrame() )
         {
-            camera.ExtractLuminanceImage( imageBuffer, camera.GetFrameWidth() );
-            sentOk = streamer.PutGreyFrame( imageBuffer, camera.GetFrameWidth(), camera.GetFrameHeight(), camera.GetFrameWidth() );
+            camera.ExtractLuminanceImage( imageBuffer, stride );
+            sentOk = streamer.PutGreyFrame( imageBuffer, camera.GetFrameWidth(), camera.GetFrameHeight(), stride );
             camera.DoneFrame();
         }
 
@@ -88,6 +89,7 @@ int runServer( int argc, char** argv )
     }
 }
 
+#ifndef ARM_BUILD
 int runClient( int argc, char** argv )
 {
     std::cerr << "Starting video-streaming client" << std::endl;
@@ -103,27 +105,47 @@ int runClient( int argc, char** argv )
             return reportError( "Could not create stream capture." );
         }
 
+        // Get sopme frames so we can extract correct image dimensions:
+        for ( int i=0;i<3;++i )
+        {
+            streamer.GetFrame();
+            streamer.DoneFrame();
+        }
+
+        int w = streamer.GetFrameWidth();
+        int h = streamer.GetFrameHeight();
+        std::cerr << "Recevied frame dimensions: " << w << "x" << h << std::endl;
+
         // Create a buffer for image data:
         uint8_t* imageBuffer;
-        int err = posix_memalign( (void**)&imageBuffer, 16, 640 * 480 * sizeof(uint8_t) );
+        int err = posix_memalign( (void**)&imageBuffer, 16, w * h * sizeof(uint8_t) );
         assert( err == 0 );
 
         // Setup a display window:
-        robo::AnnotatedImage display( 640, 480 );
+        robo::AnnotatedImage display( w, h );
 
+        GLK::Timer timer;
+        int numFrames = 0;
         bool gotFrame = true;
         while ( display.IsRunning() && gotFrame )
         {
             gotFrame = streamer.GetFrame();
             if ( gotFrame )
             {
-                streamer.ExtractLuminanceImage( imageBuffer, 640 );
+                streamer.ExtractLuminanceImage( imageBuffer, w );
                 streamer.DoneFrame();
-                display.PostImage( GLK::ImageWindow::FixedAspectRatio, 640, 480, imageBuffer );
+                display.PostImage( GLK::ImageWindow::FixedAspectRatio, w, h, imageBuffer );
+                numFrames += 1;
             }
             else
             {
                 reportError( "Could not get frame." );
+            }
+            if ( numFrames == 50 )
+            {
+                std::cerr << "Average frame rate: " << numFrames/timer.GetSeconds() << " fps" << std::endl;
+                numFrames = 0;
+                timer.Reset();
             }
         }
 
@@ -136,6 +158,12 @@ int runClient( int argc, char** argv )
         return reportError( "Could not connect." );
     }
 }
+#else
+int runClient( int argc, char** argv )
+{
+    return reportError( "Cannot run client in ARM build." );
+}
+#endif
 
 /*
     Server process captures live video and streams it over a socket.

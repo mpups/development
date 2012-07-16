@@ -158,20 +158,28 @@ const char* UnicapCamera::GetModel() const
 }
 
 /**
-    @todo bug - stride is not used.
+    @param data buffer into which image data will be copied - it must be large enough.
+    @param stride - the number of bytes between each row in the specified 'data'
+    buffer. 'stride' must be larger than the camera's image width.
 */
 void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
 {
-    uint32_t n = (m_width*m_height)*2/4;
     unsigned char* pImg = m_buffer;
-
-    do
+    uint32_t h = m_height+1;
+    assert( stride >= m_width );
+    ptrdiff_t skip = stride - m_width;
+    while ( --h )
     {
-        *data++ = *pImg;
-        pImg += 2;
-        *data++ = *pImg;
-        pImg += 2;
-    } while (--n);
+        uint32_t w = m_width/2;
+        do
+        {
+            *data++ = *pImg;
+            pImg += 2;
+            *data++ = *pImg;
+            pImg += 2;
+        } while ( --w );
+        data += skip;
+    }
 }
 
 void UnicapCamera::ExtractRgbImage( uint8_t* dest, int stride )

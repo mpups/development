@@ -21,12 +21,12 @@ LIB_DIRS = {
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
 BUILD_OPTIONS = { '-mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
-LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib' }
+LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib:/home/mark/code/beagle_builds/deploy/lib' }
 
 OPENCV_LINKS = { 'opencv_core', 'opencv_contrib' }
 OPENGL_LINKS = {}
 SYSTEM_LINKS = { 'pthread', 'rt' }
-FFMPEG_LINKS = { 'avcodec', 'avformat', 'swscale' }
+FFMPEG_LINKS = { 'avcodec', 'avformat', 'avutil', 'swscale' }
 LINKS = { 'lua5.1', 'freetype', 'unicap' }
 
 GLK_LINKS = { 'glkcore' }
