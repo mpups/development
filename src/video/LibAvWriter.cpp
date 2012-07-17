@@ -298,7 +298,7 @@ bool LibAvWriter::WriteCodecFrame()
     int packetOk;
     int err = avcodec_encode_video2( codecContext, &pkt, &m_codecFrame, &packetOk );
 
-    if ( err == 0 )
+    if ( err == 0 && packetOk == 1 )
     {
         // Note: not sure if we need to do this anymore as it gets set in encode_video2:
         pkt.pts = av_rescale_q( codecContext->coded_frame->pts, codecContext->time_base, m_stream->TimeBase() );
@@ -307,7 +307,8 @@ bool LibAvWriter::WriteCodecFrame()
         {
             pkt.flags |= AV_PKT_FLAG_KEY;
         }
-        ok = av_write_frame( m_formatContext, &pkt ) == 0;
+        err = av_write_frame( m_formatContext, &pkt );
+        ok = err == 0;
     }
 
     return ok;

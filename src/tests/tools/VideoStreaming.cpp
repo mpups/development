@@ -41,6 +41,7 @@ int streamVideo( TcpSocket& client )
         while ( sentOk && camera.GetFrame() )
         {
             sentOk = streamer.PutYUYV422Frame( camera.UnsafeBufferAccess(), camera.GetFrameWidth(), camera.GetFrameHeight() );
+            sentOk &= videoIO.GetAVIOContext()->error >= 0;
             camera.DoneFrame();
         }
 

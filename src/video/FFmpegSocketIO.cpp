@@ -9,7 +9,7 @@ int socket_write_packet( void* opaque, uint8_t* buffer, int size )
 {
     FFMpegSocketIO* io = reinterpret_cast<FFMpegSocketIO*>( opaque );
     int numBytes = io->m_socket.Write( reinterpret_cast<char*>(buffer), size );
-    //std::cerr << "putting " << size << " bytes (written " << numBytes << ")" << std::endl;
+    //std::cerr << "putting " << size << " bytes (return value := " << numBytes << ")" << std::endl;
     return numBytes;
 }
 

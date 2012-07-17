@@ -29,7 +29,7 @@ LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, ui
         CodecContext()->pix_fmt = LibAvWriter::ChooseCodecFormat( codecId, PIX_FMT_RGB24 );
         CodecContext()->bit_rate = 10000000;
         CodecContext()->bit_rate_tolerance = 1000000;
-        CodecContext()->gop_size = 25;
+        CodecContext()->gop_size = 250;
         CodecContext()->max_b_frames = 0;
 
         assert( width%2 == 0 );
