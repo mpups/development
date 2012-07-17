@@ -1,6 +1,12 @@
 // Copyright (c) 2012 Mark Pupilli, All Rights Reserved.
 
 #include <RoboLib.h>
+#include <time.h>
+
+double milliseconds( struct timespec& t )
+{
+    return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
+}
 
 int reportError( const char* error, bool fatal=true )
 {
@@ -27,25 +33,29 @@ int streamVideo( TcpSocket& client )
         LibAvWriter streamer( videoIO );
 
         // Setup an MPEG4 video stream:
-        streamer.AddVideoStream( camera.GetFrameWidth(), camera.GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+        streamer.AddVideoStream( camera.GetFrameWidth()/2, camera.GetFrameHeight()/2, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
 
-        // Create a buffer for image data:
-        uint8_t* imageBuffer;
-        int err = posix_memalign( (void**)&imageBuffer, 16, camera.GetFrameWidth() * camera.GetFrameHeight() * 3 * sizeof(uint8_t) );
-        assert( err == 0 );
         int stride = camera.GetFrameWidth();
+        struct timespec t1;
+        struct timespec t2;
 
         // Start capturing and transmitting images:
         camera.StartCapture();
         bool sentOk = true;
+        clock_gettime( CLOCK_MONOTONIC, &t1 );
         while ( sentOk && camera.GetFrame() )
         {
+            clock_gettime( CLOCK_MONOTONIC, &t2 );
+
             sentOk = streamer.PutYUYV422Frame( camera.UnsafeBufferAccess(), camera.GetFrameWidth(), camera.GetFrameHeight() );
-            sentOk &= videoIO.GetAVIOContext()->error >= 0;
             camera.DoneFrame();
+            sentOk &= videoIO.GetAVIOContext()->error >= 0;
+
+            double grabTime = milliseconds(t2) - milliseconds(t1);
+            fprintf( stderr, "%f %f %f %f\n", grabTime, streamer.lastConvertTime_ms, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
+            clock_gettime( CLOCK_MONOTONIC, &t1 );
         }
 
-        free( imageBuffer );
     }
     else
     {

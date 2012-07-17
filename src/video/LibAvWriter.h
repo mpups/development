@@ -40,7 +40,6 @@ public:
     bool PutYUYV422Frame( uint8_t* buffer, uint32_t width, uint32_t height );
 
     static int32_t FourCc( char, char, char, char );
-    static PixelFormat ChooseCodecFormat( CodecID id, PixelFormat inputFormat );
 
 protected:
     bool PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format );
@@ -58,6 +57,12 @@ private:
     FrameConverter   m_converter;
 
     bool    m_open;
+
+public:
+    // For benchmarking only:
+    double lastConvertTime_ms;
+    double lastEncodeTime_ms;
+    double lastPacketWriteTime_ms;
 };
 
 #endif /* __LIB_AV_WRITER_H__ */

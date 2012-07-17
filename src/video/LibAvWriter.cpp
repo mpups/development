@@ -10,6 +10,12 @@ extern "C" {
 
 #include <ctype.h>
 #include <assert.h>
+#include <time.h>
+
+static double milliseconds( struct timespec& t )
+{
+    return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
+}
 
 /**
     Static method returns an 32-bit integer representing the four character code (fourcc).
@@ -26,41 +32,6 @@ int32_t LibAvWriter::FourCc( char c1, char c2, char c3, char c4 )
     fourcc <<= 8;
     fourcc |= toupper(c1);
     return fourcc;
-}
-
-/**
-    Static method for choosing optimal encoding pixel format.
-
-    @note PixelFormat is a enum defiend by ffmpeg (in pixfmt.h).
-
-    @param id the CodecID to be used
-    @param inputFormat the pixel format the data will be supplied in.
-    @return a valid format for the specified CodecID
-*/
-PixelFormat LibAvWriter::ChooseCodecFormat( CodecID id, PixelFormat inputFormat )
-{
-    PixelFormat pixelFormat = PIX_FMT_YUV420P;
-
-    switch ( id )
-    {
-        case CODEC_ID_FFV1:
-        case CODEC_ID_HUFFYUV:
-        pixelFormat = PIX_FMT_YUV422P;
-        break;
-
-        case CODEC_ID_MJPEG:
-        pixelFormat = PIX_FMT_YUVJ420P;
-        break;
-
-        case CODEC_ID_RAWVIDEO:
-        pixelFormat = inputFormat;
-        break;
-
-        default:
-        break;
-    }
-
-    return pixelFormat;
 }
 
 /**
@@ -269,13 +240,21 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
     bool success = false;
     AVCodecContext* codecContext = m_stream->CodecContext();
 
+    struct timespec t1;
+    struct timespec t2;
+
     if ( m_converter.Configure( width, height, format,
                                 codecContext->width, codecContext->height, codecContext->pix_fmt )
        )
     {
         uint8_t* srcPlanes[4] = { buffer, 0, 0, 0 };
         int srcStrides[4] = { stride, 0, 0, 0 };
+
+        clock_gettime( CLOCK_MONOTONIC, &t1 );
         m_converter.Convert( srcPlanes, srcStrides, 0, height, m_codecFrame.data, m_codecFrame.linesize );
+        clock_gettime( CLOCK_MONOTONIC, &t2 );
+        lastConvertTime_ms = milliseconds(t2) - milliseconds(t1);
+
         m_codecFrame.pts += 1;
         success = WriteCodecFrame();
     }
@@ -296,7 +275,14 @@ bool LibAvWriter::WriteCodecFrame()
     pkt.data = m_stream->Buffer();
     pkt.size = m_stream->BufferSize();
     int packetOk;
+
+    struct timespec t1;
+    struct timespec t2;
+
+    clock_gettime( CLOCK_MONOTONIC, &t1 );
     int err = avcodec_encode_video2( codecContext, &pkt, &m_codecFrame, &packetOk );
+    clock_gettime( CLOCK_MONOTONIC, &t2 );
+    lastEncodeTime_ms = milliseconds(t2) - milliseconds(t1);
 
     if ( err == 0 && packetOk == 1 )
     {
@@ -307,7 +293,12 @@ bool LibAvWriter::WriteCodecFrame()
         {
             pkt.flags |= AV_PKT_FLAG_KEY;
         }
+
+        clock_gettime( CLOCK_MONOTONIC, &t1 );
         err = av_write_frame( m_formatContext, &pkt );
+        clock_gettime( CLOCK_MONOTONIC, &t2 );
+        lastPacketWriteTime_ms = milliseconds(t2) - milliseconds(t1);
+
         ok = err == 0;
     }
 

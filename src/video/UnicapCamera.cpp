@@ -6,6 +6,10 @@
 /**
     This gets called in the context of unicap's capture thread when a new frame arrives.
     It then makes a copy of the capture buffer and signals a semaphore that an image is ready.
+
+    @todo this causes problems if processing takes slightly longer than the inter-frame interval
+    - we then have to wait for the next frame, whereas there might have been one ready if we were
+    double buffering the frames.
 **/
 void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unicap_data_buffer_t* buffer, void *data )
 {

@@ -8,6 +8,7 @@
 
 extern "C" {
 #include <libavutil/mathematics.h>
+#include <libavformat/avformat.h>
 }
 
 struct AVStream;
@@ -31,6 +32,8 @@ public:
     int Index() const;
 
     AVRational TimeBase();
+
+    static PixelFormat ChooseCodecFormat( CodecID id, PixelFormat inputFormat );
 
 private:
     AVStream* m_stream;

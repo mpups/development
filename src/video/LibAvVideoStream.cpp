@@ -10,7 +10,45 @@ extern "C" {
 #include "LibAvWriter.h"
 
 /**
-    
+    Static method for choosing optimal encoding pixel format.
+
+    @note PixelFormat is a enum defiend by ffmpeg (in pixfmt.h).
+
+    @param id the CodecID to be used
+    @param inputFormat the pixel format the data will be supplied in.
+    @return a valid format for the specified CodecID
+*/
+PixelFormat LibAvVideoStream::ChooseCodecFormat( CodecID id, PixelFormat inputFormat )
+{
+    PixelFormat pixelFormat = PIX_FMT_YUV420P;
+
+    switch ( id )
+    {
+        case CODEC_ID_FFV1:
+        pixelFormat = PIX_FMT_YUV422P;
+        break;
+
+        case CODEC_ID_HUFFYUV:
+        pixelFormat = PIX_FMT_YUV422P;
+        break;
+
+        case CODEC_ID_MJPEG:
+        pixelFormat = PIX_FMT_YUVJ420P;
+        break;
+
+        case CODEC_ID_RAWVIDEO:
+        pixelFormat = inputFormat;
+        break;
+
+        default:
+        break;
+    }
+
+    return pixelFormat;
+}
+
+/**
+    @todo input format should be set here and passed to ChooseCodecFormat - it can then choose optimal codec format.
 */
 LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, uint32_t height, uint32_t fps, int32_t fourcc )
 :
@@ -26,10 +64,10 @@ LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, ui
     {
         CodecContext()->codec_id  = codecId;
         CodecContext()->codec_tag = fourcc;
-        CodecContext()->pix_fmt = LibAvWriter::ChooseCodecFormat( codecId, PIX_FMT_RGB24 );
+        CodecContext()->pix_fmt = LibAvVideoStream::ChooseCodecFormat( codecId, PIX_FMT_RGB24 );
         CodecContext()->bit_rate = 10000000;
         CodecContext()->bit_rate_tolerance = 1000000;
-        CodecContext()->gop_size = 250;
+        CodecContext()->gop_size = 50;
         CodecContext()->max_b_frames = 0;
 
         assert( width%2 == 0 );
