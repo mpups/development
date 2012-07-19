@@ -43,7 +43,8 @@ void LibAvCapture::Init( const char* streamName )
         m_formatContext->pb = m_customIO->GetAVIOContext();
     }
 
-    m_open = ( avformat_open_input( &m_formatContext, streamName, 0, 0 ) >= 0 );
+    AVInputFormat* inputFormat = 0;//av_find_input_format( "rawvideo" );
+    m_open = ( avformat_open_input( &m_formatContext, streamName, inputFormat, 0 ) >= 0 );
     if ( m_open == false )
     {
         return;
