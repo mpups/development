@@ -99,7 +99,6 @@ int runServer( int argc, char** argv )
     }
 }
 
-#ifndef ARM_BUILD
 int runClient( int argc, char** argv )
 {
     std::cerr << "Starting video-streaming client" << std::endl;
@@ -115,7 +114,7 @@ int runClient( int argc, char** argv )
             return reportError( "Could not create stream capture." );
         }
 
-        // Get sopme frames so we can extract correct image dimensions:
+        // Get some frames so we can extract correct image dimensions:
         for ( int i=0;i<3;++i )
         {
             streamer.GetFrame();
@@ -131,6 +130,7 @@ int runClient( int argc, char** argv )
         int err = posix_memalign( (void**)&imageBuffer, 16, w * h * 3 * sizeof(uint8_t) );
         assert( err == 0 );
 
+#ifndef ARM_BUILD
         // Setup a display window:
         robo::AnnotatedImage display( w, h );
         GLK::ImageWindow::ImageData postData; // this struct describes the image data we post for display
@@ -142,16 +142,27 @@ int runClient( int argc, char** argv )
         postData.isColourBgr = true;
 
         GLK::Timer timer;
+#endif
+
         int numFrames = 0;
         bool gotFrame = true;
+
+#ifndef ARM_BUILD
         while ( display.IsRunning() && gotFrame )
+#else
+        while ( gotFrame )
+#endif
         {
             gotFrame = streamer.GetFrame();
             if ( gotFrame )
             {
                 streamer.ExtractBgrImage( imageBuffer, w*3 );
                 streamer.DoneFrame();
+#ifndef ARM_BUILD
                 display.PostImage( postData );
+#else
+                std::cerr << "got frame" << std::endl;
+#endif
                 numFrames += 1;
             }
             else
@@ -160,9 +171,11 @@ int runClient( int argc, char** argv )
             }
             if ( numFrames == 50 )
             {
+#ifndef ARM_BUILD
                 std::cerr << "Average frame rate: " << numFrames/timer.GetSeconds() << " fps" << std::endl;
-                numFrames = 0;
                 timer.Reset();
+#endif
+                numFrames = 0;
             }
         }
 
@@ -175,12 +188,6 @@ int runClient( int argc, char** argv )
         return reportError( "Could not connect." );
     }
 }
-#else
-int runClient( int argc, char** argv )
-{
-    return reportError( "Cannot run client in ARM build." );
-}
-#endif
 
 /*
     Server process captures live video and streams it over a socket.

@@ -3,7 +3,7 @@
 
 #include <netinet/in.h>
 
-#include <iostream>
+#include <string>
 
 /**
     Class for storing and manipulating IPv4 addresses.
