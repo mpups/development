@@ -47,6 +47,10 @@ int main( int argc, char** argv )
         int32_t position;
         motors.SetSpeed( 1, -600, position );
         motors.SetSpeed( 2, 600, position );
+
+        // repeat - it seems to miss the first command sometimes
+        motors.SetSpeed( 1, -600, position );
+        motors.SetSpeed( 2, 600, position );
     
         for ( int i = 0; i<40; ++i )
         {    

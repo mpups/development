@@ -42,9 +42,6 @@ int streamVideo( TcpSocket& client )
         struct timespec t1;
         struct timespec t2;
 
-        TeleJoystick joy( client );
-        joy.Go();
-
         // Start capturing and transmitting images:
         camera.StartCapture();
         bool sentOk = true;

@@ -9,7 +9,7 @@
 class RobotServer
 {
 public:
-    RobotServer( const char* tcpPort, const char* motorSerialPort );
+    RobotServer( int tcpPort, const char* motorSerialPort );
     virtual ~RobotServer();
 
     void Listen();
@@ -19,6 +19,7 @@ public:
 private:
     void PostConnectionSetup();
     void PostCommsCleanup();
+    void StreamVideo( TeleJoystick& joy );
 
     GLK::String m_serialPort;
     DiffDrive*  m_drive;

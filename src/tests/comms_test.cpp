@@ -20,9 +20,9 @@ const int IMG_HEIGHT = 240;
 **/
 void runServer( int argc, char** argv )
 {
-    fprintf( stderr, "server process here...\n" );
+    fprintf( stderr, "Server process here...\n" );
 
-    RobotServer robot( argv[1], "/dev/ttyUSB0" );
+    RobotServer robot( atoi(argv[1]), "/dev/ttyUSB0" );
 
     while ( true )
     {

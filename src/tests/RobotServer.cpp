@@ -3,12 +3,19 @@
 const int IMG_WIDTH  = 320;
 const int IMG_HEIGHT = 240;
 
+#include <time.h>
+
+static double milliseconds( struct timespec& t )
+{
+    return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
+}
+
 /**
     Setup a robot server with specified TCP and serial ports.
     
     TCP is used for a remote tele-link and the serial port is used for differential drive control (if available).
 **/
-RobotServer::RobotServer( const char* tcpPort, const char* motorSerialPort )
+RobotServer::RobotServer( int tcpPort, const char* motorSerialPort )
 :
     m_serialPort( motorSerialPort ),
     m_drive ( 0 ),
@@ -19,7 +26,7 @@ RobotServer::RobotServer( const char* tcpPort, const char* motorSerialPort )
 {   
     // Setup a server socket for receiving client commands:
     m_server = new TcpSocket();
-    m_server->Bind( atoi( tcpPort ) ); // Get port from command line
+    m_server->Bind( tcpPort );
 }
 
 RobotServer::~RobotServer()
@@ -41,7 +48,7 @@ void RobotServer::Listen()
     m_server->Listen( 0 ); // Wait for connection - no queue
     m_con = m_server->Accept(); // Create connection
     m_con->SetBlocking( false );
-    
+
     PostConnectionSetup();
 }
 
@@ -94,7 +101,7 @@ void RobotServer::PostConnectionSetup()
 void RobotServer::PostCommsCleanup()
 {
     // These must be deleted in this order:
-    delete m_drive;   
+    delete m_drive;
     delete m_motors;
     m_drive = 0;
     m_motors = 0;
@@ -114,8 +121,6 @@ void RobotServer::RunCommsLoop()
 {
     // Setup a TeleJoystick object:
     TeleJoystick* teljoy = 0;
-    int bytesToSend = 0;
-    const char* pSend = 0;
     if ( m_con )
     {
         Ipv4Address clientAddress;
@@ -133,46 +138,18 @@ void RobotServer::RunCommsLoop()
         GLK::Thread::Sleep( 100 );
         fprintf( stderr, "running: %d\n", teljoy->IsRunning() );
 
-        // Capture images continuously:
-        while ( bytesToSend >= 0 && teljoy->IsRunning() )
+        // Start capturing and transmitting images:
+        if ( m_camera )
         {
-            if ( m_camera && (bytesToSend == 0) )
-            {
-                m_camera->GetFrame();
-                m_camera->ExtractLuminanceImage( m_lum, m_camera->GetFrameWidth() );
-                m_camera->DoneFrame();
-                
-                IplImage* cvImage = cvCreateImage( cvSize(640,480), IPL_DEPTH_8U, 1 );
-                IplImage* cvSmaller = cvCreateImage( cvSize( IMG_WIDTH, IMG_HEIGHT ), IPL_DEPTH_8U, 1 );
-                FillIplImage( m_lum, cvImage );
-                cvResize( cvImage, cvSmaller );
-                SpillIplImage( cvSmaller, m_lum );
-                cvReleaseImage( &cvImage );
-                cvReleaseImage( &cvSmaller );
-                
-                bytesToSend =  IMG_WIDTH * IMG_HEIGHT * sizeof(uint8_t);
-                pSend = reinterpret_cast<char*>( m_lum );
+            StreamVideo( *teljoy );
+        }
+        else
+        {
+            while ( teljoy->IsRunning() ) {
+                sleep(100);
             }
-        
-            if ( bytesToSend > 0 )
-            {
-                int bytesWritten = m_con->Write( pSend, bytesToSend );
-                if ( bytesWritten >= 0  )
-                {
-                    bytesToSend -= bytesWritten;
-                    pSend += bytesWritten;
-                }
-                else
-                {
-                    fprintf( stderr, "Error writing to socket\n" );
-                    bytesToSend = -1;
-                }
+        }
 
-                GLK::Thread::Sleep( 5 );
-            }
-            
-        } // end while
-        
         fprintf( stderr, "Control terminated\n" );
         
     } // end if
@@ -181,4 +158,39 @@ void RobotServer::RunCommsLoop()
     
     PostCommsCleanup();
 }
+
+/**
+    Assumptions:
+        m_con is not null.
+*/
+void RobotServer::StreamVideo( TeleJoystick& joy )
+{
+    assert( m_con );
+
+    // Create a video writer object that uses socket IO:
+    FFMpegSocketIO videoIO( *m_con, true );
+    LibAvWriter streamer( videoIO );
+
+    // Setup an MPEG4 video stream:
+    streamer.AddVideoStream( m_camera->GetFrameWidth()/2, m_camera->GetFrameHeight()/2, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+
+    struct timespec t1;
+    struct timespec t2;
+
+    bool sentOk = true;
+    clock_gettime( CLOCK_MONOTONIC, &t1 );
+    while ( sentOk && joy.IsRunning() && m_camera->GetFrame() )
+    {
+        clock_gettime( CLOCK_MONOTONIC, &t2 );
+
+        sentOk = streamer.PutYUYV422Frame( m_camera->UnsafeBufferAccess(), m_camera->GetFrameWidth(), m_camera->GetFrameHeight() );
+        m_camera->DoneFrame();
+        sentOk &= videoIO.GetAVIOContext()->error >= 0;
+
+        double grabTime = milliseconds(t2) - milliseconds(t1);
+        fprintf( stderr, "%f %f %f %f\n", grabTime, streamer.lastConvertTime_ms, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
+        clock_gettime( CLOCK_MONOTONIC, &t1 );
+    }
+}
+
 
