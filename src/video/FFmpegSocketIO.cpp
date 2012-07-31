@@ -33,7 +33,6 @@ FFMpegSocketIO::FFMpegSocketIO( TcpSocket& socket, bool sender )
     m_io = avio_alloc_context( m_buffer, BUFFER_SIZE, writeable, this, socket_read_packet, socket_write_packet, 0 );
 
     m_socket.SetNagleBufferingOff();
-    m_socket.SetBlocking( true );
 }
 
 FFMpegSocketIO::~FFMpegSocketIO()

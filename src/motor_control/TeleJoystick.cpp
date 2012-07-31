@@ -4,24 +4,26 @@
 
 TeleJoystick::TeleJoystick( Socket& socket )
 :
+    m_thread    ( *this ),
     m_socket    ( socket ),
     m_drive     ( 0 ),
     m_terminate (false)
 {
-    Start();
 }
 
 TeleJoystick::TeleJoystick( Socket& socket, DiffDrive* drive )
 :
+    m_thread    ( *this ),
     m_socket    ( socket ),
-    m_drive     ( drive )
+    m_drive     ( drive ),
+    m_terminate (false)
 {
-    Start();
 }
 
 TeleJoystick::~TeleJoystick()
 {
     m_terminate = true;
+    m_thread.Join();
 }
 
 void TeleJoystick::Run()
@@ -37,7 +39,7 @@ void TeleJoystick::Run()
     {
         int timeoutCount = 0;
         int r = 0;
-        int n = 3*sizeof(int);
+        int n = 3*sizeof(int32_t);
         int tmpData[3];
         char* pData = reinterpret_cast<char*>( tmpData );
         while ( n != 0 && r >= 0 && timeoutCount < 200 )

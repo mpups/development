@@ -128,6 +128,8 @@ void RobotServer::RunCommsLoop()
         }
 
         teljoy = new TeleJoystick( *m_con, m_drive ); // Will start receiving and processing remote joystick cammands immediately.
+        teljoy->Go();
+
         GLK::Thread::Sleep( 100 );
         fprintf( stderr, "running: %d\n", teljoy->IsRunning() );
 

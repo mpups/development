@@ -26,6 +26,9 @@ int streamVideo( TcpSocket& client )
 {
     UnicapCamera camera;
 
+    // Setup the socket for server side:
+    client.SetBlocking( true );
+
     if ( camera.IsOpen() )
     {
         // Create a video writer object that uses socket IO:
@@ -38,6 +41,9 @@ int streamVideo( TcpSocket& client )
         int stride = camera.GetFrameWidth();
         struct timespec t1;
         struct timespec t2;
+
+        TeleJoystick joy( client );
+        joy.Go();
 
         // Start capturing and transmitting images:
         camera.StartCapture();
