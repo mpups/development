@@ -11,6 +11,12 @@ int socket_write_packet( void* opaque, uint8_t* buffer, int size )
 {
     FFMpegSocketIO* io = reinterpret_cast<FFMpegSocketIO*>( opaque );
     int numBytes = io->m_socket.Write( reinterpret_cast<char*>(buffer), size );
+
+    if (numBytes > 0 )
+    {
+        io->m_bytesTx += numBytes;
+    }
+
     //std::cerr << "putting " << size << " bytes (return value := " << numBytes << ")" << std::endl;
     return numBytes;
 }
@@ -19,13 +25,20 @@ int socket_read_packet( void* opaque, uint8_t* buffer, int size )
 {
     FFMpegSocketIO* io = reinterpret_cast<FFMpegSocketIO*>( opaque );
     int numRead = io->m_socket.Read( reinterpret_cast<char*>(buffer), size );
+
+    if (numRead > 0 )
+    {
+        io->m_bytesRx += numRead;
+    }
     //std::cerr << "requesting " << size << " bytes (read " << numRead <<")" << std::endl;
     return numRead;
 }
 
 FFMpegSocketIO::FFMpegSocketIO( TcpSocket& socket, bool sender )
 :
-    m_socket ( socket )
+    m_socket  ( socket ),
+    m_bytesTx ( 0 ),
+    m_bytesRx ( 0 )
 {
     m_buffer = (uint8_t*)av_malloc( BUFFER_SIZE + FF_INPUT_BUFFER_PADDING_SIZE );
     assert( m_buffer != 0 );
@@ -56,5 +69,15 @@ const char* FFMpegSocketIO::GetStreamName()
     m_socket.GetPeerAddress( address );
     address.GetHostName( m_peerName );
     return m_peerName.c_str();
+}
+
+uint64_t FFMpegSocketIO::BytesRead() const
+{
+    return m_bytesRx;
+}
+
+uint64_t FFMpegSocketIO::BytesWritten() const
+{
+    return m_bytesTx;
 }
 

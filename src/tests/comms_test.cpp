@@ -6,6 +6,7 @@
 #endif
 
 #include <math.h>
+#include <time.h>
 
 const int IMG_WIDTH = 320;
 const int IMG_HEIGHT = 240;
@@ -14,7 +15,12 @@ const int IMG_HEIGHT = 240;
 
 #include "RobotServer.h"
 
-void message( const char* msg )
+static double milliseconds( struct timespec& t )
+{
+    return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
+}
+
+static void message( const char* msg )
 {
     std::cerr  << msg << std::endl;
 }
@@ -101,6 +107,12 @@ int runClient( int argc, char** argv )
 #endif
 
         int32_t joyData[3] = { 0,0,1 };
+        int numFrames = 0;
+        uint64_t videoBytes = 0;
+
+        struct timespec t1;
+        struct timespec t2;
+        clock_gettime( CLOCK_MONOTONIC, &t1 );
 
 #ifndef ARM_BUILD
         while ( display.IsRunning() && gotFrame )
@@ -122,6 +134,22 @@ int runClient( int argc, char** argv )
             {
                 streamer.ExtractBgrImage( imageBuffer, w*3 );
                 streamer.DoneFrame();
+
+                numFrames += 1;
+
+                if ( numFrames == 45 ) // Output rolling averages after certain number of frames
+                {
+                    clock_gettime( CLOCK_MONOTONIC, &t2 );
+
+                    double secs = (milliseconds(t2) - milliseconds(t1))/1000.0;
+                    uint64_t bytesRx = videoIO.BytesRead();
+                    double bits_per_sec = ( bytesRx - videoBytes )*(8.0/secs);
+                    videoBytes = bytesRx;
+                    std::cerr << "Through-put: " << numFrames/secs << " fps @ " << bits_per_sec/(1024.0*1024.0) << "Mbps" << std::endl;
+                    numFrames = 0;
+                    clock_gettime( CLOCK_MONOTONIC, &t1 );
+                }
+
 #ifndef ARM_BUILD
                 display.PostImage( postData );
 #else

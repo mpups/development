@@ -32,6 +32,9 @@ public:
     virtual AVIOContext* GetAVIOContext();
     virtual const char* GetStreamName();
 
+    uint64_t BytesRead() const;
+    uint64_t BytesWritten() const;
+
 protected:
     static const int BUFFER_SIZE = 32*1024;
 
@@ -40,6 +43,9 @@ private:
     AVIOContext* m_io;
     TcpSocket& m_socket;
     std::string m_peerName;
+
+    uint64_t m_bytesTx;
+    uint64_t m_bytesRx;
 };
 
 #endif /* __FFMPEG_SOCKET_IO_H__ */
