@@ -22,6 +22,9 @@ int reportError( const char* error, bool fatal=true )
     }
 }
 
+/**
+    Open the camera device and enter a loop that wills tream video over the specified socket.
+*/
 int streamVideo( TcpSocket& client )
 {
     UnicapCamera camera;
@@ -102,6 +105,9 @@ int runServer( int argc, char** argv )
     }
 }
 
+/**
+    The client receives (and displays) the video stream.
+*/
 int runClient( int argc, char** argv )
 {
     std::cerr << "Starting video-streaming client" << std::endl;
