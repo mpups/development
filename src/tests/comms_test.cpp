@@ -36,9 +36,8 @@ int runServer( int argc, char** argv )
 
     RobotServer robot( atoi(argv[1]), "/dev/ttyUSB0" );
 
-    while ( true )
+    while ( robot.Listen() ) // Wait for 1 new connection.
     {
-        robot.Listen(); // Wait for 1 new connection.
         robot.RunCommsLoop(); // Runs communications with new conection.
     }
 }

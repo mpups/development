@@ -306,7 +306,7 @@ bool UnicapCamera::FindFormat( int width, int height, unsigned int fourcc, unica
                         result = format;
                         result.size.width  = width;
                         result.size.height = height;
-                        success =  true;
+                        success = true;
                     }
                 }
             }

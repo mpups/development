@@ -12,7 +12,7 @@ public:
     RobotServer( int tcpPort, const char* motorSerialPort );
     virtual ~RobotServer();
 
-    void Listen();
+    bool Listen();
 
     void RunCommsLoop();
 

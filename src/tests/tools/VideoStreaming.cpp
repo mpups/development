@@ -39,7 +39,7 @@ int streamVideo( TcpSocket& client )
         LibAvWriter streamer( videoIO );
 
         // Setup an MPEG4 video stream:
-        streamer.AddVideoStream( camera.GetFrameWidth()/2, camera.GetFrameHeight()/2, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+        streamer.AddVideoStream( camera.GetFrameWidth(), camera.GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
 
         int stride = camera.GetFrameWidth();
         struct timespec t1;

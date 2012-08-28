@@ -229,11 +229,19 @@ bool LibAvWriter::PutYUYV422Frame( uint8_t* buffer, uint32_t width, uint32_t hei
     return PutFrame( buffer, width, height, width*2, PIX_FMT_YUYV422 );
 }
 
+bool LibAvWriter::PutYUV420PFrame( uint8_t* buffer, uint32_t width, uint32_t height )
+{
+    return PutFrame( buffer, width, height, width, PIX_FMT_YUV420P );
+}
+
 /**
     Write a frame with the specified pixel format to the video file.
 
     The sws_scale library is used to convert the frame from the specified format to the format
     required by the stream's codec.
+
+    @todo This doesn't work for planar formats as the full srcPlanes and srcStrides arrays
+    need to be filled correctly in those cases.
 */
 bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format )
 {
@@ -249,6 +257,14 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
     {
         uint8_t* srcPlanes[4] = { buffer, 0, 0, 0 };
         int srcStrides[4] = { stride, 0, 0, 0 };
+
+        if ( format == PIX_FMT_YUV420P )
+        {
+            srcPlanes[1]  = buffer + (width*height);
+            srcStrides[1] = width/2;
+            srcPlanes[2]  = srcPlanes[1] + (width*height/4);
+            srcStrides[2] = width/2;
+        }
 
         clock_gettime( CLOCK_MONOTONIC, &t1 );
         m_converter.Convert( srcPlanes, srcStrides, 0, height, m_codecFrame.data, m_codecFrame.linesize );
