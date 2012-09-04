@@ -262,7 +262,7 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
 
         if ( format == PIX_FMT_YUV420P )
         {
-            // @hack to hard code planar format to see if it improves performance - will tidy if it does:
+            // @todo - need more general way of passing planar formats and formats that require no conversion.
             srcPlanes[1]  = buffer + (width*height);
             srcStrides[1] = width/2;
             srcPlanes[2]  = srcPlanes[1] + (width*height/4);

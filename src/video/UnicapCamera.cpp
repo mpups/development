@@ -7,9 +7,8 @@
     This gets called in the context of unicap's capture thread when a new frame arrives.
     It then makes a copy of the capture buffer and signals a semaphore that an image is ready.
 
-    @todo this causes problems if processing takes slightly longer than the inter-frame interval
-    - we then have to wait for the next frame, whereas there might have been one ready if we were
-    double buffering the frames.
+    @todo Need different capture modes for different purposes - one should simply be a callback
+    to allow access to the raw data without any copy at all.
 **/
 void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unicap_data_buffer_t* buffer, void *data )
 {
@@ -371,7 +370,7 @@ void UnicapCamera::EnumerateProperties()
        fprintf( stderr, "Failure: Could not turn on auto-gain!\n" );
     }
 
-    const double framerate_hz = 30;
+    const double framerate_hz = 60;
     status = unicap_set_property_value( m_handle, "frame rate", framerate_hz );
     if ( SUCCESS( status ) )
     {

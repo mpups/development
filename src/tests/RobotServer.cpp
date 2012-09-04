@@ -242,6 +242,7 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* ds
             // Write luma to first plane:
             vst1_u8( lumaDst, yuv_out.val[0] );
 
+            // @todo fix output of colour planes
             // First write the chroma planes without vertical subsampling:
             //vst1_u8( chromaDst, yuv_out.val[1] );
 
@@ -454,13 +455,20 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     {
         clock_gettime( CLOCK_MONOTONIC, &t2 );
 
-        //halfscale_yuyv422( w, h, m_camera->UnsafeBufferAccess(), m_camera->UnsafeBufferAccess() );
+#ifdef __ARM_NEON__
         halfscale_yuyv422_to_yuv420p( w, h, m_camera->UnsafeBufferAccess(), m_camera->UnsafeBufferAccess() );
+#else
+        // @todo plain C or SSE version of halfscale_yuyv422_to_yuv420p
+        halfscale_yuyv422( w, h, m_camera->UnsafeBufferAccess(), m_camera->UnsafeBufferAccess() );
+#endif
 
         clock_gettime( CLOCK_MONOTONIC, &t3 );
 
-        //sentOk = streamer.PutYUYV422Frame( m_camera->UnsafeBufferAccess(), w/2, h/2 );
+#ifdef __ARM_NEON__
         sentOk = streamer.PutYUV420PFrame( m_camera->UnsafeBufferAccess(), w/2, h/2 ); // yuv420p is native format for MPEG4
+#else
+        sentOk = streamer.PutYUYV422Frame( m_camera->UnsafeBufferAccess(), w/2, h/2 );
+#endif
 
         m_camera->DoneFrame();
         sentOk &= videoIO.GetAVIOContext()->error >= 0;
