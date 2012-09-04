@@ -17,22 +17,26 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
 
     UnicapCamera* camera = reinterpret_cast<UnicapCamera*>( data );
 
-    if ( camera->m_captureFrame )
     {
+        camera->m_mutex.Lock();
+
         memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
+
         camera->m_time = buffer->fill_time.tv_sec * 1000000;
         camera->m_time += buffer->fill_time.tv_usec;
+        camera->m_frameCount += 1;
 
-        camera->m_captureFrame = false;
-        camera->m_frameReady.Release();
+        camera->m_mutex.Unlock();
+        camera->m_cond.WakeOne();
     }
 }
 
 UnicapCamera::UnicapCamera( unsigned long long guid )
 :
-    m_frameReady        ( 0 ),
-    m_buffer            ( 0 ),
-    m_time              ( -1 )
+    m_frameCount    ( 0 ),
+    m_retrievedCount( 0 ),
+    m_buffer        ( 0 ),
+    m_time          (-1 )
 {
     if ( OpenDevice() )
     {
@@ -93,7 +97,6 @@ void UnicapCamera::StartCapture()
 
     if ( SUCCESS(status) )
     {
-        m_captureFrame = true;
         status = unicap_start_capture( m_handle );
         assert( SUCCESS(status) );
     }
@@ -116,7 +119,14 @@ void UnicapCamera::StopCapture()
 **/
 bool UnicapCamera::GetFrame()
 {
-    m_frameReady.Acquire();
+    m_mutex.Lock();
+    while ( m_retrievedCount >= m_frameCount )
+    {
+        m_cond.Wait( m_mutex );
+    }
+
+    m_retrievedCount = m_frameCount;
+
     return true;
 }
 
@@ -125,7 +135,7 @@ bool UnicapCamera::GetFrame()
 **/
 void UnicapCamera::DoneFrame()
 {
-    m_captureFrame = true;
+    m_mutex.Unlock();
 }
 
 int32_t UnicapCamera::GetFrameWidth() const
@@ -321,6 +331,8 @@ bool UnicapCamera::FindFormat( int width, int height, unsigned int fourcc, unica
 
 /**
     Just list all properties for debugging.
+
+    @todo Currently this also sets some properties which is not good.
 **/
 void UnicapCamera::EnumerateProperties()
 {
@@ -357,6 +369,17 @@ void UnicapCamera::EnumerateProperties()
     else
     {
        fprintf( stderr, "Failure: Could not turn on auto-gain!\n" );
+    }
+
+    const double framerate_hz = 30;
+    status = unicap_set_property_value( m_handle, "frame rate", framerate_hz );
+    if ( SUCCESS( status ) )
+    {
+        fprintf( stderr, "Success: framerate set to %g Hz!\n", framerate_hz );
+    }
+    else
+    {
+        fprintf( stderr, "Failure: Could not set frame rate!\n" );
     }
 
     do

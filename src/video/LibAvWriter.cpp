@@ -258,6 +258,8 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
         uint8_t* srcPlanes[4] = { buffer, 0, 0, 0 };
         int srcStrides[4] = { stride, 0, 0, 0 };
 
+        clock_gettime( CLOCK_MONOTONIC, &t1 );
+
         if ( format == PIX_FMT_YUV420P )
         {
             // @hack to hard code planar format to see if it improves performance - will tidy if it does:
@@ -276,9 +278,11 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
             m_codecFrame.linesize[2] = srcStrides[2];
             m_codecFrame.linesize[3] = srcStrides[3];
         }
+        else
+        {
+            m_converter.Convert( srcPlanes, srcStrides, 0, height, m_codecFrame.data, m_codecFrame.linesize );
+        }
 
-        clock_gettime( CLOCK_MONOTONIC, &t1 );
-        //m_converter.Convert( srcPlanes, srcStrides, 0, height, m_codecFrame.data, m_codecFrame.linesize );
         clock_gettime( CLOCK_MONOTONIC, &t2 );
         lastConvertTime_ms = milliseconds(t2) - milliseconds(t1);
 

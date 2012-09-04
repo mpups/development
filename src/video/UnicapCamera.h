@@ -56,7 +56,12 @@ private:
     static void NewFrame( unicap_event_t event, unicap_handle_t handle, unicap_data_buffer_t* buffer, void *data );    
 
     unicap_handle_t m_handle;
-    GLK::Semaphore  m_frameReady;
+
+    GLK::ConditionVariable m_cond;
+    GLK::Mutex             m_mutex;
+    uint32_t               m_frameCount;
+    uint32_t               m_retrievedCount;
+
     uint8_t*        m_buffer;
     uint32_t        m_width;
     uint32_t        m_height;
@@ -64,7 +69,6 @@ private:
     GLK::String     m_vendor;
     GLK::String     m_model;
     volatile uint64_t m_time;
-    volatile bool   m_captureFrame;
 
     FrameConverter m_converter;
 };

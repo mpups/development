@@ -158,6 +158,7 @@ void RobotServer::RunCommsLoop()
         }
         else
         {
+            // No video so this thread can just sleep while joystick control runs:
             while ( teljoy->IsRunning() ) {
                 sleep(100);
             }
@@ -447,6 +448,8 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 
     bool sentOk = true;
     clock_gettime( CLOCK_MONOTONIC, &t1 );
+
+    // Get-frame must be last in this condition because if it suceeds DoneFrame() must be called:
     while ( sentOk && joy.IsRunning() && m_camera->GetFrame() )
     {
         clock_gettime( CLOCK_MONOTONIC, &t2 );

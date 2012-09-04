@@ -70,7 +70,7 @@ void TeleJoystick::Run()
         else if ( timeSinceLastCommand_secs > motionTimeout_secs )
         {
             // Set speeds to zero since we have lost comms (maybe temporarily)
-            fprintf( stderr, "Warning: Joystick comms timedout - stopping motion until new comms received." );
+            fprintf( stderr, "Warning: Joystick comms timedout - stopping motion until new comms received.\n" );
             data[0] = 0;
             data[1] = 0;
         }
