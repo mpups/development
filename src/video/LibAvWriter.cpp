@@ -255,39 +255,42 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
                                 codecContext->width, codecContext->height, codecContext->pix_fmt )
        )
     {
-        uint8_t* srcPlanes[4] = { buffer, 0, 0, 0 };
-        int srcStrides[4] = { stride, 0, 0, 0 };
+        AVFrame srcFrame;
+        avcodec_get_frame_defaults( &srcFrame );
+        srcFrame.data[0] = buffer;
+        srcFrame.data[1] = 0;
+        srcFrame.data[2] = 0;
+        srcFrame.data[3] = 0;
+        srcFrame.linesize[0] = stride;
+        srcFrame.linesize[1] = 0;
+        srcFrame.linesize[2] = 0;
+        srcFrame.linesize[3] = 0;
 
         clock_gettime( CLOCK_MONOTONIC, &t1 );
 
+        AVFrame* frameToSend;
         if ( format == PIX_FMT_YUV420P )
         {
             // @todo - need more general way of passing planar formats and formats that require no conversion.
-            srcPlanes[1]  = buffer + (width*height);
-            srcStrides[1] = width/2;
-            srcPlanes[2]  = srcPlanes[1] + (width*height/4);
-            srcStrides[2] = width/2;
+            srcFrame.data[1]   = buffer + (width*height);
+            srcFrame.linesize[1] = width/2;
+            srcFrame.data[2]   = srcFrame.data[1] + (width*height/4);
+            srcFrame.linesize[2] = width/2;
 
-            m_codecFrame.data[0] = srcPlanes[0];
-            m_codecFrame.data[1] = srcPlanes[1];
-            m_codecFrame.data[2] = srcPlanes[2];
-            m_codecFrame.data[3] = srcPlanes[3];
-
-            m_codecFrame.linesize[0] = srcStrides[0];
-            m_codecFrame.linesize[1] = srcStrides[1];
-            m_codecFrame.linesize[2] = srcStrides[2];
-            m_codecFrame.linesize[3] = srcStrides[3];
+            frameToSend = &srcFrame;
         }
         else
         {
-            m_converter.Convert( srcPlanes, srcStrides, 0, height, m_codecFrame.data, m_codecFrame.linesize );
+            m_converter.Convert( srcFrame.data, srcFrame.linesize, 0, height, m_codecFrame.data, m_codecFrame.linesize );
+            frameToSend = &m_codecFrame;
         }
 
         clock_gettime( CLOCK_MONOTONIC, &t2 );
         lastConvertTime_ms = milliseconds(t2) - milliseconds(t1);
 
         m_codecFrame.pts += 1;
-        success = WriteCodecFrame();
+        srcFrame.pts = m_codecFrame.pts;
+        success = WriteCodecFrame( frameToSend );
     }
 
     return success;
@@ -296,9 +299,11 @@ bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, ui
 /**
     Write the current codec picture to the current stream.
 */
-bool LibAvWriter::WriteCodecFrame()
+bool LibAvWriter::WriteCodecFrame( AVFrame* frame )
 {
     bool ok = false;
+
+    assert( frame != 0 );
 
     AVCodecContext* codecContext = m_stream->CodecContext();
     AVPacket pkt;
@@ -311,7 +316,7 @@ bool LibAvWriter::WriteCodecFrame()
     struct timespec t2;
 
     clock_gettime( CLOCK_MONOTONIC, &t1 );
-    int err = avcodec_encode_video2( codecContext, &pkt, &m_codecFrame, &packetOk );
+    int err = avcodec_encode_video2( codecContext, &pkt, frame, &packetOk );
     clock_gettime( CLOCK_MONOTONIC, &t2 );
     lastEncodeTime_ms = milliseconds(t2) - milliseconds(t1);
 

@@ -437,15 +437,8 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     struct timespec t2;
     struct timespec t3;
 
-    // Create a buffer for full-size image in format YUV420P:
-    uint8_t* yuv420p;
     int w = m_camera->GetFrameWidth();
     int h = m_camera->GetFrameHeight();
-    int err = posix_memalign( (void**)&yuv420p, 16, (3 * w * h) / 2 );
-    assert( err == 0 );
-
-    // Set no colour in chroma planes:
-    memset( yuv420p, 127, (3*w*h)/2 );
 
     bool sentOk = true;
     clock_gettime( CLOCK_MONOTONIC, &t1 );
@@ -464,8 +457,9 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 
         clock_gettime( CLOCK_MONOTONIC, &t3 );
 
+        // yuv420p is native format for MPEG4
 #ifdef __ARM_NEON__
-        sentOk = streamer.PutYUV420PFrame( m_camera->UnsafeBufferAccess(), w/2, h/2 ); // yuv420p is native format for MPEG4
+        sentOk = streamer.PutYUV420PFrame( m_camera->UnsafeBufferAccess(), w/2, h/2 );
 #else
         sentOk = streamer.PutYUYV422Frame( m_camera->UnsafeBufferAccess(), w/2, h/2 );
 #endif
