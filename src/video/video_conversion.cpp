@@ -173,42 +173,47 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* ds
     uint8_t* uDst = dstBuffer + ((w*h)/4);
     uint8_t* vDst = uDst + ((w*h)/16);
 
-    const int rowBytes = w*2;
-    int r = (h/2) + 1;
+    const int srcRowBytes = w*2; // src stride
+    const int dstRowBytes = w/2; // dst luma stride
+    int r = (h/4) + 1;
     while ( --r )
     {
         int c = (w/16) + 1;
         while ( --c )
         {
+            int16_t y1,u1,y2,v1,y3,u2,y4,v2;
+
             // Process 32 bytes (16 pixels) each outer loop:
             for ( int p=0;p<4;++p)
             {
                 // Row 1
-                int16_t y1,u1,y2,v1,y3,u2,y4,v2;
-                y1 = srcBuffer[0];
-                u1 = srcBuffer[1];
-                y2 = srcBuffer[2];
-                v1 = srcBuffer[3];
-                y3 = srcBuffer[4];
-                u2 = srcBuffer[5];
-                y4 = srcBuffer[6];
-                v2 = srcBuffer[7];
+                uint8_t* srcRow = srcBuffer;
+                srcBuffer += 8;
+
+                y1 = srcRow[0];
+                u1 = srcRow[1];
+                y2 = srcRow[2];
+                v1 = srcRow[3];
+                y3 = srcRow[4];
+                u2 = srcRow[5];
+                y4 = srcRow[6];
+                v2 = srcRow[7];
 
                 int16_t Y1 = y1+y2;
                 int16_t U1 = u1+u2;
                 int16_t Y2 = y3+y4;
                 int16_t V1 = v1+v2;
 
-                // Now do next row
-                uint8_t* nextSrcRow = srcBuffer + rowBytes;
-                y1 = nextSrcRow[0];
-                u1 = nextSrcRow[1];
-                y2 = nextSrcRow[2];
-                v1 = nextSrcRow[3];
-                y3 = nextSrcRow[4];
-                u2 = nextSrcRow[5];
-                y4 = nextSrcRow[6];
-                v2 = nextSrcRow[7];
+                // Row 2
+                srcRow += srcRowBytes;
+                y1 = srcRow[0];
+                u1 = srcRow[1];
+                y2 = srcRow[2];
+                v1 = srcRow[3];
+                y3 = srcRow[4];
+                u2 = srcRow[5];
+                y4 = srcRow[6];
+                v2 = srcRow[7];
 
                 Y1 += y1 + y2;
                 U1 += u1 + u2;
@@ -221,26 +226,66 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* ds
                 Y2 /= 4;
                 V1 /= 4;
 
-                srcBuffer += 8;
-
-                // Write luminance result:
+                // Write row 1 luminance result:
                 lumaDst[0] = Y1;
                 lumaDst[1] = Y2;
+
+                // Row 3
+                srcRow += srcRowBytes;
+                y1 = srcRow[0];
+                u1 = srcRow[1];
+                y2 = srcRow[2];
+                v1 = srcRow[3];
+                y3 = srcRow[4];
+                u2 = srcRow[5];
+                y4 = srcRow[6];
+                v2 = srcRow[7];
+
+                int16_t R2Y1 = y1+y2;
+                int16_t R2U1 = u1+u2;
+                int16_t R2Y2 = y3+y4;
+                int16_t R2V1 = v1+v2;
+
+                // Row 4
+                srcRow += srcRowBytes;
+                y1 = srcRow[0];
+                u1 = srcRow[1];
+                y2 = srcRow[2];
+                v1 = srcRow[3];
+                y3 = srcRow[4];
+                u2 = srcRow[5];
+                y4 = srcRow[6];
+                v2 = srcRow[7];
+
+                R2Y1 += y1 + y2;
+                R2U1 += u1 + u2;
+                R2Y2 += y3 + y4;
+                R2V1 += v1 + v2;
+
+                // average row 2:
+                R2Y1 /= 4;
+                R2U1 /= 4;
+                R2Y2 /= 4;
+                R2V1 /= 4;
+
+                // Write row 2 luminance result:
+                lumaDst[dstRowBytes] = R2Y1;
+                lumaDst[dstRowBytes+1] = R2Y2;
                 lumaDst += 2;
 
                 // Write chrominance result:
-                //uDst[0] = U1;
-                //vDst[0] = V1;
+                // @todo Do'h can't do this in place - we are overwriting data that will be read later!
+                uDst[0] = (U1 + R2U1)/2;
+                vDst[0] = (V1 + R2V1)/2;
                 uDst += 1;
                 vDst += 1;
             }
         }
 
-        // Now skip row because we processed 2 rows at once.
-        srcBuffer += rowBytes;
+        // Now skip because we processed 4 rows at once.
+        srcBuffer += 3*srcRowBytes;
+        lumaDst += dstRowBytes;
     }
-
-    memset( dstBuffer + ((w*h)/4), 127, (w*h)/8 );
 }
 
 /**
