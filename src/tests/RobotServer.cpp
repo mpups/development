@@ -206,21 +206,12 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     {
         clock_gettime( CLOCK_MONOTONIC, &t2 );
 
-#ifdef __ARM_NEON__
         halfscale_yuyv422_to_yuv420p( w, h, m_camera->UnsafeBufferAccess(), m_camera->UnsafeBufferAccess() );
-#else
-        // @todo plain C or SSE version of halfscale_yuyv422_to_yuv420p
-        halfscale_yuyv422( w, h, m_camera->UnsafeBufferAccess(), m_camera->UnsafeBufferAccess() );
-#endif
 
         clock_gettime( CLOCK_MONOTONIC, &t3 );
 
         // yuv420p is native format for MPEG4
-#ifdef __ARM_NEON__
         sentOk = streamer.PutYUV420PFrame( m_camera->UnsafeBufferAccess(), w/2, h/2 );
-#else
-        sentOk = streamer.PutYUYV422Frame( m_camera->UnsafeBufferAccess(), w/2, h/2 );
-#endif
 
         m_camera->DoneFrame();
         sentOk &= videoIO.GetAVIOContext()->error >= 0;

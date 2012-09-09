@@ -167,6 +167,82 @@ void halfscale_yuyv422( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
 
 #else
 
+void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
+{
+    uint8_t* lumaDst = dstBuffer;
+    uint8_t* uDst = dstBuffer + ((w*h)/4);
+    uint8_t* vDst = uDst + ((w*h)/16);
+
+    const int rowBytes = w*2;
+    int r = (h/2) + 1;
+    while ( --r )
+    {
+        int c = (w/16) + 1;
+        while ( --c )
+        {
+            // Process 32 bytes (16 pixels) each outer loop:
+            for ( int p=0;p<4;++p)
+            {
+                // Row 1
+                int16_t y1,u1,y2,v1,y3,u2,y4,v2;
+                y1 = srcBuffer[0];
+                u1 = srcBuffer[1];
+                y2 = srcBuffer[2];
+                v1 = srcBuffer[3];
+                y3 = srcBuffer[4];
+                u2 = srcBuffer[5];
+                y4 = srcBuffer[6];
+                v2 = srcBuffer[7];
+
+                int16_t Y1 = y1+y2;
+                int16_t U1 = u1+u2;
+                int16_t Y2 = y3+y4;
+                int16_t V1 = v1+v2;
+
+                // Now do next row
+                uint8_t* nextSrcRow = srcBuffer + rowBytes;
+                y1 = nextSrcRow[0];
+                u1 = nextSrcRow[1];
+                y2 = nextSrcRow[2];
+                v1 = nextSrcRow[3];
+                y3 = nextSrcRow[4];
+                u2 = nextSrcRow[5];
+                y4 = nextSrcRow[6];
+                v2 = nextSrcRow[7];
+
+                Y1 += y1 + y2;
+                U1 += u1 + u2;
+                Y2 += y3 + y4;
+                V1 += v1 + v2;
+
+                // Now average:
+                Y1 /= 4;
+                U1 /= 4;
+                Y2 /= 4;
+                V1 /= 4;
+
+                srcBuffer += 8;
+
+                // Write luminance result:
+                lumaDst[0] = Y1;
+                lumaDst[1] = Y2;
+                lumaDst += 2;
+
+                // Write chrominance result:
+                //uDst[0] = U1;
+                //vDst[0] = V1;
+                uDst += 1;
+                vDst += 1;
+            }
+        }
+
+        // Now skip row because we processed 2 rows at once.
+        srcBuffer += rowBytes;
+    }
+
+    memset( dstBuffer + ((w*h)/4), 127, (w*h)/8 );
+}
+
 /**
     Take image data in yuyv422 format and reduce the image dimensions by half.
 
