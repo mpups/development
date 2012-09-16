@@ -201,12 +201,17 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     bool sentOk = true;
     clock_gettime( CLOCK_MONOTONIC, &t1 );
 
+    // Create a buffer for full-size image in format YUV420P:
+    uint8_t* yuv420p;
+    int err = posix_memalign( (void**)&yuv420p, 16, (3 * w * h) / 2 );
+    assert( err == 0 );
+
     // Get-frame must be last in this condition because if it suceeds DoneFrame() must be called:
     while ( sentOk && joy.IsRunning() && m_camera->GetFrame() )
     {
         clock_gettime( CLOCK_MONOTONIC, &t2 );
 
-        halfscale_yuyv422_to_yuv420p( w, h, m_camera->UnsafeBufferAccess(), m_camera->UnsafeBufferAccess() );
+        //halfscale_yuyv422_to_yuv420p( w, h, m_camera->UnsafeBufferAccess(), yuv420p );
 
         clock_gettime( CLOCK_MONOTONIC, &t3 );
 
@@ -221,5 +226,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
         fprintf( stderr, "%f %f %f %f %f\n", grabTime, extractTime, streamer.lastConvertTime_ms, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
         clock_gettime( CLOCK_MONOTONIC, &t1 );
     }
+
+    free( yuv420p );
 }
 

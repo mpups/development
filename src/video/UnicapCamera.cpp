@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "video_conversion.h"
+
 /**
     This gets called in the context of unicap's capture thread when a new frame arrives.
     It then makes a copy of the capture buffer and signals a semaphore that an image is ready.
@@ -19,7 +21,8 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
     {
         camera->m_mutex.Lock();
 
-        memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
+        halfscale_yuyv422_to_yuv420p( 640, 480, buffer->data, camera->m_buffer );
+        //memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
 
         camera->m_time = buffer->fill_time.tv_sec * 1000000;
         camera->m_time += buffer->fill_time.tv_usec;
