@@ -2,6 +2,7 @@
 #include "video_conversion.h"
 
 #include <memory.h>
+#include <assert.h>
 
 // gcc for Arm defines the following if you set -mfpu=neon
 #ifdef __ARM_NEON__
@@ -20,18 +21,25 @@
     This function expects the separate planes to all be tightly packed into the src and
     dst buffers. This might not lead to optimal alignment for some image dimensions.
 
+    The conversion can NOT be used in-place: the src and dst buffers must not be the same
+    (or overlap).
+
     @param w the input width in pixels.
     @param h the input height in pixels.
     @srcBuffer input yuv420p image of dimension wxh.
     @dstBuffer output yuv420p image of dimension (w/2)x(h/2).
 */
-void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
+void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* __restrict__ srcBuffer, uint8_t* __restrict__ dstBuffer )
 {
-    uint8_t* lumaDst = dstBuffer;
-    uint8_t* chromaDst = dstBuffer + ((w*h)/4);
+    assert( srcBuffer != dstBuffer );
 
-    const int rowBytes = w*2;
-    int r = (h/2) + 1;
+    uint8_t* lumaDst = dstBuffer;
+    uint8_t* uDst = dstBuffer + ((w*h)/4);
+    uint8_t* vDst = uDst + ((w*h)/16);
+
+    const int srcRowBytes = w*2; // src stride
+    const int dstRowBytes = w/2; // dst luma stride
+    int r = (h/4) + 1;
     while ( --r )
     {
         int c = (w/16) + 1;
@@ -43,51 +51,76 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* ds
             // [1] = u1 u2 u3 u4 u5 u6 u7 u8
             // [2] = y2 y4 y6 y8 y10 y12 y14 y16
             // [3] = v1 v2 v3 v4 v5 v6 v7 v8
-            uint8x8x4_t row1_yuyv_lanes = vld4_u8( srcBuffer );
-            uint8x8x4_t row2_yuyv_lanes = vld4_u8( srcBuffer + rowBytes ); // process corresponding pixels from next row simultaneously
+            uint8_t* srcRow = srcBuffer;
+            srcBuffer += 32;
+            uint8x8x4_t row1_yuyv_lanes = vld4_u8( srcRow );
+            srcRow += srcRowBytes;
+            uint8x8x4_t row2_yuyv_lanes = vld4_u8( srcRow ); // process corresponding pixels from next row simultaneously
+            srcRow += srcRowBytes;
+            uint8x8x4_t row3_yuyv_lanes = vld4_u8( srcRow );
+            srcRow += srcRowBytes;
+            uint8x8x4_t row4_yuyv_lanes = vld4_u8( srcRow );
 
             // Average adjacent luminance components using halving add: 
             uint8x8_t row1_luma = vrhadd_u8( row1_yuyv_lanes.val[0], row1_yuyv_lanes.val[2] ); // ([0] + [2]) / 2 -> Y1 Y2 Y3 Y4 Y5 Y6 Y7 Y8
             uint8x8_t row2_luma = vrhadd_u8( row2_yuyv_lanes.val[0], row2_yuyv_lanes.val[2] );
+            uint8x8_t row3_luma = vrhadd_u8( row3_yuyv_lanes.val[0], row3_yuyv_lanes.val[2] );
+            uint8x8_t row4_luma = vrhadd_u8( row4_yuyv_lanes.val[0], row4_yuyv_lanes.val[2] );
+
+            // Now average luminance vertically with halving add:
+            uint8x8x2_t luma_out; // this type ensures we get an adjacent pair of registers
+            luma_out.val[0] = vrhadd_u8( row1_luma, row2_luma ); // luma result: y1 y2 y3 y4 y5 y6 y7 y8
+            luma_out.val[1] = vrhadd_u8( row3_luma, row4_luma );
+
+            // Store luminance plane, output 2 rows per iteration (8 bytes to each):
+            vst1_u8( lumaDst, luma_out.val[0] );
+            vst1_u8( lumaDst+dstRowBytes, luma_out.val[1] );
+            lumaDst += 8;
 
             // Average chroma components using pair-wise add:
             uint16x4_t row1_chroma_u_16 = vpaddl_u8( row1_yuyv_lanes.val[1] ); // [1] -> U1 U2 U3 U4 (U1 = (u1+u2)/2, etc)
             uint16x4_t row1_chroma_v_16 = vpaddl_u8( row1_yuyv_lanes.val[3] ); // [3] -> V1 V2 V3 V4
             uint16x4_t row2_chroma_u_16 = vpaddl_u8( row2_yuyv_lanes.val[1] );
             uint16x4_t row2_chroma_v_16 = vpaddl_u8( row2_yuyv_lanes.val[3] );
+            uint16x4_t row3_chroma_u_16 = vpaddl_u8( row3_yuyv_lanes.val[1] );
+            uint16x4_t row3_chroma_v_16 = vpaddl_u8( row3_yuyv_lanes.val[3] );
+            uint16x4_t row4_chroma_u_16 = vpaddl_u8( row4_yuyv_lanes.val[1] );
+            uint16x4_t row4_chroma_v_16 = vpaddl_u8( row4_yuyv_lanes.val[3] );
 
             // Combine u anv v into one vector:
             uint16x8_t row1_chroma_uv_16 = vcombine_u16( row1_chroma_u_16, row1_chroma_v_16 ); // U1 U2 U3 U4 V1 V2 V3 V4
             uint16x8_t row2_chroma_uv_16 = vcombine_u16( row2_chroma_u_16, row2_chroma_v_16 );
+            uint16x8_t row3_chroma_uv_16 = vcombine_u16( row3_chroma_u_16, row3_chroma_v_16 );
+            uint16x8_t row4_chroma_uv_16 = vcombine_u16( row4_chroma_u_16, row4_chroma_v_16 );
 
             // Halve and truncate chroma back to 8-bits:
             // vrshrn does rounding but takes 1 more cycle - not worth it?
             uint8x8_t row1_chroma_uv_8 = vshrn_n_u16( row1_chroma_uv_16, 1 ); // (U1 U2 U3 U4 V1 V2 V3 V4) / 2
             uint8x8_t row2_chroma_uv_8 = vshrn_n_u16( row2_chroma_uv_16, 1 );
+            uint8x8_t row3_chroma_uv_8 = vshrn_n_u16( row3_chroma_uv_16, 1 );
+            uint8x8_t row4_chroma_uv_8 = vshrn_n_u16( row4_chroma_uv_16, 1 );
 
-            // Now average all data for the two rows with halving add:
-            uint8x8x2_t yuv_out; // this type ensures we get an adjacent pair of registers
-            yuv_out.val[0] = vrhadd_u8( row1_luma, row2_luma ); // luma result: y1 y2 y3 y4 y5 y6 y7 y8
-            yuv_out.val[1] = vrhadd_u8( row1_chroma_uv_8, row2_chroma_uv_8 ); // chroma result: u1 u2 u3 u4 v1 v2 v3 v4
+            // Use halving add to average vertically:
+            uint8x8_t chroma1 = vrhadd_u8( row1_chroma_uv_8, row2_chroma_uv_8 );
+            uint8x8_t chroma2 = vrhadd_u8( row3_chroma_uv_8, row4_chroma_uv_8 );
+            uint8x8_t chroma_out_8 = vrhadd_u8( chroma1, chroma2 ); // chroma result: u1 u2 u3 u4 v1 v2 v3 v4
 
-            // Write luma to first plane:
-            vst1_u8( lumaDst, yuv_out.val[0] );
-
-            // @todo fix output of colour planes
-            // First write the chroma planes without vertical subsampling:
-            //vst1_u8( chromaDst, yuv_out.val[1] );
-
-            lumaDst += 8;
-            chromaDst += 8;
-
-            srcBuffer += 32;
+            // To write the chroma u-v planes we need to 'cast' them to 2 x int32 (one int for 4 u
+            // components the other for the 4 V components) and we write each int to the appropriate
+            // output plane.
+            // @todo Whilst this works it uses unaligned stores which may be slower.
+            uint32x2_t chroma_out_32 = vreinterpret_u32_u8( chroma_out_8 );
+            vst1_lane_u32( (uint32_t*)uDst, chroma_out_32, 0 ); // writes 4 U bytes
+            vst1_lane_u32( (uint32_t*)vDst, chroma_out_32, 1 ); // writes 4 V bytes
+            uDst += 4;
+            vDst += 4;
         }
 
-        srcBuffer += rowBytes;
+        // Now skip because we processed 4 rows at once.
+        srcBuffer += 3*srcRowBytes;
+        lumaDst += dstRowBytes;
     }
 
-    // Set no colour in chroma planes:
-    memset( dstBuffer + ((w*h)/4), 127, (w*h)/8 );
 }
 
 /**
@@ -95,7 +128,7 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* ds
     Take image data in yuyv422 format and reduce the image dimensions by half.
 
     @param w width in pixels - must be multiple of 16
-    @param h height in pixels
+    @param h height in pixels - must be exactly divisible by 4
     @param srcBuffer pointer to yuyv422 image data - must be 16-byte/128-bit aligned
     @param dstBuffer pointer to storage for yuyv422 result - must be 16-byte/128-bit aligned
 
@@ -111,7 +144,6 @@ void halfscale_yuyv422( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
     int r = (h/2) + 1;
     while ( --r )
     {
-
         int c = (w/16) + 1;
         while ( --c )
         {
@@ -167,8 +199,10 @@ void halfscale_yuyv422( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
 
 #else
 
-void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
+void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* __restrict__ srcBuffer, uint8_t* __restrict__ dstBuffer )
 {
+    assert( srcBuffer != dstBuffer );
+
     uint8_t* lumaDst = dstBuffer;
     uint8_t* uDst = dstBuffer + ((w*h)/4);
     uint8_t* vDst = uDst + ((w*h)/16);
@@ -183,7 +217,7 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* ds
         {
             int16_t y1,u1,y2,v1,y3,u2,y4,v2;
 
-            // Process 32 bytes (16 pixels) each outer loop:
+            // Each iteration of the following inner loop processes 8 pixels: hence, each outer loop processes 32 (to mimic the SIMD version).
             for ( int p=0;p<4;++p)
             {
                 // Row 1
@@ -274,7 +308,6 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* srcBuffer, uint8_t* ds
                 lumaDst += 2;
 
                 // Write chrominance result:
-                // @todo Do'h can't do this in place - we are overwriting data that will be read later!
                 uDst[0] = (U1 + R2U1)/2;
                 vDst[0] = (V1 + R2V1)/2;
                 uDst += 1;
