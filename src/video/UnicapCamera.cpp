@@ -5,6 +5,12 @@
 
 #include "video_conversion.h"
 
+static double milliseconds( struct timespec& t )
+{
+    return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
+}
+#include <unistd.h>
+
 /**
     This gets called in the context of unicap's capture thread when a new frame arrives.
     It then makes a copy of the capture buffer and signals a semaphore that an image is ready.
@@ -21,11 +27,17 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
     {
         camera->m_mutex.Lock();
 
+        struct timespec t1;
+        struct timespec t2;
+
+        clock_gettime( CLOCK_MONOTONIC, &t1 );
         halfscale_yuyv422_to_yuv420p( 640, 480, buffer->data, camera->m_buffer );
         //memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
+        clock_gettime( CLOCK_MONOTONIC, &t2 );
 
-        camera->m_time = buffer->fill_time.tv_sec * 1000000;
-        camera->m_time += buffer->fill_time.tv_usec;
+        double time_us = (milliseconds(t2) - milliseconds(t1))*1000.0;
+        camera->m_time = time_us;// buffer->fill_time.tv_sec * 1000000;
+        //camera->m_time += buffer->fill_time.tv_usec;
         camera->m_frameCount += 1;
 
         camera->m_mutex.Unlock();

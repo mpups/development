@@ -15,6 +15,7 @@ extern "C" {
 
 class LibAvVideoStream;
 class FFMpegCustomIO;
+class VideoFrame;
 
 /**
     Class which uses libavcodec to write video streams to a video file.
@@ -39,6 +40,8 @@ public:
 
     bool PutYUYV422Frame( uint8_t* buffer, uint32_t width, uint32_t height );
     bool PutYUV420PFrame( uint8_t* buffer, uint32_t width, uint32_t height );
+
+    bool PutVideoFrame( VideoFrame& frame );
 
     static int32_t FourCc( char, char, char, char );
 

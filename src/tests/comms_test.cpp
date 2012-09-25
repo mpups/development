@@ -40,6 +40,8 @@ int runServer( int argc, char** argv )
     {
         robot.RunCommsLoop(); // Runs communications with new conection.
     }
+
+    return EXIT_SUCCESS;
 }
 
 /**

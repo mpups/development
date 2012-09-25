@@ -1,5 +1,6 @@
 #include "LibAvWriter.h"
 
+#include "VideoFrame.h"
 #include "LibAvCapture.h"
 #include "LibAvVideoStream.h"
 #include "FFmpegCustomIO.h"
@@ -232,6 +233,57 @@ bool LibAvWriter::PutYUYV422Frame( uint8_t* buffer, uint32_t width, uint32_t hei
 bool LibAvWriter::PutYUV420PFrame( uint8_t* buffer, uint32_t width, uint32_t height )
 {
     return PutFrame( buffer, width, height, width, PIX_FMT_YUV420P );
+}
+
+bool LibAvWriter::PutVideoFrame( VideoFrame& frame )
+{
+    const int width  = frame.GetWidth();
+    const int height = frame.GetHeight();
+    const PixelFormat format = frame.GetAvPixelFormat();
+    AVCodecContext* codecContext = m_stream->CodecContext();
+
+    struct timespec t1;
+    struct timespec t2;
+    clock_gettime( CLOCK_MONOTONIC, &t1 );
+
+    AVFrame srcFrame;
+    avcodec_get_frame_defaults( &srcFrame );
+
+    AVFrame* frameToSend;
+    if (  format == codecContext->pix_fmt )
+    {
+        // No conversion needed so just copy pointers:
+        AVPicture& picture = frame.GetAvPicture();
+        srcFrame.data[0] = picture.data[0];
+        srcFrame.data[1] = picture.data[1];
+        srcFrame.data[2] = picture.data[2];
+        srcFrame.data[3] = picture.data[3];
+        srcFrame.linesize[0] = picture.linesize[0];
+        srcFrame.linesize[1] = picture.linesize[1];
+        srcFrame.linesize[2] = picture.linesize[2];
+        srcFrame.linesize[3] = picture.linesize[3];
+        frameToSend = &srcFrame;
+    }
+    else
+    {
+        if ( m_converter.Configure( width, height, format, codecContext->width, codecContext->height, codecContext->pix_fmt ) )
+        {
+            m_converter.Convert( srcFrame.data, srcFrame.linesize, 0, height, m_codecFrame.data, m_codecFrame.linesize );
+            frameToSend = &m_codecFrame;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    clock_gettime( CLOCK_MONOTONIC, &t2 );
+    lastConvertTime_ms = milliseconds(t2) - milliseconds(t1);
+
+    m_codecFrame.pts += 1;
+    srcFrame.pts = m_codecFrame.pts;
+    bool success = WriteCodecFrame( frameToSend );
+    return success;
 }
 
 /**

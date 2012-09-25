@@ -10,6 +10,8 @@
 #include "../src/vision/LoadBalancingCornerDetector.h"
 #include "../src/vision/FastCornerSearch.h"
 
+#include "../src/video/video_conversion.h"
+#include "../src/video/VideoFrame.h"
 #include "../src/video/LibAvCapture.h"
 #include "../src/video/LibAvWriter.h"
 #include "../src/video/FFmpegCustomIO.h"
