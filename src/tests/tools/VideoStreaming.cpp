@@ -41,9 +41,10 @@ int streamVideo( TcpSocket& client )
         // Setup an MPEG4 video stream:
         streamer.AddVideoStream( camera.GetFrameWidth(), camera.GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
 
-        int stride = camera.GetFrameWidth();
         struct timespec t1;
         struct timespec t2;
+
+        VideoFrame frame( camera.UnsafeBufferAccess(), PIX_FMT_YUYV422, camera.GetFrameWidth(), camera.GetFrameHeight(), camera.GetFrameWidth()*2 );
 
         // Start capturing and transmitting images:
         camera.StartCapture();
@@ -53,7 +54,7 @@ int streamVideo( TcpSocket& client )
         {
             clock_gettime( CLOCK_MONOTONIC, &t2 );
 
-            sentOk = streamer.PutYUYV422Frame( camera.UnsafeBufferAccess(), camera.GetFrameWidth(), camera.GetFrameHeight() );
+            sentOk = streamer.PutVideoFrame( frame );
             camera.DoneFrame();
             sentOk &= videoIO.GetAVIOContext()->error >= 0;
 

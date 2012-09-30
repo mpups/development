@@ -52,6 +52,7 @@ private:
     bool OpenDevice();
     bool FindFormat( int width, int height, unsigned int fourcc, unicap_format_t& format );
     void EnumerateProperties();
+    void SetDefaultProperties();
 
     static void NewFrame( unicap_event_t event, unicap_handle_t handle, unicap_data_buffer_t* buffer, void *data );    
 

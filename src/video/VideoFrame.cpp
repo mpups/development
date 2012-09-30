@@ -27,6 +27,8 @@ VideoFrame::VideoFrame( uint8_t* buffer, PixelFormat format, uint32_t width, uin
     m_height( height ),
     m_freePicture (false)
 {
+    memset( &m_picture, 0 , sizeof(m_picture) );
+
     m_picture.data[0] = buffer;
     m_picture.data[1] = 0;
     m_picture.data[2] = 0;
@@ -51,6 +53,27 @@ VideoFrame::~VideoFrame()
     {
         avpicture_free( &m_picture );
     }
+}
+
+/**
+    Copy the internal AVPicture data pointers to the specified AVFrame.
+
+    @note This is intended for quick copyless transfers of frame data - no
+    data is not copied only the pointers - hence the AVFrame parameter
+    must never be free'd with avframe_free().
+
+    @param frame The frame whos pointers will be modified.
+*/
+void VideoFrame::FillAvFramePointers( AVFrame& frame ) const
+{
+    frame.data[0] = m_picture.data[0];
+    frame.data[1] = m_picture.data[1];
+    frame.data[2] = m_picture.data[2];
+    frame.data[3] = m_picture.data[3];
+    frame.linesize[0] = m_picture.linesize[0];
+    frame.linesize[1] = m_picture.linesize[1];
+    frame.linesize[2] = m_picture.linesize[2];
+    frame.linesize[3] = m_picture.linesize[3];
 }
 
 AVPicture& VideoFrame::GetAvPicture()

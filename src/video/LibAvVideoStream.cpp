@@ -49,6 +49,11 @@ PixelFormat LibAvVideoStream::ChooseCodecFormat( CodecID id, PixelFormat inputFo
 
 /**
     @todo input format should be set here and passed to ChooseCodecFormat - it can then choose optimal codec format.
+
+    @param width  The desired width of the output video.
+    @param height The desired height of the output video.
+    @param fps    The desired frame rate of the output video in frames per second.
+    @param fourcc The fourcc code for the video compression codec to be used.
 */
 LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, uint32_t height, uint32_t fps, int32_t fourcc )
 :

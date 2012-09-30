@@ -34,19 +34,19 @@ public:
 
     bool AddVideoStream( uint32_t width, uint32_t height, uint32_t fps, int32_t fourcc );
 
-    bool PutGreyFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
+    /*bool PutGreyFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
     bool PutRgbFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
     bool PutBgrFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride );
 
     bool PutYUYV422Frame( uint8_t* buffer, uint32_t width, uint32_t height );
-    bool PutYUV420PFrame( uint8_t* buffer, uint32_t width, uint32_t height );
+    bool PutYUV420PFrame( uint8_t* buffer, uint32_t width, uint32_t height );*/
 
     bool PutVideoFrame( VideoFrame& frame );
 
     static int32_t FourCc( char, char, char, char );
 
 protected:
-    bool PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format );
+    //bool PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format );
     bool WriteCodecFrame( AVFrame* );
 
 private:

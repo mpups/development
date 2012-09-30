@@ -1,5 +1,7 @@
 #include "FrameConverter.h"
 
+#include "VideoFrame.h"
+
 /**
     Construct an empty convertor which has no
     context allocated - you must call Configure() to
@@ -50,7 +52,7 @@ bool FrameConverter::Configure( int srcW, int srcH, PixelFormat srcFormat,
 
     @return true if conversion was successful, of false if there was an error.
 */
-bool FrameConverter::Convert( uint8_t* src[], int srcStride[], int rowOffset, int rowHeight, uint8_t* dst[], int dstStride[] )
+bool FrameConverter::Convert( uint8_t* src[], int srcStride[], int rowOffset, int rowHeight, uint8_t* dst[], int dstStride[] ) const
 {
     if ( m_context != 0 )
     {
@@ -59,3 +61,15 @@ bool FrameConverter::Convert( uint8_t* src[], int srcStride[], int rowOffset, in
 
     return m_context != 0;
 }
+
+bool FrameConverter::Convert( const VideoFrame& frame, uint8_t* dst[], int dstStride[] ) const
+{
+    if ( m_context != 0 )
+    {
+        const AVPicture& picture = frame.GetAvPicture();
+        sws_scale( m_context, picture.data, picture.linesize, 0, frame.GetHeight(), dst, dstStride );
+    }
+
+    return m_context != 0;
+}
+

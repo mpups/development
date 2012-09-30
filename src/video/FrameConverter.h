@@ -10,6 +10,8 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+class VideoFrame;
+
 /**
     Class which holds and caches the context for frame conversion.
 
@@ -22,7 +24,8 @@ public:
     virtual ~FrameConverter();
 
     bool Configure( int srcW, int srcH, PixelFormat srcFormat, int dstW, int dstH, PixelFormat dstFormat );
-    bool Convert( uint8_t* src[], int srcStride[], int rowOffset, int rowHeight, uint8_t* dst[], int dstStride[] );
+    bool Convert( uint8_t* src[], int srcStride[], int rowOffset, int rowHeight, uint8_t* dst[], int dstStride[] ) const;
+    bool Convert( const VideoFrame& frame, uint8_t* dst[], int dstStride[] ) const;
 
 private:
     SwsContext* m_context;

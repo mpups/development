@@ -167,10 +167,10 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
         }
     }
 
-// @todo - can this be done elsewhere - what if we had more than 1 stream?
+    // @todo - can this be done elsewhere - what if we had more than 1 stream?
     if ( success )
     {
-        // We don't need to call avio_open if we are using custom I/O:
+        // We only need to call avio_open if we are not using custom I/O:
         if ( m_customIO == 0 )
         {
             int err = avio_open( &m_formatContext->pb, m_formatContext->filename, AVIO_FLAG_WRITE );
@@ -185,56 +185,15 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
             avformat_write_header( m_formatContext, 0 );
         }
     }
-    else
-    {
-        //@todo free m_videoStream ?
-    }
 
     return success;
 }
 
 /**
-    Write a grey frame to the video-file.
-
-    @note If the width and height of the image data do not match those of the stream, the image will be scaled.
-*/
-bool LibAvWriter::PutGreyFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride )
-{
-    return PutFrame( buffer, width, height, stride, PIX_FMT_GRAY8 );
-}
-
-/**
-    Write an RGB colour frame to the video file.
-
-    @note If the width and height of the image data do not match those of the stream, the image will be scaled.
+    Write a video frame to the video file.
+    @note If the width and height of the VideoFrame do not match those of the stream, the image will be scaled.
     @note If a colour video stream has not been setup then the video will be converted to greyscale.
 */
-bool LibAvWriter::PutRgbFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride )
-{
-    return PutFrame( buffer, width, height, stride, PIX_FMT_RGB24 );
-}
-
-/**
-    Write an RGB colour frame to the video file.
-
-    @note If the width and height of the image data do not match those of the stream, the image will be scaled.
-    @note If a colour video stream has not been setup then the video will be converted to greyscale.
-*/
-bool LibAvWriter::PutBgrFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride )
-{
-    return PutFrame( buffer, width, height, stride, PIX_FMT_BGR24 );
-}
-
-bool LibAvWriter::PutYUYV422Frame( uint8_t* buffer, uint32_t width, uint32_t height )
-{
-    return PutFrame( buffer, width, height, width*2, PIX_FMT_YUYV422 );
-}
-
-bool LibAvWriter::PutYUV420PFrame( uint8_t* buffer, uint32_t width, uint32_t height )
-{
-    return PutFrame( buffer, width, height, width, PIX_FMT_YUV420P );
-}
-
 bool LibAvWriter::PutVideoFrame( VideoFrame& frame )
 {
     const int width  = frame.GetWidth();
@@ -253,26 +212,19 @@ bool LibAvWriter::PutVideoFrame( VideoFrame& frame )
     if (  format == codecContext->pix_fmt )
     {
         // No conversion needed so just copy pointers:
-        AVPicture& picture = frame.GetAvPicture();
-        srcFrame.data[0] = picture.data[0];
-        srcFrame.data[1] = picture.data[1];
-        srcFrame.data[2] = picture.data[2];
-        srcFrame.data[3] = picture.data[3];
-        srcFrame.linesize[0] = picture.linesize[0];
-        srcFrame.linesize[1] = picture.linesize[1];
-        srcFrame.linesize[2] = picture.linesize[2];
-        srcFrame.linesize[3] = picture.linesize[3];
+        frame.FillAvFramePointers( srcFrame );
         frameToSend = &srcFrame;
     }
     else
     {
         if ( m_converter.Configure( width, height, format, codecContext->width, codecContext->height, codecContext->pix_fmt ) )
         {
-            m_converter.Convert( srcFrame.data, srcFrame.linesize, 0, height, m_codecFrame.data, m_codecFrame.linesize );
+            m_converter.Convert( frame, m_codecFrame.data, m_codecFrame.linesize );
             frameToSend = &m_codecFrame;
         }
         else
         {
+            // Could not configure the frame convertor:
             return false;
         }
     }
@@ -283,68 +235,6 @@ bool LibAvWriter::PutVideoFrame( VideoFrame& frame )
     m_codecFrame.pts += 1;
     srcFrame.pts = m_codecFrame.pts;
     bool success = WriteCodecFrame( frameToSend );
-    return success;
-}
-
-/**
-    Write a frame with the specified pixel format to the video file.
-
-    The sws_scale library is used to convert the frame from the specified format to the format
-    required by the stream's codec.
-
-    @todo This doesn't work for planar formats as the full srcPlanes and srcStrides arrays
-    need to be filled correctly in those cases.
-*/
-bool LibAvWriter::PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format )
-{
-    bool success = false;
-    AVCodecContext* codecContext = m_stream->CodecContext();
-
-    struct timespec t1;
-    struct timespec t2;
-
-    if ( m_converter.Configure( width, height, format,
-                                codecContext->width, codecContext->height, codecContext->pix_fmt )
-       )
-    {
-        AVFrame srcFrame;
-        avcodec_get_frame_defaults( &srcFrame );
-        srcFrame.data[0] = buffer;
-        srcFrame.data[1] = 0;
-        srcFrame.data[2] = 0;
-        srcFrame.data[3] = 0;
-        srcFrame.linesize[0] = stride;
-        srcFrame.linesize[1] = 0;
-        srcFrame.linesize[2] = 0;
-        srcFrame.linesize[3] = 0;
-
-        clock_gettime( CLOCK_MONOTONIC, &t1 );
-
-        AVFrame* frameToSend;
-        if ( format == PIX_FMT_YUV420P )
-        {
-            // @todo - need more general way of passing planar formats and formats that require no conversion.
-            srcFrame.data[1]   = buffer + (width*height);
-            srcFrame.linesize[1] = width/2;
-            srcFrame.data[2]   = srcFrame.data[1] + (width*height/4);
-            srcFrame.linesize[2] = width/2;
-
-            frameToSend = &srcFrame;
-        }
-        else
-        {
-            m_converter.Convert( srcFrame.data, srcFrame.linesize, 0, height, m_codecFrame.data, m_codecFrame.linesize );
-            frameToSend = &m_codecFrame;
-        }
-
-        clock_gettime( CLOCK_MONOTONIC, &t2 );
-        lastConvertTime_ms = milliseconds(t2) - milliseconds(t1);
-
-        m_codecFrame.pts += 1;
-        srcFrame.pts = m_codecFrame.pts;
-        success = WriteCodecFrame( frameToSend );
-    }
-
     return success;
 }
 

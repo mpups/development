@@ -166,7 +166,8 @@ bool CameraWindow::Update( unsigned int )
 
         m_camera->ExtractBgrImage( m_rgb, 3*m_camera->GetFrameWidth() );
 
-        bool frameOK = m_videoWriter->PutBgrFrame( (uint8_t*)m_rgb, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 3*m_camera->GetFrameWidth() );
+        VideoFrame frame( (uint8_t*)m_rgb, PIX_FMT_BGR24, m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 3*m_camera->GetFrameWidth() );
+        bool frameOK = m_videoWriter->PutVideoFrame( frame );
         assert( frameOK );
 
         glBindTexture( GL_TEXTURE_2D, m_lumTex );

@@ -32,17 +32,19 @@ int main( int argc, char** argv )
     }
 
     LibAvWriter out( argv[2] );
-    out.AddVideoStream( video.GetFrameWidth(), video.GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+    out.AddVideoStream( 320, 240, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
 
     uint8_t* buffer;
     err = posix_memalign( (void**)&buffer, 16, video.GetFrameWidth() * video.GetFrameHeight() * 3 * sizeof(uint8_t) );
     assert( err == 0 );
 
+    VideoFrame frame( buffer, PIX_FMT_RGB24, video.GetFrameWidth(), video.GetFrameHeight(), video.GetFrameWidth()*3 );
+
     while ( video.GetFrame() )
     {
         video.DoneFrame();
         video.ExtractRgbImage( buffer, video.GetFrameWidth()*3 );
-        out.PutRgbFrame( buffer, video.GetFrameWidth(), video.GetFrameHeight(), video.GetFrameWidth()*3 );
+        out.PutVideoFrame( frame );
     }
 
     free( buffer );

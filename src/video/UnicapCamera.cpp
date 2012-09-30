@@ -291,6 +291,7 @@ bool UnicapCamera::OpenDevice()
         m_model = GLK::String( devices[0].model_name );
         fprintf( stderr, "\nUnicap: Opened camera with GUID %lu\n", m_guid );
 
+        SetDefaultProperties();
         EnumerateProperties();
         return true;
     }
@@ -344,15 +345,32 @@ bool UnicapCamera::FindFormat( int width, int height, unsigned int fourcc, unica
 }
 
 /**
-    Just list all properties for debugging.
-
-    @todo Currently this also sets some properties which is not good.
+    Just list all available properties for debugging.
 **/
 void UnicapCamera::EnumerateProperties()
 {
     unicap_property_t property;
     unicap_status_t status = STATUS_NO_MATCH;
     int count = 0;
+
+    do
+    {
+        status = unicap_enumerate_properties( m_handle, 0, &property, count );
+        if ( SUCCESS(status) )
+        {
+            fprintf ( stderr, "Property %d : %s", count, property.identifier );
+            fprintf( stderr, " ( value := %f, category := %s)\n ", property.value, property.category );
+            count += 1;
+        }
+    } while ( SUCCESS(status) );
+}
+
+/**
+    Set some default properties (if those properties are available).
+*/
+void UnicapCamera::SetDefaultProperties()
+{
+    unicap_status_t status;
 
     /*status = unicap_set_property_auto( m_handle, "Brightness" );
     if ( SUCCESS( status ) )
@@ -395,15 +413,4 @@ void UnicapCamera::EnumerateProperties()
     {
         fprintf( stderr, "Failure: Could not set frame rate!\n" );
     }
-
-    do
-    {
-        status = unicap_enumerate_properties( m_handle, 0, &property, count );
-        fprintf ( stderr, "Property %d : %s", count, property.identifier );
-        fprintf( stderr, " ( value := %f, category := %s)\n ", property.value, property.category );
-
-        count += 1;
-
-    } while ( SUCCESS(status) );
 }
-

@@ -21,6 +21,8 @@ public:
     AVPicture& GetAvPicture();
     const AVPicture& GetAvPicture() const;
 
+    void FillAvFramePointers( AVFrame& frame ) const;
+
     int GetWidth() const;
     int GetHeight() const;
     PixelFormat GetAvPixelFormat() const;

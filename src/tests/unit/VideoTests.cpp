@@ -3,6 +3,7 @@
 #include "../../video/LibAvWriter.h"
 #include "../../video/LibAvCapture.h"
 #include "../../video/FFmpegCustomIO.h"
+#include "../../video/VideoFrame.h"
 
 #include <gtest/gtest.h>
 
@@ -15,6 +16,8 @@ void TestVideo()
     uint8_t* buffer;
     int err = posix_memalign( (void**)&buffer, 16, 640*480 );
     ASSERT_EQ( 0, err );
+
+    VideoFrame frame( buffer, PIX_FMT_GRAY8, 640, 480, 480 );
 
     //  scoped so that LibAvWriter is destroyed at end (and hence file is closed and flushed).
     {
@@ -29,7 +32,7 @@ void TestVideo()
         for ( int i=0;i<256;++i)
         {
             memset( buffer, i, 640*480 );
-            bool frameWritten = writer.PutGreyFrame( buffer, 640, 480, 480 );
+            bool frameWritten = writer.PutVideoFrame( frame );
             ASSERT_TRUE( frameWritten );
         }
     }
