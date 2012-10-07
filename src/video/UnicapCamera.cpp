@@ -367,6 +367,8 @@ void UnicapCamera::EnumerateProperties()
 
 /**
     Set some default properties (if those properties are available).
+
+    @note These are hard-coded for the PS3 Eye camera at the moment.
 */
 void UnicapCamera::SetDefaultProperties()
 {
@@ -391,6 +393,16 @@ void UnicapCamera::SetDefaultProperties()
     {
        fprintf( stderr, "Falure: Could not turn on auto-exposure!\n" );
     }*/
+
+    status = unicap_set_property_value( m_handle, "Sharpness", 8.0 );
+    if ( SUCCESS( status ) )
+    {
+        fprintf( stderr, "Success: Set sharpness!\n" );
+    }
+    else
+    {
+       fprintf( stderr, "Falure: Could not set sharpness!\n" );
+    }
 
     status = unicap_set_property_manual( m_handle, "Autogain" );
     status = unicap_set_property_value( m_handle, "Autogain", 1.0 );
