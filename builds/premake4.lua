@@ -72,21 +72,21 @@ solution 'robolib'
             }
         end
 
-    project 'robo-test'
+    project 'puppybot-test'
         kind 'ConsoleApp'
         
-        files { SRC .. 'tests/robo_test.cpp' }
+        files { SRC .. 'puppybot/puppybot_test.cpp' }
 
         configuration {}
         links { 'robolib' }
         links ( GLK_LINKS )
         links { LINKS }
             
-    project 'comms-test'
+    project 'puppybot-comms'
         kind 'ConsoleApp'
         
-        files { SRC .. 'tests/RobotServer.cpp' }
-        files { SRC .. 'tests/comms_test.cpp' }
+        files { SRC .. 'puppybot/RobotServer.cpp' }
+        files { SRC .. 'puppybot/puppybot_comms.cpp' }
         
         configuration {}
         links { 'robolib' }
