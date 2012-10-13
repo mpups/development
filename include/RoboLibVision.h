@@ -16,6 +16,7 @@
 #include "../src/video/LibAvWriter.h"
 #include "../src/video/FFmpegCustomIO.h"
 #include "../src/video/FFmpegSocketIO.h"
+#include "../src/video/FFmpegBufferIO.h"
 
 // These are not intended to be used on embedded ARM systems yet:
 #ifndef ARM_BUILD

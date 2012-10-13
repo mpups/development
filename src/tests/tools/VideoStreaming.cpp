@@ -36,7 +36,8 @@ int streamVideo( TcpSocket& client )
     {
         // Create a video writer object that uses socket IO:
         FFMpegSocketIO videoIO( client, true );
-        LibAvWriter streamer( videoIO );
+        FFMpegBufferIO bufferIO( FFMpegBufferIO::WriteBuffer );
+        LibAvWriter streamer( bufferIO );
 
         // Setup an MPEG4 video stream:
         streamer.AddVideoStream( camera.GetFrameWidth(), camera.GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
@@ -56,7 +57,7 @@ int streamVideo( TcpSocket& client )
 
             sentOk = streamer.PutVideoFrame( frame );
             camera.DoneFrame();
-            sentOk &= videoIO.GetAVIOContext()->error >= 0;
+            sentOk &= !streamer.IoError();
 
             double grabTime = milliseconds(t2) - milliseconds(t1);
             fprintf( stderr, "%f %f %f %f\n", grabTime, streamer.lastConvertTime_ms, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );

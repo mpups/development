@@ -158,7 +158,7 @@ bool MotionMind::Move( int32_t addr, int32_t move_c, int32_t& position )
 **/
 MotionMind::Register MotionMind::StringToRegister( const char* string )
 {
-    // TODO: Should use a map or hash table!
+    /** @todo Should use a map or hash table */
     for ( unsigned int i=0; i<32; ++i )
     {
         if ( 0 == strcmp( string, m_regName[i] ) )
@@ -340,7 +340,7 @@ bool MotionMind::GetReadAck( int32_t addr, Register reg, int32_t& value )
 
     if ( c == expected && ComputeCheckSum( cmd, expected-1 ) == cmd[expected-1] )
     {
-        // TODO: check address and compute checksum here:
+        /** @todo  check address and compute checksum here: */
         value = 0;
         for ( unsigned int i = m_regSize[reg]; i>0; --i )
         {

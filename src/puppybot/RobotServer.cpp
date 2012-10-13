@@ -210,7 +210,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
         sentOk = streamer.PutVideoFrame( frame );
 
         m_camera->DoneFrame();
-        sentOk &= videoIO.GetAVIOContext()->error >= 0;
+        sentOk &= !streamer.IoError();
 
         double grabTime = milliseconds(t2) - milliseconds(t1);
 

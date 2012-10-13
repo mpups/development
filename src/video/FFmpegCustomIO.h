@@ -29,7 +29,8 @@ public:
     FFMpegCustomIO() {};
     virtual ~FFMpegCustomIO() {};
     virtual AVIOContext* GetAVIOContext() = 0;
-    virtual const char* GetStreamName() = 0;
+    virtual const char* GetStreamName() const = 0;
+    virtual bool IoError() const = 0; // should return true if there was an IO error
 };
 
 /**
@@ -47,7 +48,8 @@ public:
     FFMpegFileIO( const char* filename, bool input );
     virtual ~FFMpegFileIO();
     virtual AVIOContext* GetAVIOContext() { return m_io; };
-    virtual const char* GetStreamName();
+    virtual const char* GetStreamName() const;
+    virtual bool IoError() const;
 
     static const int BUFFER_SIZE = 32*1024;
 

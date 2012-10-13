@@ -73,8 +73,16 @@ FFMpegFileIO::~FFMpegFileIO()
     fclose( m_fp );
 };
 
-const char* FFMpegFileIO::GetStreamName()
+const char* FFMpegFileIO::GetStreamName() const
 {
     return m_fileName;
+}
+
+/**
+    @return true if there was a low level IO error.
+*/
+bool FFMpegFileIO::IoError() const
+{
+    return m_io->error < 0;
 }
 

@@ -108,7 +108,7 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* __restrict__ srcBuffer
             // To write the chroma u-v planes we need to 'cast' them to 2 x int32 (one int for 4 u
             // components the other for the 4 V components) and we write each int to the appropriate
             // output plane.
-            // @todo Whilst this works it uses unaligned stores which may be slower.
+            /** @todo Whilst this works it uses unaligned stores which may be slower */
             uint32x2_t chroma_out_32 = vreinterpret_u32_u8( chroma_out_8 );
             vst1_lane_u32( (uint32_t*)uDst, chroma_out_32, 0 ); // writes 4 U bytes
             vst1_lane_u32( (uint32_t*)vDst, chroma_out_32, 1 ); // writes 4 V bytes

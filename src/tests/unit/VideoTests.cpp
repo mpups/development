@@ -21,7 +21,7 @@ void TestVideo()
 
     //  scoped so that LibAvWriter is destroyed at end (and hence file is closed and flushed).
     {
-        // @todo - testing custom IO objects should be separate test:
+        /** @todo - testing custom IO objects should be separate test: */
         FFMpegFileIO customIO( "test.avi", false );
         LibAvWriter writer( customIO );
         ASSERT_TRUE( writer.IsOpen() );

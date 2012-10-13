@@ -5,8 +5,10 @@
 #include "../io/TcpSocket.h"
 #include "../io/Ipv4Address.h"
 
-//#include <iostream>
-
+/**
+    Send the buffered packet over the socket.
+    @return the number of bytes sent over the socket.
+*/
 int socket_write_packet( void* opaque, uint8_t* buffer, int size )
 {
     FFMpegSocketIO* io = reinterpret_cast<FFMpegSocketIO*>( opaque );
@@ -17,10 +19,13 @@ int socket_write_packet( void* opaque, uint8_t* buffer, int size )
         io->m_bytesTx += numBytes;
     }
 
-    //std::cerr << "putting " << size << " bytes (return value := " << numBytes << ")" << std::endl;
     return numBytes;
 }
 
+/**
+    Receive from the socket and store in the buffer.
+    @return the number of bytes received over the socket.
+*/
 int socket_read_packet( void* opaque, uint8_t* buffer, int size )
 {
     FFMpegSocketIO* io = reinterpret_cast<FFMpegSocketIO*>( opaque );
@@ -30,10 +35,14 @@ int socket_read_packet( void* opaque, uint8_t* buffer, int size )
     {
         io->m_bytesRx += numRead;
     }
-    //std::cerr << "requesting " << size << " bytes (read " << numRead <<")" << std::endl;
     return numRead;
 }
 
+/**
+    Create an FFmpeg IO object that will read/write av data to the specified socket object.
+    @param socket Socket to use for IO.
+    @param sender True if this IO object will be used to send video, false if it will be used to receive video.
+*/
 FFMpegSocketIO::FFMpegSocketIO( TcpSocket& socket, bool sender )
 :
     m_socket  ( socket ),
@@ -44,6 +53,7 @@ FFMpegSocketIO::FFMpegSocketIO( TcpSocket& socket, bool sender )
     assert( m_buffer != 0 );
     int writeable = sender ? 1 : 0;
     m_io = avio_alloc_context( m_buffer, BUFFER_SIZE, writeable, this, socket_read_packet, socket_write_packet, 0 );
+    m_io->seekable = 0;
 
     m_socket.SetNagleBufferingOff();
 }
@@ -51,7 +61,8 @@ FFMpegSocketIO::FFMpegSocketIO( TcpSocket& socket, bool sender )
 FFMpegSocketIO::~FFMpegSocketIO()
 {
     av_free( m_io );
-    // av_free( m_buffer ); // @todo - freeing causes crash (ffmpeg bug?)
+    // av_free( m_buffer );
+    /** @todo - freeing causes crash (ffmpeg bug?) */
 }
 
 AVIOContext* FFMpegSocketIO::GetAVIOContext()
@@ -63,12 +74,19 @@ AVIOContext* FFMpegSocketIO::GetAVIOContext()
     Get the address of the peer connection, then retrieve
     the host name storing a local copy and returning its C string.
 */
-const char* FFMpegSocketIO::GetStreamName()
+const char* FFMpegSocketIO::GetStreamName() const
 {
-    Ipv4Address address;
-    m_socket.GetPeerAddress( address );
-    address.GetHostName( m_peerName );
+    // Logical constness - we aren't changing the peer name just retrieving it:
+    const_cast<std::string&>( m_peerName ) = RetrievePeerName();
     return m_peerName.c_str();
+}
+
+/**
+    @return true if there was a low level IO error.
+*/
+bool FFMpegSocketIO::IoError() const
+{
+    return m_io->error < 0;
 }
 
 uint64_t FFMpegSocketIO::BytesRead() const
@@ -79,5 +97,18 @@ uint64_t FFMpegSocketIO::BytesRead() const
 uint64_t FFMpegSocketIO::BytesWritten() const
 {
     return m_bytesTx;
+}
+
+/**
+    Get the name of the connected peer and store internally.
+    It is only valid to call this after connection is established.
+*/
+std::string FFMpegSocketIO::RetrievePeerName() const
+{
+    std::string peerName;
+    Ipv4Address address;
+    m_socket.GetPeerAddress( address );
+    address.GetHostName( peerName );
+    return peerName;
 }
 

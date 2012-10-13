@@ -137,6 +137,22 @@ bool LibAvWriter::IsOpen() const
 }
 
 /**
+    @return true if there was/is any IO error/problem.
+*/
+bool LibAvWriter::IoError() const
+{
+    assert( m_formatContext != 0 );
+
+    assert( m_formatContext->pb != 0 );
+    if ( m_formatContext->pb == 0 )
+    {
+        return true; // no IO object has been set - consider this error
+    }
+
+    return m_formatContext->pb->error < 0;
+}
+
+/**
     @param width width of images to be encoded in this stream
     @param height height of images to be encoded in this stream
     @param fps Frame rate in frames-per-second
@@ -167,7 +183,7 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
         }
     }
 
-    // @todo - can this be done elsewhere - what if we had more than 1 stream?
+    /** @todo - can this be done elsewhere - what if we had more than 1 stream? */
     if ( success )
     {
         // We only need to call avio_open if we are not using custom I/O:
@@ -233,7 +249,7 @@ bool LibAvWriter::PutVideoFrame( VideoFrame& frame )
     lastConvertTime_ms = milliseconds(t2) - milliseconds(t1);
 
     m_codecFrame.pts += 1;
-    srcFrame.pts = m_codecFrame.pts;
+    srcFrame.pts = m_codecFrame.pts; /** @todo - allow caller to specify timestamp */
     bool success = WriteCodecFrame( frameToSend );
     return success;
 }

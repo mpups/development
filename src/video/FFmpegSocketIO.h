@@ -18,7 +18,7 @@ int socket_read_packet( void* opaque, uint8_t* buffer, int size );
 } // end extern "C"
 
 /**
-    Class which implements streaming of video
+    Class which allows streaming of video packets
     over a TCP socket connection.
 */
 class FFMpegSocketIO : public FFMpegCustomIO
@@ -30,7 +30,8 @@ public:
     FFMpegSocketIO( TcpSocket& socket, bool sender );
     virtual ~FFMpegSocketIO();
     virtual AVIOContext* GetAVIOContext();
-    virtual const char* GetStreamName();
+    virtual const char* GetStreamName() const;
+    virtual bool IoError() const;
 
     uint64_t BytesRead() const;
     uint64_t BytesWritten() const;
@@ -39,6 +40,8 @@ protected:
     static const int BUFFER_SIZE = 32*1024;
 
 private:
+    std::string RetrievePeerName() const;
+
     uint8_t* m_buffer;
     AVIOContext* m_io;
     TcpSocket& m_socket;
