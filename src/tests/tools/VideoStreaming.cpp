@@ -36,8 +36,7 @@ int streamVideo( TcpSocket& client )
     {
         // Create a video writer object that uses socket IO:
         FFMpegSocketIO videoIO( client, true );
-        FFMpegBufferIO bufferIO( FFMpegBufferIO::WriteBuffer );
-        LibAvWriter streamer( bufferIO );
+        LibAvWriter streamer( videoIO );
 
         // Setup an MPEG4 video stream:
         streamer.AddVideoStream( camera.GetFrameWidth(), camera.GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','M','P','4' ) );

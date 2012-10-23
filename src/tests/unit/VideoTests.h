@@ -5,6 +5,7 @@
 #define __VIDEO_TESTS_H__
 
 void TestVideo();
+void TestBufferIO();
 
 #endif /* __VIDEO_TESTS_H__ */
 

@@ -22,6 +22,7 @@ TEST( io, networking )
 TEST( io, video )
 {
     TestVideo();
+    //TestBufferIO();
 }
 #endif
 
