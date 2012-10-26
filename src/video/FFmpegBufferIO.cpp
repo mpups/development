@@ -31,53 +31,30 @@ int buffer_read_packet( void* opaque, uint8_t* buffer, int size )
 {
     FFMpegBufferIO& io = *reinterpret_cast<FFMpegBufferIO*>( opaque );
 
-    //std::cerr << "Starting read_packet: " << io.m_buffers.size() << " buffers in queue." << std::endl;
-
     if ( io.m_buffers.size() == 0 )
     {
         return -1;
     }
 
+    // Lets just try returning contents of 1 buffer at a time and rely on libav to ask for more:
     FFMpegBufferIO::Buffer tmp = io.m_buffers.front();
 
-    int writeIndex = 0;
-    const int requested = size;
-    while ( size )
+    if ( size < tmp.size )
     {
-        int bytesAvailable = tmp.size - io.m_readIndex; // bytes available from current Buffer
-        if ( bytesAvailable >= size )
-        {
-            memcpy( buffer + writeIndex, tmp.data + io.m_readIndex, size );
-            io.m_readIndex += size;
-            size = 0;
-            //std::cerr << "\tread_packet: Finished servicing " << requested-size << " bytes. Read Index := " << io.m_readIndex << std::endl;
-        }
-        else
-        {
-            //std::cerr << "\tBytes available := " << bytesAvailable << std::endl;
-            memcpy( buffer + writeIndex, tmp.data + io.m_readIndex, bytesAvailable );
-            size -= bytesAvailable;
-            writeIndex += bytesAvailable;
+        memcpy( buffer, tmp.data, size );
 
-            // move to next buffer in queue:
-            io.m_readIndex = 0;
-            if ( io.m_buffers.size() )
-            {
-                io.m_buffers.pop_front();
-                av_free( tmp.data );
-                tmp = io.m_buffers.front();
-            }
-            else
-            {
-                // No more buffers!
-                return requested - size;
-            }
-            //std::cerr << "\tread_packet: serviced " << requested-size << " bytes. Moving to next buffer (size := " << tmp.size << ")" << std::endl;
-        }
+        size_t remainder = tmp.size - size;
+        memmove( tmp.data, tmp.data+size, remainder );
+        tmp.size = remainder;
+
+        return size;
     }
 
-    //std::cerr << "read_packet: " << requested-size << " bytes" << std::endl;
-    return requested - size;
+    io.m_buffers.pop_front();
+    memcpy( buffer, tmp.data, tmp.size );
+
+    av_free( tmp.data );
+    return tmp.size;
 }
 
 FFMpegBufferIO::FFMpegBufferIO( BufferType direction )
