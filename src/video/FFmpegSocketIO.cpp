@@ -89,11 +89,17 @@ bool FFMpegSocketIO::IoError() const
     return m_io->error < 0;
 }
 
+/**
+    @return The total number of bytes read through this IO object.
+*/
 uint64_t FFMpegSocketIO::BytesRead() const
 {
     return m_bytesRx;
 }
 
+/**
+    @return The total number of bytes written through this IO object.
+*/
 uint64_t FFMpegSocketIO::BytesWritten() const
 {
     return m_bytesTx;

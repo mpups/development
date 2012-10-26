@@ -23,7 +23,7 @@ int fd_read_packet( void* opaque, uint8_t* buffer, int size )
         numBytes =  -1;
     }
 
-    //std::cerr << "socket_read_packet: bytes requested :=" << size << " bytes, received := " << numBytes << std::endl;
+    //std::cerr << "fd_read_packet: bytes requested :=" << size << " bytes, received := " << numBytes << std::endl;
     return numBytes;
 }
 

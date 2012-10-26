@@ -39,6 +39,8 @@ public:
 
     static const int BUFFER_SIZE = 32*1024;
 
+    void DumpToFile( const char* fileName ) const;
+
 protected:
     void AllocateBuffer();
 

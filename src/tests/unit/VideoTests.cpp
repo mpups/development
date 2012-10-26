@@ -23,8 +23,8 @@ void TestVideo()
     //  scoped so that LibAvWriter is destroyed at end (and hence file is closed and flushed).
     {
         /** @todo - testing custom IO objects should be separate test: */
-        FFMpegFileIO customIO( "test.avi", false );
-        LibAvWriter writer( customIO );
+        FFMpegFileIO videoOut( "test.avi", false );
+        LibAvWriter writer( videoOut );
         ASSERT_TRUE( writer.IsOpen() );
 
         bool streamCreated = writer.AddVideoStream( 320,240,30, LibAvWriter::FourCc( 'F','M','P','4' ) );
@@ -40,8 +40,8 @@ void TestVideo()
 
     {
         // Now try to read back the same video
-        FFMpegFileIO customIO( "test.avi", true );
-        LibAvCapture reader( customIO );
+        FFMpegFileIO videoIn( "test.avi", true );
+        LibAvCapture reader( videoIn );
         ASSERT_TRUE( reader.IsOpen() );
 
         int decodedCount = 0;
@@ -92,7 +92,7 @@ void TestBufferIO()
         LibAvWriter writer( videoIO );
         ASSERT_TRUE( writer.IsOpen() );
 
-        bool streamCreated = writer.AddVideoStream( 320, 240, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+        bool streamCreated = writer.AddVideoStream( 640, 480, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
         ASSERT_TRUE( streamCreated );
 
         for ( int i=0;i<256;++i)
