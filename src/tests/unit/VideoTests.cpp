@@ -92,7 +92,7 @@ void TestBufferIO()
         LibAvWriter writer( videoIO );
         ASSERT_TRUE( writer.IsOpen() );
 
-        bool streamCreated = writer.AddVideoStream( 640, 480, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+        bool streamCreated = writer.AddVideoStream( 320, 240, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
         ASSERT_TRUE( streamCreated );
 
         for ( int i=0;i<256;++i)

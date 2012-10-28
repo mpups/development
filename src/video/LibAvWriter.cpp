@@ -104,7 +104,7 @@ LibAvWriter::LibAvWriter( FFMpegCustomIO& customIO )
     if ( m_open )
     {
         // This guesses the container format (e.g. .avi, .ogg):
-        m_outputFormat = av_guess_format( "avi", 0, 0 );
+        m_outputFormat = av_guess_format( "m4v", 0, 0 );
         m_formatContext->oformat = m_outputFormat;
         snprintf( m_formatContext->filename, sizeof(m_formatContext->filename), "%s", customIO.GetStreamName() );
     }
