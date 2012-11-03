@@ -1,3 +1,4 @@
 linux_build
 arm_build
 docs/html
+cmake-build
