@@ -12,6 +12,10 @@
 #include "../src/video/FFmpegSocketIO.h"
 #include "../src/video/FFmpegBufferIO.h"
 
+#include "../src/io/Ipv4Address.h"
+#include "../src/io/Socket.h"
+#include "../src/io/TcpSocket.h"
+#include "../src/io/UdpSocket.h"
 
 #ifndef ARM_BUILD
 // These components are not ready to be used on
