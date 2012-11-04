@@ -1,0 +1,35 @@
+find_package (GTest)
+
+if (GTEST_FOUND)
+    include_directories( ${GTEST_INCLUDE_DIR} )
+    set( LIBS ${LIBS} ${GTEST_LIBRARY_DEBUG} )
+
+    # FindGTest is annoying so fix it:
+    if ( NOT ${GTEST_LIBRARY_DEBUG} )
+        set( GTEST_LIBRARY_DEBUG ${GTEST_LIBRARY} CACHE FILEPATH "" FORCE )
+        message( "WARNING: GTest debug library not found - setting to release library." )
+    endif()
+
+    if ( NOT ${GTEST_MAIN_LIBRARY_DEBUG} )
+        set( GTEST_MAIN_LIBRARY_DEBUG ${GTEST_MAIN_LIBRARY} CACHE FILEPATH "" FORCE )
+        message( "WARNING: GTest-main debug library not found - setting to release library." )
+    endif()
+
+elseif()
+  set( GTEST_BUILD_TESTS OFF CACHE BOOL )
+endif()
+
+project( utest )
+
+add_executable( utest WIN32
+    unit/gtests.cpp
+    unit/NetworkingTests.cpp
+    unit/NetworkingTests.h
+    unit/VideoTests.cpp
+    unit/VideoTests.h
+)
+
+target_link_libraries( utest ${LIBS} videolib )
+
+install( TARGETS utest DESTINATION bin )
+

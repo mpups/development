@@ -8,7 +8,6 @@
 #include <gtest/gtest.h>
 
 #include "NetworkingTests.h"
-#include "ImageTests.h"
 #include "VideoTests.h"
 
 TEST( io, networking )
@@ -25,13 +24,6 @@ TEST( io, video )
     TestBufferIO();
 }
 #endif
-
-TEST( vision, image )
-{
-    robo::TestImage();
-    robo::TestImageFill();
-    robo::SadTest();
-}
 
 /**
     Runs all the tests listed above.

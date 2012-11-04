@@ -37,7 +37,6 @@ add_library( videolib SHARED
     video/VideoFrame.h
 )
 
-add_definitions( -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS )
 target_link_libraries( videolib ${LIBS} )
 install( TARGETS videolib DESTINATION lib )
 

@@ -23,13 +23,37 @@ if ( GLK_FOUND )
     set( LIBS ${LIBS} ${GLK_LIBRARIES})
 endif()
 
+add_definitions( -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS )
+
 # My custom ffmpeg installation (Ubuntu install is an old broken version):
 include_directories( "/home/mark/tmp_installs/include" )
 include_directories( "/home/mark/tmp_installs/include" )
 set( FFMPEG_LIBRARIES "/home/mark/tmp_installs/lib/libavcodec.so" "/home/mark/tmp_installs/lib/libavformat.so" "/home/mark/tmp_installs/lib/libavutil.so" "/home/mark/tmp_installs/lib/libswscale.so" )
 
-# Unicap
-include_directories( "/usr/include/unicap" )
+set( LIBS ${LIBS} ${FFMPEG_LIBRARIES})
 
+# Unicap and dc1394:
+include_directories( "/usr/include/unicap" )
+set( LIBS ${LIBS} /usr/lib/libunicap.so /usr/lib/x86_64-linux-gnu/libdc1394.so )
+
+# Build library:
 add_subdirectory( ${PROJECT_SOURCE_DIR}/src/ )
+
+# Build Tests:
+add_subdirectory( ${PROJECT_SOURCE_DIR}/src/tests )
+
+# Header File installation:
+# Create a list containing all the directories which contain headers to be installed:
+set( INSTALL_HEADER_DIRS
+    include
+    src/io
+    src/video
+)
+
+# For each item in list, find all .h files, and install them:
+foreach( DIR ${INSTALL_HEADER_DIRS} )
+    FILE( GLOB INSTALL_HEADERS ${DIR}/*.h )
+    install( FILES ${INSTALL_HEADERS} DESTINATION ${DIR} )
+endforeach()
+
 
