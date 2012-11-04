@@ -2,6 +2,8 @@
 
 #include <arpa/inet.h>
 
+#include <VideoLib.h>
+
 TeleJoystick::TeleJoystick( Socket& socket )
 :
     m_thread    ( *this ),

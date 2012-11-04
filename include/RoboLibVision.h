@@ -3,25 +3,13 @@
 
 #include "RoboLibCore.h"
 
-#include "../src/video/CameraCapture.h"
-#include "../src/video/UnicapCamera.h"
 #include "../src/vision/Image.h"
 #include "../src/vision/FastCornerThread.h"
 #include "../src/vision/LoadBalancingCornerDetector.h"
 #include "../src/vision/FastCornerSearch.h"
 
-#include "../src/video/video_conversion.h"
-#include "../src/video/VideoFrame.h"
-#include "../src/video/LibAvCapture.h"
-#include "../src/video/LibAvWriter.h"
-#include "../src/video/FFmpegCustomIO.h"
-#include "../src/video/FFmpegSocketIO.h"
-#include "../src/video/FFmpegBufferIO.h"
-
 // These are not intended to be used on embedded ARM systems yet:
 #ifndef ARM_BUILD
-
-#include "../src/video/Dc1394Camera.h"
 
 #include "../src/sse/ImageProcSse.h"
 #include "../src/sse/ImageProc.h"

@@ -7,24 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include "NetworkingTests.h"
 #include "ImageTests.h"
-#include "VideoTests.h"
-
-TEST( io, networking )
-{
-    TestIpv4Address();
-    TestTcp();
-    TestUdp();
-}
-
-#ifndef ARM_BUILD
-TEST( io, video )
-{
-    TestVideo();
-    TestBufferIO();
-}
-#endif
 
 TEST( vision, image )
 {

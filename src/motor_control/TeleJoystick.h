@@ -2,8 +2,9 @@
 #define TELE_JOYSTICK_H
 
 #include <glkcore.h>
-#include "../io/Socket.h"
 #include "DiffDrive.h"
+
+class Socket;
 
 /**
     Class which receives tele-operation joystick commands and passes

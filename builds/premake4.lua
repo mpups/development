@@ -13,6 +13,7 @@ append( LINKS, OPENCV_LINKS )
 append( LINKS, OPENGL_LINKS )
 append( LINKS, SYSTEM_LINKS )
 append( LINKS, FFMPEG_LINKS )
+append( LINKS, VIDEO_LINKS )
 --for i,v in pairs(LINKS) do print(i,v) end
 
 SRC = '../src/'
