@@ -15,7 +15,7 @@ if( NOT WIN32 )
     SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/home/mark/code/glk/cmake/Modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/glk/share/cmake/Modules/")
 
 find_package (GLK REQUIRED)
 if ( GLK_FOUND )
