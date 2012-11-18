@@ -31,6 +31,8 @@ public:
     virtual ~LibAvCapture();
 
     bool IsOpen() const;
+    bool IoError() const;
+
     bool GetFrame();
     void DoneFrame();
     int32_t GetFrameWidth() const;
@@ -49,7 +51,7 @@ protected:
 
 private:
     AVFormatContext* m_formatContext;
-    FFMpegCustomIO*    m_customIO;
+    FFMpegCustomIO*  m_customIO;
     AVCodecContext*  m_codecContext;
     AVCodec*         m_codec;
     AVFrame*         m_avFrame;

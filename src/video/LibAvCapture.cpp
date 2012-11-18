@@ -166,6 +166,27 @@ bool LibAvCapture::IsOpen() const
 }
 
 /**
+    @return false if there was any kinf of IO error, true otherwise.
+
+    @note This will return false even if there are more frames in the
+    internal decode buffer that could be returned by GetFrame(), so if
+    all frames are required you will need to continue to call GetFrame()
+    until GetFrame() itself returns false.
+*/
+bool LibAvCapture::IoError() const
+{
+    assert( m_formatContext != 0 );
+
+    assert( m_formatContext->pb != 0 );
+    if ( m_formatContext->pb == 0 )
+    {
+        return true; // no IO object has been set - consider this error
+    }
+
+    return m_formatContext->pb->error < 0;
+}
+
+/**
     Read frame and buffer it internally.
 
     @return false if there are no more frames to read, true otherwise.
@@ -187,10 +208,10 @@ bool LibAvCapture::GetFrame()
         if( packet.stream_index == m_videoStream )
         {
             // Decode video frame
-            avcodec_decode_video2( m_codecContext, m_avFrame, &frameFinished, &packet );
+            int bytes = avcodec_decode_video2( m_codecContext, m_avFrame, &frameFinished, &packet );
 
             // Did we get a video frame?
-            if( frameFinished )
+            if( bytes >=0 && frameFinished )
             {
                 success = true;
                 av_free_packet( &packet );
@@ -209,8 +230,8 @@ bool LibAvCapture::GetFrame()
             // but there might be more buffered frames:
             packet.data = 0;
             packet.size = 0;
-            avcodec_decode_video2( m_codecContext, m_avFrame, &frameFinished, &packet );
-            if( frameFinished )
+            int bytes = avcodec_decode_video2( m_codecContext, m_avFrame, &frameFinished, &packet );
+            if( bytes >=0 && frameFinished )
             {
                 success = true;
             }

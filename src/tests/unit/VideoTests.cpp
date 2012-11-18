@@ -78,11 +78,16 @@ void TestVideo()
 */
 void TestBufferIO()
 {
+    const int FRAME_WIDTH   = 640;
+    const int FRAME_HEIGHT  = 480;
+    const int STREAM_WIDTH  = 320;
+    const int STREAM_HEIGHT = 240;
+
     uint8_t* buffer;
-    int err = posix_memalign( (void**)&buffer, 16, 640*480 );
+    int err = posix_memalign( (void**)&buffer, 16, FRAME_WIDTH*FRAME_HEIGHT );
     ASSERT_EQ( 0, err );
 
-    VideoFrame frame( buffer, PIX_FMT_GRAY8, 640, 480, 480 );
+    VideoFrame frame( buffer, PIX_FMT_GRAY8, FRAME_WIDTH, FRAME_HEIGHT, FRAME_WIDTH );
 
     FFMpegBufferIO videoIO( FFMpegBufferIO::WriteBuffer );
 
@@ -92,12 +97,12 @@ void TestBufferIO()
         LibAvWriter writer( videoIO );
         ASSERT_TRUE( writer.IsOpen() );
 
-        bool streamCreated = writer.AddVideoStream( 320, 240, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+        bool streamCreated = writer.AddVideoStream( STREAM_WIDTH, STREAM_HEIGHT, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
         ASSERT_TRUE( streamCreated );
 
         for ( int i=0;i<256;++i)
         {
-            memset( buffer, i, 640*480 );
+            memset( buffer, i, FRAME_WIDTH*FRAME_HEIGHT );
             bool frameWritten = writer.PutVideoFrame( frame );
             ASSERT_TRUE( frameWritten );
         }
@@ -113,9 +118,10 @@ void TestBufferIO()
         int decodedCount = 0;
         while ( reader.GetFrame() )
         {
-            reader.ExtractLuminanceImage( buffer, 640 );
+            reader.ExtractLuminanceImage( buffer, STREAM_WIDTH );
             EXPECT_EQ( buffer[0], decodedCount );
             reader.DoneFrame();
+
             decodedCount += 1;
         }
 
