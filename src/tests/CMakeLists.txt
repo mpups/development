@@ -29,7 +29,7 @@ add_executable( utest WIN32
     unit/VideoTests.h
 )
 
-target_link_libraries( utest ${LIBS} videolib )
+target_link_libraries( utest videolib ${LIBS} )
 
 install( TARGETS utest DESTINATION bin )
 

@@ -10,8 +10,9 @@ set( CMAKE_DEBUG_POSTFIX "_d" CACHE STRING "Debug library suffix." )
 if( NOT WIN32 )
     # These are specifically for Linux builds at the moment:
     set( CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/videolib )
+
     # Setup RPATH so that installed executables can find installed shared libs:
-    SET(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX} )
+    SET(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
     SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
