@@ -267,6 +267,11 @@ void LibAvCapture::ExtractBgrImage( uint8_t* data, int stride )
     FrameConversion( PIX_FMT_BGR24, data, stride );
 }
 
+void LibAvCapture::ExtractRgb565Image( uint8_t* data, int stride )
+{
+    FrameConversion( PIX_FMT_RGB565, data, stride );
+}
+
 /**
     Uses swscale library to convert the most recently read frame to
     the specified format.
