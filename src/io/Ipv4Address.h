@@ -33,8 +33,8 @@ private:
     void GetHostNameInfo( std::string&, int nameInfoFlags ) const;
     void GetHostByName( const char* hostname, int portNumber );
 
-    const sockaddr_in* const Get_sockaddr_in_Ptr() const;
-    const sockaddr_storage* const Get_sockaddr_storage_Ptr() const;
+    sockaddr_in* Get_sockaddr_in_Ptr() const;
+    sockaddr_storage* Get_sockaddr_storage_Ptr() const;
 };
 
 #endif /* __IPV4_ADDRESS_H__ */

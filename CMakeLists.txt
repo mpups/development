@@ -51,6 +51,9 @@ set( INSTALL_HEADER_DIRS
     src/video
 )
 
+# Install the find script so other cmake builds can use it:
+install( FILES cmake/Modules/FindVIDEOLIB.cmake DESTINATION share/cmake/Modules )
+
 # For each item in list, find all .h files, and install them:
 foreach( DIR ${INSTALL_HEADER_DIRS} )
     FILE( GLOB INSTALL_HEADERS ${DIR}/*.h )

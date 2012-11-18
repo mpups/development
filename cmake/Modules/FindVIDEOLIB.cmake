@@ -17,16 +17,16 @@ set( INCLUDE_HINT /usr/local/videolib/include )
 set( LIB_HINT /usr/local/videolib/lib )
 
 find_path( VIDEOLIB_INCLUDE_DIR
-           NAMES videolib.h
+           NAMES VideoLib.h
            HINTS ${INCLUDE_HINT} )
 
 find_library( VIDEOLIB_LIBRARY
-              NAMES glkcore libglkcore
-              HINTS "/usr/local/glk/lib" )
+              NAMES videolib libvideolib
+              HINTS ${LIB_HINT} )
 
 # Set the include dir variables and the libraries and let libfind_process do the rest.
 # NOTE: Singular variables for this library, plural for libraries this lib depends on.
 set( VIDEOLIB_PROCESS_INCLUDES VIDEOLIB_INCLUDE_DIR )
 set( VIDEOLIB_PROCESS_LIBS VIDEOLIB_LIBRARY GLK_LIBRARIES )
-libfind_process(GLK)
+libfind_process(VIDEOLIB)
 

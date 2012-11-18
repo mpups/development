@@ -144,16 +144,16 @@ void Ipv4Address::GetHostNameInfo( std::string& host, int nameInfoFlags ) const
     Private member for friend classes that need direct access to the sockaddr_in structure
     (e.g. Socket objects).
 **/
-const sockaddr_in* const Ipv4Address::Get_sockaddr_in_Ptr() const
+sockaddr_in* Ipv4Address::Get_sockaddr_in_Ptr() const
 {
-    return reinterpret_cast<const sockaddr_in*>(&m_addr);
+    return const_cast<sockaddr_in* const>( reinterpret_cast<const sockaddr_in*>(&m_addr) );
 }
 
 /**
     Private member for friend classes that need direct access to the sockaddr_storage structure
     (e.g. Socket objects).
 */
-const sockaddr_storage* const Ipv4Address::Get_sockaddr_storage_Ptr() const
+sockaddr_storage* Ipv4Address::Get_sockaddr_storage_Ptr() const
 {
-    return &m_addr;
+    return const_cast<sockaddr_storage* const>( &m_addr );
 }
