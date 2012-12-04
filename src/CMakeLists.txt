@@ -15,6 +15,8 @@ add_library( videolib SHARED
     video/Capture.h
     video/Dc1394Camera.cpp
     video/Dc1394Camera.h
+    video/FFmpegStdFunctionIO.h
+    video/FFmpegStdFunctionIO.cpp
     video/FFmpegBufferIO.cpp
     video/FFmpegBufferIO.h
     video/FFmpegCustomIO.cpp

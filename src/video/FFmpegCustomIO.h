@@ -26,6 +26,12 @@ int fd_read_packet( void* opaque, uint8_t* buffer, int size );
 class FFMpegCustomIO
 {
 public:
+
+    enum BufferType {
+        ReadBuffer  = 0,
+        WriteBuffer = 1
+    };
+
     FFMpegCustomIO() {};
     virtual ~FFMpegCustomIO() {};
     virtual AVIOContext* GetAVIOContext() = 0;

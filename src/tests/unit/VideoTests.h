@@ -6,6 +6,7 @@
 
 void TestVideo();
 void TestBufferIO();
+void TestStdFunctionIO();
 
 #endif /* __VIDEO_TESTS_H__ */
 

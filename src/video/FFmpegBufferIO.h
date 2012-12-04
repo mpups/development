@@ -23,11 +23,6 @@ public:
         uint8_t* data; // the data buffer
     };
 
-    enum BufferType {
-        ReadBuffer  = 0,
-        WriteBuffer = 1
-    };
-
     FFMpegBufferIO( BufferType direction );
     virtual ~FFMpegBufferIO();
 

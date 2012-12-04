@@ -17,13 +17,20 @@ TEST( io, networking )
     TestUdp();
 }
 
-#ifndef ARM_BUILD
-TEST( io, video )
+TEST( video, file )
 {
     TestVideo();
+}
+
+TEST( video, buffer )
+{
     TestBufferIO();
 }
-#endif
+
+TEST( video, stdfunction )
+{
+    TestStdFunctionIO();
+}
 
 /**
     Runs all the tests listed above.
