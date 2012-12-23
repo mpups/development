@@ -37,6 +37,8 @@ set( LIBS ${LIBS} ${FFMPEG_LIBRARIES})
 include_directories( "/usr/include/unicap" )
 set( LIBS ${LIBS} /usr/lib/libunicap.so /usr/lib/x86_64-linux-gnu/libdc1394.so )
 
+include_directories( "include" )
+
 # Build library:
 add_subdirectory( ${PROJECT_SOURCE_DIR}/src/ )
 

@@ -31,6 +31,7 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
         struct timespec t2;
 
         clock_gettime( CLOCK_MONOTONIC, &t1 );
+        /// @todo This shouldn't be hard coded - wasting a lot of time everytime I forget about this!
         halfscale_yuyv422_to_yuv420p( 640, 480, buffer->data, camera->m_buffer );
         //memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
         clock_gettime( CLOCK_MONOTONIC, &t2 );

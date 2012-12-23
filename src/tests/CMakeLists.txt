@@ -31,5 +31,11 @@ add_executable( utest WIN32
 
 target_link_libraries( utest videolib ${LIBS} )
 
+add_executable( transcode WIN32
+    tools/transcode.cpp
+)
+
+target_link_libraries( transcode videolib ${LIBS} )
+
 install( TARGETS utest DESTINATION bin )
 

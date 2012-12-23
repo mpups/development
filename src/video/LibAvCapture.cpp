@@ -314,4 +314,3 @@ void LibAvCapture::FrameConversion( PixelFormat format, uint8_t* data, int strid
     m_converter.Configure( w, h, m_codecContext->pix_fmt, w, h, format );
     m_converter.Convert( m_avFrame->data, m_avFrame->linesize, 0, h, dstPlanes, dstStrides );
 }
-

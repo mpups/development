@@ -1,8 +1,9 @@
 // Copyright (c) 2012 Mark Pupilli, All Rights Reserved.
 
-#include <RoboLibVision.h>
-
 #include <sys/stat.h>
+#include <iostream>
+
+#include <VideoLib.h>
 
 /*
     Read in a video file and write it as an mpeg4 (fourcc=FMP4)
