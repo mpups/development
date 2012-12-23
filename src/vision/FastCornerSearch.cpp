@@ -52,18 +52,18 @@ void FastCornerSearch::GetRectIndices( const AlignedBox& rect, std::vector<int>&
 void FastCornerSearch::ScanRow( int row, int x1, int x2, std::vector<int>& results ) const
 {
     int index = m_rowIndex[row];
-    if (index == -1 )
+    if ( index == -1 )
     {
         return;
     }
 
     // Scan along the row until we are at first corner inside the rectangle:
-    while ( index < m_corners.size() && m_corners[index].y == row && m_corners[index].x < x1 )
+    while ( static_cast<unsigned int>(index) < m_corners.size() && m_corners[index].y == row && m_corners[index].x < x1 )
     {
         index += 1;
     }
 
-    while ( index < m_corners.size() && m_corners[index].y == row && m_corners[index].x < x2 )
+    while ( static_cast<unsigned int>(index) < m_corners.size() && m_corners[index].y == row && m_corners[index].x < x2 )
     {
         results.push_back( index );
         index += 1;

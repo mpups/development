@@ -120,6 +120,15 @@ end
         links ( GLK_LINKS )
         links ( LINKS )
 
+    project 'packet-streaming'
+        kind 'ConsoleApp'
+        includedirs { "../include" }
+        files { SRC .. 'tests/tools/PacketStreaming.cpp' }
+        configuration {}
+        links { 'robolib' }
+        links ( GLK_LINKS )
+        links ( LINKS )
+
     project 'gtests' -- unit tests
         kind 'ConsoleApp'
 

@@ -30,5 +30,6 @@ FFMPEG_LINKS = { 'avcodec', 'avformat', 'avutil', 'swscale' }
 LINKS = { 'lua5.1', 'freetype', 'unicap' }
 
 GLK_LINKS = { 'glkcore' }
+VIDEO_LINKS = { 'videolib' }
 
 CONFIGURING_ARM = true
