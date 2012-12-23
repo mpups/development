@@ -25,7 +25,7 @@ FFMpegStdFunctionIO::FFMpegStdFunctionIO(  FFMpegCustomIO::BufferType direction,
 FFMpegStdFunctionIO::~FFMpegStdFunctionIO()
 {
     av_free( m_io );
-//  av_free( m_buffer );
+    av_free( m_buffer );
 }
 
 AVIOContext* FFMpegStdFunctionIO::GetAVIOContext()
@@ -48,7 +48,6 @@ bool FFMpegStdFunctionIO::IoError() const
 
 void FFMpegStdFunctionIO::AllocateBuffer()
 {
-    m_buffer = (uint8_t*)av_malloc( BUFFER_SIZE + 2*FF_INPUT_BUFFER_PADDING_SIZE );
+    m_buffer = (uint8_t*)av_malloc( BUFFER_SIZE );
     assert( m_buffer != 0 );
 }
-

@@ -9,6 +9,10 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+#include <iostream>
+#include <fstream>
+
 const int FRAME_WIDTH   = 640;
 const int FRAME_HEIGHT  = 480;
 const int STREAM_WIDTH  = 320;
@@ -110,10 +114,29 @@ void TestBufferIO()
 
 void TestStdFunctionIO()
 {
-    uint8_t* buffer;
-    int err = posix_memalign( (void**)&buffer, 16, FRAME_WIDTH*FRAME_HEIGHT );
-    ASSERT_EQ( 0, err );
+    using namespace std;
+    string testFileName( "ofstream.avi" );
+    ofstream outFile( testFileName, ios_base::out | ios_base::binary );
 
-    FFMpegStdFunctionIO videoOut( FFMpegCustomIO::WriteBuffer, [](uint8_t* buffer, int size){ std::cerr << "Write of " << size << " bytes requested." << std::endl; return size; } );
-    RunWriter( videoOut ); // We only test the writer because The lambda funciton above doesn't actually write any data for the reader.
+    FFMpegStdFunctionIO videoOut( FFMpegCustomIO::WriteBuffer, [&](uint8_t* buffer, int size){
+        outFile.write( reinterpret_cast<char*>(buffer), size );
+        return size;
+    });
+
+    RunWriter( videoOut );
+
+    ifstream inFile( testFileName, ios_base::in | ios_base::binary );
+    FFMpegStdFunctionIO videoIn( FFMpegCustomIO::ReadBuffer, [&](uint8_t* buffer, int size){
+        streamsize count = inFile.readsome( reinterpret_cast<char*>(buffer), size );
+        if ( inFile.good() )
+        {
+            return static_cast<int>( count );
+        }
+        else
+        {
+            return -1;
+        }
+    });
+
+    RunReader( videoIn );
 }

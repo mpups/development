@@ -25,7 +25,7 @@ public:
     virtual const char* GetStreamName() const;
     virtual bool IoError() const;
 
-    static const int BUFFER_SIZE = 32*1024;
+    static constexpr int BUFFER_SIZE = (32*1024);// + FF_INPUT_BUFFER_PADDING_SIZE;
 
 protected:
     void AllocateBuffer();
