@@ -11,6 +11,7 @@
 #include "../src/video/FFmpegCustomIO.h"
 #include "../src/video/FFmpegSocketIO.h"
 #include "../src/video/FFmpegBufferIO.h"
+#include "../src/video/FFmpegStdFunctionIO.h"
 
 #include "../src/io/Ipv4Address.h"
 #include "../src/io/Socket.h"
