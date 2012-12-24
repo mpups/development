@@ -22,7 +22,7 @@ LIB_DIRS = {
     '/usr/lib/x86_64-linux-gnu'
 }
 
-BUILD_OPTIONS = { '-msse -msse2' }
+BUILD_OPTIONS = { '-std=c++0x -msse -msse2' }
 LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/usr/local/videolib/lib:/home/mark/tmp_installs/lib' }
 
 OPENCV_LINKS = { 'opencv_imgproc','opencv_calib3d','opencv_highgui', 'opencv_core' }

@@ -1,5 +1,6 @@
 // Copyright (c) 2012 Mark Pupilli, All Rights Reserved.
 
+#include <VideoLib.h>
 #include <RoboLib.h>
 #include <time.h>
 
@@ -34,8 +35,11 @@ int streamVideo( TcpSocket& client )
 
     if ( camera.IsOpen() )
     {
-        // Create a video writer object that uses socket IO:
-        FFMpegSocketIO videoIO( client, true );
+        // Create a video writer object that passes a lamba function that writes to socket:
+        FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&client]( uint8_t* buffer, int size ){
+            return client.Write( reinterpret_cast<char*>(buffer), size );
+        });
+
         LibAvWriter streamer( videoIO );
 
         // Setup an MPEG4 video stream:
@@ -117,8 +121,11 @@ int runClient( int argc, char** argv )
 
     if ( client.Connect( argv[1], atoi( argv[2] ) ) )
     {
-        // Create a video reader object that uses socket IO:
-        FFMpegSocketIO videoIO( client, false );
+        // Create a video writer object that passes a lamba function that reads from socket:
+        FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&client]( uint8_t* buffer, int size ){
+            return client.Read( reinterpret_cast<char*>(buffer), size );
+        });
+
         LibAvCapture streamer( videoIO );
         if ( streamer.IsOpen() == false )
         {
