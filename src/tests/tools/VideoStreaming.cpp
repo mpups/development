@@ -99,7 +99,9 @@ int runServer( int argc, char** argv )
         std::cerr << "Connection from '" << clientName << "'" << std::endl;
 
         // Network connection successful so try to capture video:
-        return streamVideo( *clientConnection );
+        int streamSuccess = streamVideo( *clientConnection );
+        delete clientConnection;
+        return streamSuccess;
     }
     else
     {

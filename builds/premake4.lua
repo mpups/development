@@ -88,7 +88,9 @@ solution 'robolib'
         
         files { SRC .. 'puppybot/RobotServer.cpp' }
         files { SRC .. 'puppybot/puppybot_comms.cpp' }
-        
+        files { SRC .. 'puppybot/Com*.cpp' }
+        excludes { SRC .. 'puppybot/puppybot_test.cpp' }
+
         configuration {}
         links { 'robolib' }
         links ( GLK_LINKS )

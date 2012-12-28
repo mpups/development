@@ -90,11 +90,11 @@ void Joystick::Run()
             if ( val == sizeof(struct js_event) )
             {
                 switch ( e.type & ~JS_EVENT_INIT )
-		        {
-		            case JS_EVENT_AXIS:
+                {
+                    case JS_EVENT_AXIS:
                         m_axis[e.number] = e.value;
-        	    	break;
-			    
+                    break;
+
                     case JS_EVENT_BUTTON:
                         m_button[e.number] = e.value;
 
@@ -109,10 +109,10 @@ void Joystick::Run()
 
                     default:
                     break;
-    		    }
+                }
             }
 
-        }        
+        }
     }
     fcntl( m_joy, F_SETFL, O_SYNC ); // blocking I/O back on
 }

@@ -4,6 +4,11 @@
 #include <RoboLib.h>
 #include <time.h>
 
+#include <queue>
+#include <iostream>
+
+#include "../../../src/puppybot/ComCentre.h"
+
 double milliseconds( struct timespec& t )
 {
     return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
@@ -30,14 +35,16 @@ int streamVideo( TcpSocket& client )
 {
     UnicapCamera camera;
 
-    // Setup the socket for server side:
-    client.SetBlocking( true );
-
     if ( camera.IsOpen() )
     {
-        // Create a video writer object that passes a lamba function that writes to socket:
-        FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&client]( uint8_t* buffer, int size ){
-            return client.Write( reinterpret_cast<char*>(buffer), size );
+        ComCentre comms( client );
+
+        // Create a video writer object that passes a lamba function that posts video packets to
+        // the communication sub-system:
+        FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&]( uint8_t* buffer, int size ) {
+            comms.PostPacket( ComPacket( ComPacket::Type::AvData, buffer, size ) );
+            std::cerr << "Posted packet (" << comms.Ok() << ")" << std::endl;
+            return comms.Ok() ? size : -1;
         });
 
         LibAvWriter streamer( videoIO );
@@ -103,7 +110,9 @@ int runServer( int argc, char** argv )
         std::cerr << "Connection from '" << clientName << "'" << std::endl;
 
         // Network connection successful so try to capture video:
-        return streamVideo( *clientConnection );
+        int streamSuccess = streamVideo( *clientConnection );
+        delete clientConnection;
+        return streamSuccess;
     }
     else
     {
@@ -121,9 +130,25 @@ int runClient( int argc, char** argv )
 
     if ( client.Connect( argv[1], atoi( argv[2] ) ) )
     {
+        ComCentre comms( client );
+
         // Create a video writer object that passes a lamba function that reads from socket:
-        FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&client]( uint8_t* buffer, int size ){
-            return client.Read( reinterpret_cast<char*>(buffer), size );
+        FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&comms]( uint8_t* buffer, int size ) {
+            /// @todo - Now we are sending packets not raw video streams we need to receieve the packets somewhere else,
+            /// then dump the video data to a raw stream which can be returned a piece at a time at this point:
+
+            std::queue<ComPacket>& avPackets = comms.GetAvDataQueue();
+            while ( avPackets.size() == 0 ) {}
+            ComPacket& packet = avPackets.front();
+
+            std::cerr << "Queued packet count := " << comms.AvDataQueued() << std::endl;
+            std::cerr << "Available Packet size := " << packet.GetData().size() << std::endl;
+            std::cerr << "Requested Packet size := " << size << std::endl;
+
+            std::copy( packet.GetData().begin(), packet.GetData().end(), buffer );
+            ///@todo - copy what is requested, save the rest for later.
+
+            return packet.GetData().size();
         });
 
         LibAvCapture streamer( videoIO );
