@@ -45,11 +45,8 @@ void ComCentre::Send()
         {
             // Wait until new data is posted (don't care to which queue it is
             // posted, hence one condition variable for all queues):
-            std::cerr << "Wating for packet post..." << std::endl;
             m_txReady.Wait( m_txLock );
         }
-
-        std::cerr << "Sending packets..." << std::endl;
 
         // Send in priority order:
         SendAll( m_txQueues[ ComPacket::Type::AvInfo ] );
@@ -64,8 +61,12 @@ void ComCentre::Receive()
     ComPacket packet;
     while ( m_transportError == false )
     {
-        ReceivePacket( packet );
-        m_rxQueues[ packet.GetType() ].push( std::move(packet) );
+        if ( ReceivePacket( packet ) )
+        {
+            GLK::MutexLock lock( m_rxLock );
+            m_rxQueues[ packet.GetType() ].push( std::move(packet) );
+            m_rxReady.WakeOne();
+        }
     }
 }
 
@@ -75,16 +76,15 @@ void ComCentre::Receive()
 
     @param packet An rvalue reference to a packet that will be posted on the queue.
     If it is not an rvalue reference then after calling this the packet object will become
-    an invalid packet.
+    invalid ( i.e. have type ComPacket::Type::invalid and no data).
 */
 void ComCentre::PostPacket( ComPacket&& packet )
 {
     GLK::MutexLock lock( m_txLock );
     // Each packet type goes onto a separate queue:
-    m_txQueues[ packet.GetType() ].push( std::move(packet) ); /// @todo - std::move() on the packet to avoid copy?
+    m_txQueues[ packet.GetType() ].push( std::move(packet) );
     m_numPosted += 1;
-    std::cerr << "Packet posted." << std::endl;
-    m_txReady.WakeAll();
+    m_txReady.WakeOne();
 }
 
 /**
@@ -111,33 +111,97 @@ void ComCentre::SendAll( PacketContainer& packets )
 void ComCentre::SendPacket( const ComPacket& packet )
 {
     // Write the type as an unsigned 32-bit integer in network byte order:
+    size_t writeCount = sizeof(uint32_t);
     uint32_t type = htonl( static_cast<uint32_t>( packet.GetType() ) );
-    m_transport.Write( reinterpret_cast<const char*>(&type), sizeof(uint32_t) );
+    bool ok = WriteBytes( reinterpret_cast<const uint8_t*>(&type), writeCount );
+    m_transportError &= ok;
 
     // Write the data size:
     uint32_t size = htonl( packet.GetDataSize() );
-    m_transport.Write( reinterpret_cast<const char*>(&size), sizeof(uint32_t) );
+    writeCount = sizeof(uint32_t);
+    ok = WriteBytes( reinterpret_cast<const uint8_t*>(&size), writeCount );
+    m_transportError &= ok;
 
     // Write the byte data:
-    int sent = m_transport.Write( reinterpret_cast<const char*>( packet.GetDataPtr() ), packet.GetDataSize() );
-    if ( sent == -1 )
-    {
-        m_transportError = true;
-    }
-    std::cerr << "Packet sent. (" << sent << ")" << std::endl;
+    writeCount = packet.GetDataSize();
+    ok = WriteBytes( reinterpret_cast<const uint8_t*>( packet.GetDataPtr() ), writeCount );
+    m_transportError &= ok;
 }
 
-void ComCentre::ReceivePacket( ComPacket& packet )
+/**
+    @param packet If return value is true then packet will contain the new data, if false packet remains unchanged.
+    @return false on comms error, true if successful.
+*/
+bool ComCentre::ReceivePacket( ComPacket& packet )
 {
     uint32_t type = 0;
     uint32_t size = 0;
-    m_transport.Read( reinterpret_cast<char*>(&type), sizeof(uint32_t) );
-    m_transport.Read( reinterpret_cast<char*>(&size), sizeof(uint32_t) );
+
+    size_t byteCount = sizeof(uint32_t);
+    bool ok = ReadBytes( reinterpret_cast<uint8_t*>(&type), byteCount );
+    if ( !ok ) return false;
+
+    byteCount = sizeof(uint32_t);
+    ok = ReadBytes( reinterpret_cast<uint8_t*>(&size), byteCount );
+    if ( !ok ) return false;
+
     type = ntohl( type );
     size = ntohl( size );
 
     ComPacket p( static_cast<ComPacket::Type>(type), size );
-    m_transport.Read( reinterpret_cast<char*>(p.GetDataPtr()), p.GetDataSize() );
+    byteCount = p.GetDataSize();
+    ok = ReadBytes( reinterpret_cast<uint8_t*>(p.GetDataPtr()), byteCount );
+    if ( !ok ) return false;
+
     std::swap( p, packet );
+    return true;
+}
+
+/**
+    Loop to guarantee the number of bytes requested are actually read.
+
+    On error (return of false) size will contain the number of bytes that were remaining to be read.
+
+    @return true if all bytes were written, false if there was an error at any point.
+*/
+bool ComCentre::ReadBytes( uint8_t* buffer, size_t& size )
+{
+    while ( size > 0 )
+    {
+        int n = m_transport.Read( reinterpret_cast<char*>( buffer ), size );
+        if ( n < 0 )
+        {
+            return false;
+        }
+
+        size -= n;
+        buffer += n;
+    }
+
+    return true;
+}
+
+/**
+    Loop to guarantee the number of bytes requested are actually written.
+
+    On error (return of false) size will contain the number of bytes that were remaining to be written.
+
+    @return true if all bytes were written, false if there was an error at any point.
+*/
+bool ComCentre::WriteBytes( const uint8_t* buffer, size_t& size )
+{
+    while ( size > 0 )
+    {
+        int n = m_transport.Write( reinterpret_cast<const char*>( buffer ), size );
+        if ( n < 0 )
+        {
+            return false;
+        }
+
+        size -= n;
+        buffer += n;
+    }
+
+    return true;
 }
 

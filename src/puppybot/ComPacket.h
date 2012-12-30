@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <type_traits>
 
 class ComPacket
 {
@@ -26,13 +27,17 @@ public:
     ComPacket( ComPacket::Type type, int size ) : m_type(type), m_data( size ) {};
     virtual ~ComPacket() {};
 
-    ComPacket( ComPacket&& p ) : m_type( ComPacket::Type::Invalid ) { std::swap( p.m_type, m_type ); }; ///@todo use delgating constructor when upgraded to gcc-4.7+
+    ComPacket( ComPacket&& p ) : m_type( ComPacket::Type::Invalid ) {
+        std::swap( p.m_type, m_type );
+        std::swap( p.m_data, m_data );
+    }; ///@todo use delgating constructor when upgraded to gcc-4.7+
 
     ComPacket::Type GetType()   const { return m_type; };
     const uint8_t* GetDataPtr() const { return &(m_data[0]); };
     uint8_t* GetDataPtr() { return &(m_data[0]); };
     std::vector<uint8_t>::size_type GetDataSize() const noexcept { return m_data.size(); };
     const std::vector<uint8_t>& GetData() const { return m_data; };
+    std::vector<uint8_t>& GetData() { return m_data; };
 protected:
 
 private:

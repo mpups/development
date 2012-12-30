@@ -45,8 +45,22 @@ public:
     void Receive();
     void PostPacket( ComPacket&& packet );
 
-    size_t AvDataQueued() { return m_rxQueues[ ComPacket::Type::AvData ].size(); };
     std::queue<ComPacket>& GetAvDataQueue() { return m_rxQueues[ ComPacket::Type::AvData ]; };
+
+    bool LockPackets() {
+        m_rxLock.Lock();
+        m_rxReady.Wait( m_rxLock );
+        if ( m_rxQueues[ ComPacket::Type::AvData ].size() > 0 )
+        {
+            return true;
+        }
+        else
+        {
+            m_rxLock.Unlock();
+            return false;
+        }
+    };
+    void DonePackets() { m_rxLock.Unlock(); };
 
 protected:
     typedef std::queue<ComPacket> PacketContainer;
@@ -54,7 +68,10 @@ protected:
 
     void SendAll( PacketContainer& packets );
     void SendPacket( const ComPacket& packet );
-    void ReceivePacket( ComPacket& packet );
+    bool ReceivePacket( ComPacket& packet );
+
+    bool ReadBytes( uint8_t* buffer, size_t& size );
+    bool WriteBytes( const uint8_t* buffer, size_t& size );
 
 private:
     RunnableFunction m_sender;
@@ -66,6 +83,9 @@ private:
     GLK::Mutex m_txLock;
     uint32_t m_numPosted;
     uint32_t m_numSent;
+
+    GLK::ConditionVariable m_rxReady;
+    GLK::Mutex m_rxLock;
 
     std::unordered_map< MapEntry::first_type, MapEntry::second_type > m_txQueues;
     std::unordered_map< MapEntry::first_type, MapEntry::second_type > m_rxQueues;

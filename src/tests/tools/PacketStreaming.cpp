@@ -43,7 +43,6 @@ int streamVideo( TcpSocket& client )
         // the communication sub-system:
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&]( uint8_t* buffer, int size ) {
             comms.PostPacket( ComPacket( ComPacket::Type::AvData, buffer, size ) );
-            std::cerr << "Posted packet (" << comms.Ok() << ")" << std::endl;
             return comms.Ok() ? size : -1;
         });
 
@@ -134,21 +133,53 @@ int runClient( int argc, char** argv )
 
         // Create a video writer object that passes a lamba function that reads from socket:
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&comms]( uint8_t* buffer, int size ) {
-            /// @todo - Now we are sending packets not raw video streams we need to receieve the packets somewhere else,
-            /// then dump the video data to a raw stream which can be returned a piece at a time at this point:
-
+            /// @todo - All this needs a mutex!:
             std::queue<ComPacket>& avPackets = comms.GetAvDataQueue();
-            while ( avPackets.size() == 0 ) {}
-            ComPacket& packet = avPackets.front();
 
-            std::cerr << "Queued packet count := " << comms.AvDataQueued() << std::endl;
-            std::cerr << "Available Packet size := " << packet.GetData().size() << std::endl;
+            ///@todo - use condition variable:
+            while ( comms.LockPackets() == false ) {}
+
+            std::cerr << "Queued packet count := " << avPackets.size() << std::endl;
             std::cerr << "Requested Packet size := " << size << std::endl;
 
-            std::copy( packet.GetData().begin(), packet.GetData().end(), buffer );
-            ///@todo - copy what is requested, save the rest for later.
+            // We were asked for more than packet contains so loop through packets until
+            // we have returned what we needed or there are no more packets:
+            int required = size;
+            while ( required > 0 && !avPackets.empty() )
+            {
+                ComPacket& packet = avPackets.front();
+                const int availableSize = packet.GetData().size();
 
-            return packet.GetData().size();
+                std::cerr << "\tCurrent Packet size := " << availableSize << std::endl;
+                std::cerr << "\tRemaining required bytes := " << required << std::endl;
+
+                if ( availableSize <= required )
+                {
+                    // Current packet contains less than required so copy the whole packet
+                    // and continue:
+                    std::copy( packet.GetData().begin(), packet.GetData().end(), buffer );
+                    avPackets.pop();
+                    buffer += availableSize;
+                    std::cerr << "\tSent " << availableSize << " bytes." << std::endl;
+                    required -= availableSize;
+                }
+                else
+                {
+                    assert( availableSize > required );
+                    // Current packet contains at least enough to fulfill the request
+                    // so copy what is required and save the rest for later:
+                    std::copy( packet.GetData().begin(), packet.GetData().begin()+required, buffer );
+                    const size_t remainder = availableSize - required;
+                    std::copy( packet.GetData().begin()+required, packet.GetData().end(), packet.GetData().begin() );
+                    packet.GetData().resize( remainder );
+                    std::cerr << "\tSent " << required << " bytes. Remainder:=" << remainder << ". Finished" << std::endl;
+                    required = 0;
+                }
+            }
+
+            std::cerr << "\tTotal Sent " << size - required << std::endl;
+            comms.DonePackets();/// @todo - horrible
+            return size - required;
         });
 
         LibAvCapture streamer( videoIO );

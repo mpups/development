@@ -30,28 +30,28 @@ char MotionMind::m_regName[][32] =
         "VELOCITYFF",
         "FUNCTION",
         "PTERM",
-        "ITERM",   
-        "DTERM",    
-        "ADDRESS",  
+        "ITERM",
+        "DTERM",
+        "ADDRESS",
         "PIDSCALAR",
-        "TIMER",   
-        "RCMAX",  
-        "RCMIN",   
-        "RCBAND",  
-        "RCCOUNT", 
+        "TIMER",
+        "RCMAX",
+        "RCMIN",
+        "RCBAND",
+        "RCCOUNT",
         "VELOCITY",
         "TIME",
-        "STATUS",         
-        "REVISION",       
-        "MODE",           
-        "ANALOGCON",      
-        "ANALOGFBCK",     
-        "PWMOUT",         
+        "STATUS",
+        "REVISION",
+        "MODE",
+        "ANALOGCON",
+        "ANALOGFBCK",
+        "PWMOUT",
         "INDEXPOS",
-        "VNLIMIT",      
-        "VPLIMIT",                  
-        "PWMLIMIT",       
-        "DEADBAND",      
+        "VNLIMIT",
+        "VPLIMIT",
+        "PWMLIMIT",
+        "DEADBAND",
         "DESIREDPOSITION",
         "AMPSLIMIT",
         "AMPS",
@@ -145,7 +145,8 @@ bool MotionMind::Move( int32_t addr, int32_t move_c, int32_t& position )
     cmd[4] = (move_c >> 16) & 0xFF;
     cmd[5] = (move_c >> 24) & 0xFF;
     cmd[6] = cmd[0] + cmd[1] + cmd[2] + cmd[3] + cmd[4] + cmd[5];
-    m_com.Write( cmd, 7 );
+    int n = m_com.Write( cmd, 7 ); /// @todo - This is not guaranteed to write all the bytes
+    assert( n == 7 );
 
     return GetAck( position );
 }
@@ -199,8 +200,10 @@ bool MotionMind::WriteRegister( int32_t addr, MotionMind::Register reg, int32_t 
     }
     cmd[3+l] = sum;
 
-    m_com.Write( cmd, 4 + m_regSize[reg] );
-    
+    const int size = 4 + m_regSize[reg];
+    int n = m_com.Write( cmd, size );
+    assert( n == size );
+
     return GetSingleByteAck();
 }
 
@@ -224,7 +227,9 @@ bool MotionMind::ReadRegister( int32_t addr, Register reg, int32_t& value )
         sum += cmd[i];
     }
     cmd[6] = ComputeCheckSum( cmd, 6 );
-    m_com.Write( cmd, 7 );
+    const int size = 7;
+    int n = m_com.Write( cmd, size );
+    assert( n == size );
 
     return GetReadAck( addr, reg, value ); 
 }

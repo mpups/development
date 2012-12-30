@@ -127,9 +127,12 @@ size_t SerialPort::Read( char* buffer, size_t numBytes )
     if ( n < 0 )
     {
         assert( errno == EAGAIN );
-        // Only acceptable error is EAGAIN so return 0 bytes read
-        // and caller will have to try again.
-        n = 0;
+        if ( errno == EAGAIN )
+        {
+            // Only acceptable error is EAGAIN so return 0 bytes read
+            // and caller will have to try again.
+            n = 0;
+        }
     }
     return n;
 }
