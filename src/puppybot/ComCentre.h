@@ -32,7 +32,12 @@ namespace std
 /**
     Class which manages communications to and from the robot.
 
-    Holds various message queues of different priorities.
+    This system is only a simple muxer and demuxer - it does not
+    know anything about the messages except their size and type ID
+    (ComPacket::Type). The type ID is only used for the purpose
+    of muxing/demuxing into different send/receive queues. All
+    serialisation of the actual packet data must be done externally.
+    The data itself is sent as byte stream over TCP.
 */
 class ComCentre
 {
@@ -78,7 +83,7 @@ public:
     QueueLock WaitForPackets( ComPacket::Type type ) {
         m_rxLock.Lock();
 
-        while ( m_rxQueues[ type ].empty() )
+        while ( m_transportError == false && m_rxQueues[ type ].empty() )
         {
             m_rxReady.Wait( m_rxLock ); // sleep until a packet is received
         }

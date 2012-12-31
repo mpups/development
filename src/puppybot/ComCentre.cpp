@@ -23,8 +23,15 @@ ComCentre::ComCentre( Socket& socket )
 ComCentre::~ComCentre()
 {
     m_transportError = true; // Causes threads to exit (@todo use better method)
+
+    m_rxLock.Lock();
     m_rxReady.WakeAll();
+    m_rxLock.Unlock();
+
+    m_txLock.Lock();
     m_txReady.WakeAll();
+    m_txLock.Unlock();
+
     m_sendThread.Join();
     m_receiveThread.Join();
 }
