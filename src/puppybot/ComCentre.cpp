@@ -15,13 +15,16 @@ ComCentre::ComCentre( Socket& socket )
     m_transport     ( socket ),
     m_transportError( false )
 {
-    m_transport.SetBlocking( true );
+    m_transport.SetBlocking( false );
     m_sendThread.Start();
     m_receiveThread.Start();
 }
 
 ComCentre::~ComCentre()
 {
+    m_transportError = true; // Causes threads to exit (@todo use better method)
+    m_rxReady.WakeAll();
+    m_txReady.WakeAll();
     m_sendThread.Join();
     m_receiveThread.Join();
 }
@@ -49,6 +52,8 @@ void ComCentre::Send()
         }
 
         // Send in priority order:
+        /// @todo if one queue is always full we could get starvation here...how to fix?
+        /// (But in that case the system is overloaded anyway so what would we like to do when overloaded?)
         SendAll( m_txQueues[ ComPacket::Type::AvInfo ] );
         SendAll( m_txQueues[ ComPacket::Type::AvData ] );
         SendAll( m_txQueues[ ComPacket::Type::Odometry ] );
@@ -97,7 +102,7 @@ void ComCentre::PostPacket( ComPacket&& packet )
 */
 void ComCentre::SendAll( PacketContainer& packets )
 {
-    while ( packets.empty() == false )
+    while ( m_transportError == false && packets.empty() == false )
     {
         SendPacket( packets.front() );
         packets.pop();
@@ -110,22 +115,24 @@ void ComCentre::SendAll( PacketContainer& packets )
 */
 void ComCentre::SendPacket( const ComPacket& packet )
 {
+    assert( packet.GetType() != ComPacket::Type::Invalid ); // Catch attempts to send invalid packets
+
     // Write the type as an unsigned 32-bit integer in network byte order:
     size_t writeCount = sizeof(uint32_t);
     uint32_t type = htonl( static_cast<uint32_t>( packet.GetType() ) );
     bool ok = WriteBytes( reinterpret_cast<const uint8_t*>(&type), writeCount );
-    m_transportError &= ok;
+
 
     // Write the data size:
     uint32_t size = htonl( packet.GetDataSize() );
     writeCount = sizeof(uint32_t);
-    ok = WriteBytes( reinterpret_cast<const uint8_t*>(&size), writeCount );
-    m_transportError &= ok;
+    ok &= WriteBytes( reinterpret_cast<const uint8_t*>(&size), writeCount );
 
     // Write the byte data:
     writeCount = packet.GetDataSize();
-    ok = WriteBytes( reinterpret_cast<const uint8_t*>( packet.GetDataPtr() ), writeCount );
-    m_transportError &= ok;
+    ok &= WriteBytes( reinterpret_cast<const uint8_t*>( packet.GetDataPtr() ), writeCount );
+
+    m_transportError = !ok;
 }
 
 /**
@@ -154,6 +161,7 @@ bool ComCentre::ReceivePacket( ComPacket& packet )
     if ( !ok ) return false;
 
     std::swap( p, packet );
+    assert( packet.GetType() != ComPacket::Type::Invalid ); // Catch invalid packets at the lowest level.
     return true;
 }
 
@@ -169,7 +177,7 @@ bool ComCentre::ReadBytes( uint8_t* buffer, size_t& size )
     while ( size > 0 )
     {
         int n = m_transport.Read( reinterpret_cast<char*>( buffer ), size );
-        if ( n < 0 )
+        if ( n < 0 || m_transportError )
         {
             return false;
         }
@@ -193,7 +201,7 @@ bool ComCentre::WriteBytes( const uint8_t* buffer, size_t& size )
     while ( size > 0 )
     {
         int n = m_transport.Write( reinterpret_cast<const char*>( buffer ), size );
-        if ( n < 0 )
+        if ( n < 0 || m_transportError )
         {
             return false;
         }

@@ -19,14 +19,20 @@ public:
         Last,
      };
 
+    ComPacket( const ComPacket& ) = delete;
+
     /// Default constructed invalid packet:
     ComPacket() : m_type( ComPacket::Type::Invalid ) {};
 
     /// Construct a com packet from raw buffer of unsigned 8-bit data:
     ComPacket( ComPacket::Type type, uint8_t* buffer, int size ) : m_type(type), m_data( buffer, buffer+size ) {};
+
+    /// Construct ComPacket with preallocated data size (but no valid data).
     ComPacket( ComPacket::Type type, int size ) : m_type(type), m_data( size ) {};
+
     virtual ~ComPacket() {};
 
+    /// @param p THe ComPacket to be moved - it will become of invalid type, with an empty data vector.
     ComPacket( ComPacket&& p ) : m_type( ComPacket::Type::Invalid ) {
         std::swap( p.m_type, m_type );
         std::swap( p.m_data, m_data );
