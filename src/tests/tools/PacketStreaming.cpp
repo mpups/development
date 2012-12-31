@@ -133,14 +133,14 @@ int runClient( int argc, char** argv )
 
         // Create a video writer object that passes a lamba function that reads from socket:
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&comms]( uint8_t* buffer, int size ) {
-            /// @todo - All this needs a mutex!:
+
+            // Following lock is released when 'lock' object goes out of scope:
+            ComCentre::QueueLock lock = comms.WaitForPackets( ComPacket::Type::AvData );
+
             std::queue<ComPacket>& avPackets = comms.GetAvDataQueue();
 
-            ///@todo - use condition variable:
-            while ( comms.LockPackets() == false ) {}
-
             std::cerr << "Queued packet count := " << avPackets.size() << std::endl;
-            std::cerr << "Requested Packet size := " << size << std::endl;
+//            std::cerr << "Requested Packet size := " << size << std::endl;
 
             // We were asked for more than packet contains so loop through packets until
             // we have returned what we needed or there are no more packets:
@@ -150,8 +150,8 @@ int runClient( int argc, char** argv )
                 ComPacket& packet = avPackets.front();
                 const int availableSize = packet.GetData().size();
 
-                std::cerr << "\tCurrent Packet size := " << availableSize << std::endl;
-                std::cerr << "\tRemaining required bytes := " << required << std::endl;
+//                std::cerr << "\tCurrent Packet size := " << availableSize << std::endl;
+//                std::cerr << "\tRemaining required bytes := " << required << std::endl;
 
                 if ( availableSize <= required )
                 {
@@ -160,7 +160,7 @@ int runClient( int argc, char** argv )
                     std::copy( packet.GetData().begin(), packet.GetData().end(), buffer );
                     avPackets.pop();
                     buffer += availableSize;
-                    std::cerr << "\tSent " << availableSize << " bytes." << std::endl;
+//                    std::cerr << "\tSent " << availableSize << " bytes." << std::endl;
                     required -= availableSize;
                 }
                 else
@@ -172,13 +172,12 @@ int runClient( int argc, char** argv )
                     const size_t remainder = availableSize - required;
                     std::copy( packet.GetData().begin()+required, packet.GetData().end(), packet.GetData().begin() );
                     packet.GetData().resize( remainder );
-                    std::cerr << "\tSent " << required << " bytes. Remainder:=" << remainder << ". Finished" << std::endl;
+//                    std::cerr << "\tSent " << required << " bytes. Remainder:=" << remainder << ". Finished" << std::endl;
                     required = 0;
                 }
             }
 
-            std::cerr << "\tTotal Sent " << size - required << std::endl;
-            comms.DonePackets();/// @todo - horrible
+//            std::cerr << "\tTotal Sent " << size - required << std::endl;
             return size - required;
         });
 

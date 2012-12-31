@@ -47,20 +47,37 @@ public:
 
     std::queue<ComPacket>& GetAvDataQueue() { return m_rxQueues[ ComPacket::Type::AvData ]; };
 
-    bool LockPackets() {
-        m_rxLock.Lock();
-        m_rxReady.Wait( m_rxLock );
-        if ( m_rxQueues[ ComPacket::Type::AvData ].size() > 0 )
-        {
-            return true;
-        }
-        else
-        {
-            m_rxLock.Unlock();
-            return false;
-        }
+    friend class QueueLock;
+    /**
+        Class that wllows external clients to hold a queue resource with appropriate locks.
+        The resources are released automatically when a QueueLock goes out of scope.
+    */
+    class QueueLock
+    {
+    public:
+        virtual ~QueueLock() { if ( m_lock != nullptr ) { m_lock->Unlock(); } };
+        QueueLock( const QueueLock& ) = delete;
+        QueueLock( QueueLock&& ql ) : m_type(ql.m_type), m_lock(ql.m_lock) { ql.m_lock = nullptr; };
+
+        QueueLock( ComPacket::Type type, GLK::Mutex& mutex ) : m_type(type), m_lock(&mutex) {
+            // m_lock should already be locked - it will be unlocked when the QueueLock goes out of scope.
+        };
+
+    private:
+        ComPacket::Type m_type;
+        GLK::Mutex* m_lock;
     };
-    void DonePackets() { m_rxLock.Unlock(); };
+
+    QueueLock WaitForPackets( ComPacket::Type type ) {
+        m_rxLock.Lock();
+
+        while ( m_rxQueues[ type ].empty() )
+        {
+            m_rxReady.Wait( m_rxLock ); // sleep until a packet is received
+        }
+
+        return QueueLock( type, m_rxLock ); // at this point m_rxLock is locked and will be unlocked when the returned object goes out of scope
+    };
 
 protected:
     typedef std::queue<ComPacket> PacketContainer;
