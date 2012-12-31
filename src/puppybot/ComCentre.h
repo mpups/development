@@ -7,6 +7,7 @@
 #include <glkcore.h>
 #include <VideoLib.h>
 
+#include <iostream>
 #include <cstdint>
 #include <queue>
 #include <unordered_map>
@@ -45,7 +46,13 @@ public:
     void Receive();
     void PostPacket( ComPacket&& packet );
 
-    std::queue<ComPacket>& GetAvDataQueue() { return m_rxQueues[ ComPacket::Type::AvData ]; };
+    std::queue<ComPacket>& GetAvDataQueue() {
+        size_t odoSize = m_rxQueues[ ComPacket::Type::Odometry ].size();
+        if ( odoSize )
+        {
+            std::cerr << "Odo queue asize := " << odoSize << "front data := " << m_rxQueues[ ComPacket::Type::Odometry ].front().GetData().size() << std::endl;
+        }
+        return m_rxQueues[ ComPacket::Type::AvData ]; };
 
     friend class QueueLock;
     /**

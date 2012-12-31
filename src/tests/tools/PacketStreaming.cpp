@@ -72,6 +72,10 @@ int streamVideo( TcpSocket& client )
             double grabTime = milliseconds(t2) - milliseconds(t1);
             fprintf( stderr, "%f %f %f %f\n", grabTime, streamer.lastConvertTime_ms, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
             clock_gettime( CLOCK_MONOTONIC, &t1 );
+
+            // For every camera frame send fake odometry packet to test the comms system:
+            uint8_t odo[5] = {1,2,3,4,5};
+            comms.PostPacket( ComPacket( ComPacket::Type::Odometry, odo, sizeof(odo) ) );
         }
 
     }
