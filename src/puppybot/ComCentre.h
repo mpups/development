@@ -12,6 +12,7 @@
 #include <queue>
 #include <unordered_map>
 #include <functional>
+#include <memory>
 
 #include "ComPacket.h"
 #include "RunnableFunction.h"
@@ -37,11 +38,15 @@ namespace std
     (ComPacket::Type). The type ID is only used for the purpose
     of muxing/demuxing into different send/receive queues. All
     serialisation of the actual packet data must be done externally.
-    The data itself is sent as byte stream over TCP.
+
+    The data itself is currently sent as byte stream over TCP.
 */
 class ComCentre
 {
 public:
+    typedef std::shared_ptr<ComPacket> SharedPacket;
+    typedef std::queue< SharedPacket > PacketContainer;
+
     ComCentre( Socket& socket );
     virtual ~ComCentre();
 
@@ -50,14 +55,16 @@ public:
     void Send();
     void Receive();
     void PostPacket( ComPacket&& packet );
+    void EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size );
 
-    std::queue<ComPacket>& GetAvDataQueue() {
+    PacketContainer& GetAvDataQueue() {
         size_t odoSize = m_rxQueues[ ComPacket::Type::Odometry ].size();
         if ( odoSize )
         {
-            std::cerr << "Odo queue asize := " << odoSize << "front data := " << m_rxQueues[ ComPacket::Type::Odometry ].front().GetData().size() << std::endl;
+            std::cerr << "Odo queue asize := " << odoSize << "front data := " << m_rxQueues[ ComPacket::Type::Odometry ].front()->GetData().size() << std::endl;
         }
-        return m_rxQueues[ ComPacket::Type::AvData ]; };
+        return m_rxQueues[ ComPacket::Type::AvData ];
+    }
 
     friend class QueueLock;
     /**
@@ -92,7 +99,6 @@ public:
     };
 
 protected:
-    typedef std::queue<ComPacket> PacketContainer;
     typedef std::pair< ComPacket::Type, PacketContainer > MapEntry;
 
     void SendAll( PacketContainer& packets );
@@ -103,6 +109,8 @@ protected:
     bool WriteBytes( const uint8_t* buffer, size_t& size );
 
 private:
+    void SignalPacketPosted();
+
     RunnableFunction m_sender;
     RunnableFunction m_receiver;
     GLK::Thread m_sendThread;

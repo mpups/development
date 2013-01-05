@@ -42,7 +42,7 @@ int streamVideo( TcpSocket& client )
         // Create a video writer object that passes a lamba function that posts video packets to
         // the communication sub-system:
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&]( uint8_t* buffer, int size ) {
-            comms.PostPacket( ComPacket( ComPacket::Type::AvData, buffer, size ) );
+            comms.EmplacePacket( ComPacket::Type::AvData, buffer, size );
             return comms.Ok() ? size : -1;
         });
 
@@ -141,7 +141,7 @@ int runClient( int argc, char** argv )
             // Following lock is released when 'lock' object goes out of scope:
             ComCentre::QueueLock lock = comms.WaitForPackets( ComPacket::Type::AvData );
 
-            std::queue<ComPacket>& avPackets = comms.GetAvDataQueue();
+            ComCentre::PacketContainer& avPackets = comms.GetAvDataQueue();
 
             std::cerr << "Queued packet count := " << avPackets.size() << std::endl;
 //            std::cerr << "Requested Packet size := " << size << std::endl;
@@ -151,7 +151,9 @@ int runClient( int argc, char** argv )
             int required = size;
             while ( required > 0 && !avPackets.empty() )
             {
-                ComPacket& packet = avPackets.front();
+                ComCentre::SharedPacket sharedPacket = avPackets.front();
+                assert( sharedPacket.get() != nullptr );
+                ComPacket& packet = *sharedPacket.get();
                 const int availableSize = packet.GetData().size();
 
 //                std::cerr << "\tCurrent Packet size := " << availableSize << std::endl;

@@ -76,7 +76,7 @@ void ComCentre::Receive()
         if ( ReceivePacket( packet ) )
         {
             GLK::MutexLock lock( m_rxLock );
-            m_rxQueues[ packet.GetType() ].push( std::move(packet) );
+            m_rxQueues[ packet.GetType() ].push( std::make_shared<ComPacket>(std::move(packet)) );
             m_rxReady.WakeOne();
         }
     }
@@ -94,9 +94,24 @@ void ComCentre::PostPacket( ComPacket&& packet )
 {
     GLK::MutexLock lock( m_txLock );
     // Each packet type goes onto a separate queue:
-    m_txQueues[ packet.GetType() ].push( std::move(packet) );
-    m_numPosted += 1;
-    m_txReady.WakeOne();
+    m_txQueues[ packet.GetType() ].push( std::make_shared<ComPacket>(std::move(packet)) );
+    SignalPacketPosted();
+}
+
+/**
+    Optimised version of ComCentre::PostPacket() which uses forwarding to efficiently
+    construct the packet in-place (no std::move required as in PostPacket).
+
+    @param args Variadic argument list to forward to the ComPacket constructor.
+
+    @note There is a g++ bug which doesn;t allow perfect forwarding in cases like this:
+    when it is fixed variadic arguments can be forwarded directly to any ComPacket constructor.
+*/
+void ComCentre::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
+{
+    GLK::MutexLock lock( m_txLock );
+    m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
+    SignalPacketPosted();
 }
 
 /**
@@ -111,7 +126,8 @@ void ComCentre::SendAll( PacketContainer& packets )
 {
     while ( m_transportError == false && packets.empty() == false )
     {
-        SendPacket( packets.front() );
+        // Here we must send before popping to guarantee the shared_ptr is valid for the lifetime of SendPacket.
+        SendPacket( *(packets.front().get()) );
         packets.pop();
         m_numSent += 1;
     }
@@ -220,3 +236,8 @@ bool ComCentre::WriteBytes( const uint8_t* buffer, size_t& size )
     return true;
 }
 
+void ComCentre::SignalPacketPosted()
+{
+    m_numPosted += 1;
+    m_txReady.WakeOne();
+}
