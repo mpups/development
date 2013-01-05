@@ -76,7 +76,8 @@ void ComCentre::Receive()
         if ( ReceivePacket( packet ) )
         {
             GLK::MutexLock lock( m_rxLock );
-            m_rxQueues[ packet.GetType() ].push( std::make_shared<ComPacket>(std::move(packet)) );
+            ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
+            m_rxQueues[ packetType ].push( std::make_shared<ComPacket>(std::move(packet)) );
             m_rxReady.WakeOne();
         }
     }
@@ -94,7 +95,9 @@ void ComCentre::PostPacket( ComPacket&& packet )
 {
     GLK::MutexLock lock( m_txLock );
     // Each packet type goes onto a separate queue:
-    m_txQueues[ packet.GetType() ].push( std::make_shared<ComPacket>(std::move(packet)) );
+    ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
+    SharedPacket sptr = std::make_shared<ComPacket>( std::move(packet) );
+    m_txQueues[ packetType ].push( std::move(sptr) );
     SignalPacketPosted();
 }
 
