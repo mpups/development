@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 
 #include <iostream>
+#include <algorithm>
 
 ComCentre::ComCentre( Socket& socket )
 :
@@ -77,8 +78,16 @@ void ComCentre::Receive()
         {
             GLK::MutexLock lock( m_rxLock );
             ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
-            m_rxQueues[ packetType ].push( std::make_shared<ComPacket>(std::move(packet)) );
+            auto sptr = std::make_shared<ComPacket>(std::move(packet));
+            m_rxQueues[ packetType ].push( sptr );
             m_rxReady.WakeOne();
+
+            // Post the new packet to the message queues of all the subscribers for this packet type:
+            SubscriptionEntry::second_type& queue = m_subscribers[ packetType ];
+            for ( auto& subscriber : queue )
+            {
+                subscriber->m_callback( sptr );
+            }
         }
     }
 }
@@ -117,11 +126,34 @@ void ComCentre::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
     SignalPacketPosted();
 }
 
-ComCentre::Subscription ComCentre::Subscribe( ComPacket::Type type )
+/**
+    Returns a subscriber object.
+
+    @todo - This is all wrong. Problem here using Subscription(shared_ptr) here is that it won't get deleted
+    automatically. Need to return an object that wraps a reference to the subscriber.
+    I.e. return class Subscription { which wraps a Subscriber }; Then on unsubscribe, we pass
+    the subscription back to COmCentre which can search for and remove the subscriber record.
+*/
+ComCentre::Subscription ComCentre::Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback )
 {
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
-    queue.emplace_back( new ComSubscriber( *this ) );
+    queue.emplace_back( new ComSubscriber( type, *this , callback ) );
     return queue.back();
+}
+
+void ComCentre::Unsubscribe( ComSubscriber* pSubscriber )
+{
+    /// @todo - how to locate the subscription? By raw pointer value?
+    ComPacket::Type type = pSubscriber->GetType();
+    SubscriptionEntry::second_type& queue = m_subscribers[ type ];
+
+    // Search through all subscribers of this type for the specific subscriber:
+    auto itr = std::remove_if( queue.begin(), queue.end(), [pSubscriber]( const ComCentre::Subscription& subscriber ) {
+        return subscriber.get() == pSubscriber;
+    });
+
+    assert( itr != queue.end() );
+    queue.erase( itr );
 }
 
 /**

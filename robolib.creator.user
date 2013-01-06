@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by Qt Creator 2.4.1, 2013-01-06T17:02:27. -->
+<!-- Written by Qt Creator 2.4.1, 2013-01-06T21:15:29. -->
 <qtcreator>
  <data>
   <variable>GenericProjectManager.GenericProject.Toolchain</variable>
@@ -174,7 +174,7 @@
      <value type="int">13</value>
      <value type="int">14</value>
     </valuelist>
-    <value type="QString" key="ProjectExplorer.CustomExecutableRunConfiguration.Arguments">localhost 2223</value>
+    <value type="QString" key="ProjectExplorer.CustomExecutableRunConfiguration.Arguments">localhost 2222</value>
     <value type="int" key="ProjectExplorer.CustomExecutableRunConfiguration.BaseEnvironmentBase">2</value>
     <value type="QString" key="ProjectExplorer.CustomExecutableRunConfiguration.Executable">/home/mark/code/robolib/builds/linux_build/packet-streaming_d</value>
     <value type="bool" key="ProjectExplorer.CustomExecutableRunConfiguration.UseTerminal">false</value>

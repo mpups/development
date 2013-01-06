@@ -57,7 +57,8 @@ public:
     void Receive();
     void PostPacket( ComPacket&& packet );
     void EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size );
-    ComCentre::Subscription Subscribe( ComPacket::Type type );
+    ComCentre::Subscription Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback );
+    void Unsubscribe( ComSubscriber* subscriber );
 
     PacketContainer& GetAvDataQueue() {
         size_t odoSize = m_rxQueues[ ComPacket::Type::Odometry ].size();

@@ -13,6 +13,7 @@ class ComPacket
 {
 public:
      typedef std::shared_ptr<ComPacket> SharedPacket;
+     typedef std::shared_ptr<const ComPacket> ConstSharedPacket;
 
      enum class Type : uint32_t {
         Invalid = 0,

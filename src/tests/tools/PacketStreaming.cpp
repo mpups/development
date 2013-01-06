@@ -136,8 +136,9 @@ int runClient( int argc, char** argv )
         ComCentre comms( client );
 
         {
-            ComCentre::Subscription sub = comms.Subscribe( ComPacket::Type::AvData );
-            sub.get();
+            ComCentre::Subscription sub = comms.Subscribe( ComPacket::Type::AvData, []( const ComPacket::ConstSharedPacket& packet ) {
+                assert( packet->GetType() == ComPacket::Type::AvData );
+            });
         }
 
         // Create a video writer object that passes a lamba function that reads from socket:

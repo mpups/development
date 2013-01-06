@@ -15,17 +15,22 @@ class ComSubscriber
 friend class ComCentre;
 
 public:
+    typedef std::function< void( const ComPacket::ConstSharedPacket& ) > CallBack;
+
     virtual ~ComSubscriber();
     ComSubscriber( ComSubscriber& ) = delete;
     ComSubscriber( ComSubscriber&& ) = delete;
 
+    ComPacket::Type GetType() const { return m_type; };
+
 protected:
     // Constructor is protected: only a ComCentre object can create SubScribers.
-    ComSubscriber( ComCentre& );
+    ComSubscriber( ComPacket::Type type, ComCentre&, CallBack& );
 
 private:
-    ComCentre& m_comms;
-    std::queue<ComPacket::SharedPacket> m_queue;
+    ComPacket::Type m_type;
+    ComCentre&      m_comms;
+    CallBack        m_callback;
 };
 
 #endif // _COMSUBSCRIBER_H_
