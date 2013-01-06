@@ -7,10 +7,13 @@
 #include <cstdint>
 #include <vector>
 #include <type_traits>
+#include <memory>
 
 class ComPacket
 {
 public:
+     typedef std::shared_ptr<ComPacket> SharedPacket;
+
      enum class Type : uint32_t {
         Invalid = 0,
         AvInfo,
@@ -32,11 +35,11 @@ public:
 
     virtual ~ComPacket() {};
 
-    /// @param p THe ComPacket to be moved - it will become of invalid type, with an empty data vector.
+    /// @param p The ComPacket to be moved - it will become of invalid type, with an empty data vector.
     ComPacket( ComPacket&& p ) : m_type( ComPacket::Type::Invalid ) {
         std::swap( p.m_type, m_type );
         std::swap( p.m_data, m_data );
-    }; ///@todo use delgating constructor when upgraded to gcc-4.7+
+    }; /// @todo use delgating constructor to create  invalid packet when upgraded to gcc-4.7+
 
     ComPacket::Type GetType()   const { return m_type; };
     const uint8_t* GetDataPtr() const { return &(m_data[0]); };

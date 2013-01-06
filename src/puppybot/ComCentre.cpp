@@ -96,7 +96,7 @@ void ComCentre::PostPacket( ComPacket&& packet )
     GLK::MutexLock lock( m_txLock );
     // Each packet type goes onto a separate queue:
     ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
-    SharedPacket sptr = std::make_shared<ComPacket>( std::move(packet) );
+    ComPacket::SharedPacket sptr = std::make_shared<ComPacket>( std::move(packet) );
     m_txQueues[ packetType ].push( std::move(sptr) );
     SignalPacketPosted();
 }
@@ -115,6 +115,13 @@ void ComCentre::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
     GLK::MutexLock lock( m_txLock );
     m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
     SignalPacketPosted();
+}
+
+ComCentre::Subscription ComCentre::Subscribe( ComPacket::Type type )
+{
+    SubscriptionEntry::second_type& queue = m_subscribers[ type ];
+    queue.emplace_back( new ComSubscriber( *this ) );
+    return queue.back();
 }
 
 /**

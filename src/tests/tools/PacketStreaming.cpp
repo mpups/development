@@ -135,6 +135,11 @@ int runClient( int argc, char** argv )
     {
         ComCentre comms( client );
 
+        {
+            ComCentre::Subscription sub = comms.Subscribe( ComPacket::Type::AvData );
+            sub.get();
+        }
+
         // Create a video writer object that passes a lamba function that reads from socket:
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&comms]( uint8_t* buffer, int size ) {
 
@@ -151,7 +156,7 @@ int runClient( int argc, char** argv )
             int required = size;
             while ( required > 0 && !avPackets.empty() )
             {
-                ComCentre::SharedPacket sharedPacket = avPackets.front();
+                ComPacket::SharedPacket sharedPacket = avPackets.front();
                 assert( sharedPacket.get() != nullptr );
                 ComPacket& packet = *sharedPacket.get();
                 const int availableSize = packet.GetData().size();

@@ -1,0 +1,16 @@
+/home/mark/code/robolib/apps/src/puppybot
+/home/mark/code/robolib/include
+/home/mark/code/robolib/src/io
+/home/mark/code/robolib/src/io/linux
+/home/mark/code/robolib/src/io/win32
+/home/mark/code/robolib/src/lua
+/home/mark/code/robolib/src/motor_control
+/home/mark/code/robolib/src/opencv
+/home/mark/code/robolib/src/puppybot
+/home/mark/code/robolib/src/sensors
+/home/mark/code/robolib/src/sse
+/home/mark/code/robolib/src/tests/unit
+/home/mark/code/robolib/src/third_party/fast-C-src-2.1
+/home/mark/code/robolib/src/vision
+/home/mark/code/robolib/src/visualisation
+/home/mark/code/robolib/tools/camera_tool

@@ -15,6 +15,7 @@
 #include <memory>
 
 #include "ComPacket.h"
+#include "ComSubscriber.h"
 #include "RunnableFunction.h"
 
 // Need to define a hash function to use strongly typed enum as a map key:
@@ -44,8 +45,8 @@ namespace std
 class ComCentre
 {
 public:
-    typedef std::shared_ptr<ComPacket> SharedPacket;
-    typedef std::queue< SharedPacket > PacketContainer;
+    typedef std::queue< ComPacket::SharedPacket > PacketContainer;
+    typedef std::shared_ptr<ComSubscriber> Subscription;
 
     ComCentre( Socket& socket );
     virtual ~ComCentre();
@@ -56,6 +57,7 @@ public:
     void Receive();
     void PostPacket( ComPacket&& packet );
     void EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size );
+    ComCentre::Subscription Subscribe( ComPacket::Type type );
 
     PacketContainer& GetAvDataQueue() {
         size_t odoSize = m_rxQueues[ ComPacket::Type::Odometry ].size();
@@ -66,18 +68,20 @@ public:
         return m_rxQueues[ ComPacket::Type::AvData ];
     }
 
-    friend class QueueLock;
     /**
         Class that wllows external clients to hold a queue resource with appropriate locks.
         The resources are released automatically when a QueueLock goes out of scope.
     */
     class QueueLock
     {
+    friend class ComCentre;
+
     public:
         virtual ~QueueLock() { if ( m_lock != nullptr ) { m_lock->Unlock(); } };
         QueueLock( const QueueLock& ) = delete;
         QueueLock( QueueLock&& ql ) : m_type(ql.m_type), m_lock(ql.m_lock) { ql.m_lock = nullptr; };
 
+    protected:
         QueueLock( ComPacket::Type type, GLK::Mutex& mutex ) : m_type(type), m_lock(&mutex) {
             // m_lock should already be locked - it will be unlocked when the QueueLock goes out of scope.
         };
@@ -100,6 +104,7 @@ public:
 
 protected:
     typedef std::pair< ComPacket::Type, PacketContainer > MapEntry;
+    typedef std::pair< ComPacket::Type, std::vector<Subscription> > SubscriptionEntry;
 
     void SendAll( PacketContainer& packets );
     void SendPacket( const ComPacket& packet );
@@ -123,6 +128,8 @@ private:
 
     GLK::ConditionVariable m_rxReady;
     GLK::Mutex m_rxLock;
+
+    std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
 
     std::unordered_map< MapEntry::first_type, MapEntry::second_type > m_txQueues;
     std::unordered_map< MapEntry::first_type, MapEntry::second_type > m_rxQueues;
