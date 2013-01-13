@@ -870,8 +870,8 @@
 /home/mark/code/robolib/src/motor_control/TeleJoystick.h
 /home/mark/code/robolib/src/opencv/opencv_utils.cpp
 /home/mark/code/robolib/src/opencv/opencv_utils.h
-/home/mark/code/robolib/src/puppybot/ComCentre.cpp
-/home/mark/code/robolib/src/puppybot/ComCentre.h
+/home/mark/code/robolib/src/puppybot/PacketMuxer.cpp
+/home/mark/code/robolib/src/puppybot/PacketMuxer.h
 /home/mark/code/robolib/src/puppybot/ComPacket.h
 /home/mark/code/robolib/src/puppybot/puppybot_comms.cpp
 /home/mark/code/robolib/src/puppybot/puppybot_test.cpp

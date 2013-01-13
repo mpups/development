@@ -1,14 +1,14 @@
-#include "ComCentre.h"
+#include "PacketMuxer.h"
 
 #include <arpa/inet.h>
 
 #include <iostream>
 #include <algorithm>
 
-ComCentre::ComCentre( Socket& socket )
+PacketMuxer::PacketMuxer( Socket& socket )
 :
-    m_sender        ( std::bind(&ComCentre::Send, std::ref(*this)) ),
-    m_receiver      ( std::bind(&ComCentre::Receive, std::ref(*this)) ),
+    m_sender        ( std::bind(&PacketMuxer::Send, std::ref(*this)) ),
+    m_receiver      ( std::bind(&PacketMuxer::Receive, std::ref(*this)) ),
     m_sendThread    ( m_sender ),
     m_receiveThread ( m_receiver ),
     m_numPosted     (0),
@@ -21,7 +21,7 @@ ComCentre::ComCentre( Socket& socket )
     m_receiveThread.Start();
 }
 
-ComCentre::~ComCentre()
+PacketMuxer::~PacketMuxer()
 {
     m_transportError = true; // Causes threads to exit (@todo use better method)
 
@@ -40,12 +40,12 @@ ComCentre::~ComCentre()
 /**
     Return false if ther ehave been any communication errors, true otherwise.
 */
-bool ComCentre::Ok() const
+bool PacketMuxer::Ok() const
 {
     return m_transportError == false;
 }
 
-void ComCentre::Send()
+void PacketMuxer::Send()
 {
     //std::cerr << "Send thread started." << std::endl;
 
@@ -68,7 +68,7 @@ void ComCentre::Send()
     }
 }
 
-void ComCentre::Receive()
+void PacketMuxer::Receive()
 {
     //std::cerr << "Receive thread started." << std::endl;
     ComPacket packet;
@@ -100,7 +100,7 @@ void ComCentre::Receive()
     If it is not an rvalue reference then after calling this the packet object will become
     invalid ( i.e. have type ComPacket::Type::invalid and no data).
 */
-void ComCentre::PostPacket( ComPacket&& packet )
+void PacketMuxer::PostPacket( ComPacket&& packet )
 {
     GLK::MutexLock lock( m_txLock );
     // Each packet type goes onto a separate queue:
@@ -119,7 +119,7 @@ void ComCentre::PostPacket( ComPacket&& packet )
     @note There is a g++ bug which doesn;t allow perfect forwarding in cases like this:
     when it is fixed variadic arguments can be forwarded directly to any ComPacket constructor.
 */
-void ComCentre::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
+void PacketMuxer::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
 {
     GLK::MutexLock lock( m_txLock );
     m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
@@ -134,21 +134,21 @@ void ComCentre::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
     I.e. return class Subscription { which wraps a Subscriber }; Then on unsubscribe, we pass
     the subscription back to COmCentre which can search for and remove the subscriber record.
 */
-ComCentre::Subscription ComCentre::Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback )
+PacketMuxer::Subscription PacketMuxer::Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback )
 {
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
     queue.emplace_back( new ComSubscriber( type, *this , callback ) );
     return queue.back();
 }
 
-void ComCentre::Unsubscribe( ComSubscriber* pSubscriber )
+void PacketMuxer::Unsubscribe( ComSubscriber* pSubscriber )
 {
     /// @todo - how to locate the subscription? By raw pointer value?
     ComPacket::Type type = pSubscriber->GetType();
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
 
     // Search through all subscribers of this type for the specific subscriber:
-    auto itr = std::remove_if( queue.begin(), queue.end(), [pSubscriber]( const ComCentre::Subscription& subscriber ) {
+    auto itr = std::remove_if( queue.begin(), queue.end(), [pSubscriber]( const PacketMuxer::Subscription& subscriber ) {
         return subscriber.get() == pSubscriber;
     });
 
@@ -164,7 +164,7 @@ void ComCentre::Unsubscribe( ComSubscriber* pSubscriber )
     @note Assumes you have acquired the appropriate
     lock to access the specified PacketContainer.
 */
-void ComCentre::SendAll( PacketContainer& packets )
+void PacketMuxer::SendAll( PacketContainer& packets )
 {
     while ( m_transportError == false && packets.empty() == false )
     {
@@ -178,7 +178,7 @@ void ComCentre::SendAll( PacketContainer& packets )
 /**
     Used internally to send a packet over the transport layer.
 */
-void ComCentre::SendPacket( const ComPacket& packet )
+void PacketMuxer::SendPacket( const ComPacket& packet )
 {
     assert( packet.GetType() != ComPacket::Type::Invalid ); // Catch attempts to send invalid packets
 
@@ -204,7 +204,7 @@ void ComCentre::SendPacket( const ComPacket& packet )
     @param packet If return value is true then packet will contain the new data, if false packet remains unchanged.
     @return false on comms error, true if successful.
 */
-bool ComCentre::ReceivePacket( ComPacket& packet )
+bool PacketMuxer::ReceivePacket( ComPacket& packet )
 {
     uint32_t type = 0;
     uint32_t size = 0;
@@ -237,7 +237,7 @@ bool ComCentre::ReceivePacket( ComPacket& packet )
 
     @return true if all bytes were written, false if there was an error at any point.
 */
-bool ComCentre::ReadBytes( uint8_t* buffer, size_t& size )
+bool PacketMuxer::ReadBytes( uint8_t* buffer, size_t& size )
 {
     while ( size > 0 )
     {
@@ -261,7 +261,7 @@ bool ComCentre::ReadBytes( uint8_t* buffer, size_t& size )
 
     @return true if all bytes were written, false if there was an error at any point.
 */
-bool ComCentre::WriteBytes( const uint8_t* buffer, size_t& size )
+bool PacketMuxer::WriteBytes( const uint8_t* buffer, size_t& size )
 {
     while ( size > 0 )
     {
@@ -278,7 +278,7 @@ bool ComCentre::WriteBytes( const uint8_t* buffer, size_t& size )
     return true;
 }
 
-void ComCentre::SignalPacketPosted()
+void PacketMuxer::SignalPacketPosted()
 {
     m_numPosted += 1;
     m_txReady.WakeOne();

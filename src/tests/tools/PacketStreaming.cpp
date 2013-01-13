@@ -7,7 +7,7 @@
 #include <queue>
 #include <iostream>
 
-#include "../../../src/puppybot/ComCentre.h"
+#include "../../../src/puppybot/PacketMuxer.h"
 
 double milliseconds( struct timespec& t )
 {
@@ -37,7 +37,7 @@ int streamVideo( TcpSocket& client )
 
     if ( camera.IsOpen() )
     {
-        ComCentre comms( client );
+        PacketMuxer comms( client );
 
         // Create a video writer object that passes a lamba function that posts video packets to
         // the communication sub-system:
@@ -133,10 +133,10 @@ int runClient( int argc, char** argv )
 
     if ( client.Connect( argv[1], atoi( argv[2] ) ) )
     {
-        ComCentre comms( client );
+        PacketMuxer comms( client );
 
         {
-            ComCentre::Subscription sub = comms.Subscribe( ComPacket::Type::AvData, []( const ComPacket::ConstSharedPacket& packet ) {
+            PacketMuxer::Subscription sub = comms.Subscribe( ComPacket::Type::AvData, []( const ComPacket::ConstSharedPacket& packet ) {
                 assert( packet->GetType() == ComPacket::Type::AvData );
             });
         }
@@ -145,9 +145,9 @@ int runClient( int argc, char** argv )
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&comms]( uint8_t* buffer, int size ) {
 
             // Following lock is released when 'lock' object goes out of scope:
-            ComCentre::QueueLock lock = comms.WaitForPackets( ComPacket::Type::AvData );
+            PacketMuxer::QueueLock lock = comms.WaitForPackets( ComPacket::Type::AvData );
 
-            ComCentre::PacketContainer& avPackets = comms.GetAvDataQueue();
+            PacketMuxer::PacketContainer& avPackets = comms.GetAvDataQueue();
 
             std::cerr << "Queued packet count := " << avPackets.size() << std::endl;
 //            std::cerr << "Requested Packet size := " << size << std::endl;

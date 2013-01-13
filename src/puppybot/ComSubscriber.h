@@ -8,11 +8,11 @@
 
 #include "ComPacket.h"
 
-class ComCentre;
+class PacketMuxer;
 
 class ComSubscriber
 {
-friend class ComCentre;
+friend class PacketMuxer;
 
 public:
     typedef std::function< void( const ComPacket::ConstSharedPacket& ) > CallBack;
@@ -25,11 +25,11 @@ public:
 
 protected:
     // Constructor is protected: only a ComCentre object can create SubScribers.
-    ComSubscriber( ComPacket::Type type, ComCentre&, CallBack& );
+    ComSubscriber( ComPacket::Type type, PacketMuxer&, CallBack& );
 
 private:
     ComPacket::Type m_type;
-    ComCentre&      m_comms;
+    PacketMuxer&      m_comms;
     CallBack        m_callback;
 };
 

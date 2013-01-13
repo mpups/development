@@ -34,22 +34,24 @@ namespace std
 /**
     Class which manages communications to and from the robot.
 
-    This system is only a simple muxer and demuxer - it does not
+    This is the muxer half of the comms-system - it does not
     know anything about the messages except their size and type ID
-    (ComPacket::Type). The type ID is only used for the purpose
-    of muxing/demuxing into different send/receive queues. All
-    serialisation of the actual packet data must be done externally.
+    (ComPacket::Type).
+
+    Throughout the low-level comms system the type ID is only used
+    for muxing/demuxing packets into different send/receive queues.
+    All serialisation of the actual packet data must be done externally.
 
     The data itself is currently sent as byte stream over TCP.
 */
-class ComCentre
+class PacketMuxer
 {
 public:
     typedef std::queue< ComPacket::SharedPacket > PacketContainer;
     typedef std::shared_ptr<ComSubscriber> Subscription;
 
-    ComCentre( Socket& socket );
-    virtual ~ComCentre();
+    PacketMuxer( Socket& socket );
+    virtual ~PacketMuxer();
 
     bool Ok() const;
 
@@ -57,7 +59,7 @@ public:
     void Receive();
     void PostPacket( ComPacket&& packet );
     void EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size );
-    ComCentre::Subscription Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback );
+    PacketMuxer::Subscription Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback );
     void Unsubscribe( ComSubscriber* subscriber );
 
     PacketContainer& GetAvDataQueue() {
@@ -75,7 +77,7 @@ public:
     */
     class QueueLock
     {
-    friend class ComCentre;
+    friend class PacketMuxer;
 
     public:
         virtual ~QueueLock() { if ( m_lock != nullptr ) { m_lock->Unlock(); } };

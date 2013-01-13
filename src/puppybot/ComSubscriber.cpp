@@ -1,8 +1,8 @@
 #include "ComSubscriber.h"
 
-#include "ComCentre.h"
+#include "PacketMuxer.h"
 
-ComSubscriber::ComSubscriber(ComPacket::Type type, ComCentre& comms, CallBack& callback )
+ComSubscriber::ComSubscriber(ComPacket::Type type, PacketMuxer& comms, CallBack& callback )
 :
     m_type      (type),
     m_comms     ( comms ),
