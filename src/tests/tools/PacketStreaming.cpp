@@ -136,11 +136,11 @@ int runClient( int argc, char** argv )
     {
         PacketDemuxer comms( client );
 
-        {
-            PacketDemuxer::Subscription sub = comms.Subscribe( ComPacket::Type::AvData, []( const ComPacket::ConstSharedPacket& packet ) {
-                assert( packet->GetType() == ComPacket::Type::AvData );
-            });
-        }
+
+        PacketSubscription sub = comms.Subscribe( ComPacket::Type::AvData, []( const ComPacket::ConstSharedPacket& packet ) {
+            assert( packet->GetType() == ComPacket::Type::AvData );
+            std::cerr << "Subscriber got an AV packet" << std::endl;
+        });
 
         // Create a video writer object that passes a lamba function that reads from socket:
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&comms]( uint8_t* buffer, int size ) {

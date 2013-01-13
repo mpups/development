@@ -26,6 +26,7 @@ public:
      };
 
     ComPacket( const ComPacket& ) = delete;
+    ComPacket& operator=( const ComPacket& ) = delete;
 
     /// Default constructed invalid packet:
     ComPacket() : m_type( ComPacket::Type::Invalid ) {};
@@ -43,6 +44,12 @@ public:
         std::swap( p.m_type, m_type );
         std::swap( p.m_data, m_data );
     }; /// @todo use delgating constructor to create  invalid packet when upgraded to gcc-4.7+
+
+    ComPacket& operator=( ComPacket&& p ) {
+        std::swap( p.m_type, m_type );
+        std::swap( p.m_data, m_data );
+        return *this;
+    };
 
     ComPacket::Type GetType()   const { return m_type; };
     const uint8_t* GetDataPtr() const { return &(m_data[0]); };

@@ -12,6 +12,7 @@ PacketDemuxer::PacketDemuxer( Socket& socket )
 :
     m_receiver      ( std::bind(&PacketDemuxer::Receive, std::ref(*this)) ),
     m_receiveThread ( m_receiver ),
+    m_nextSubscriberId (0),
     m_transport     ( socket ),
     m_transportError( false )
 {
@@ -21,11 +22,11 @@ PacketDemuxer::PacketDemuxer( Socket& socket )
 
 PacketDemuxer::~PacketDemuxer()
 {
-    m_transportError = true; /// Causes receive-thread to exit (@todo use better method)
-
-    m_rxLock.Lock();
-    m_rxReady.WakeAll();
-    m_rxLock.Unlock();
+    {
+        GLK::MutexLock lock( m_rxLock );
+        m_transportError = true; /// Causes receive-thread to exit (@todo use better method)
+        m_rxReady.WakeAll();
+    }
 
     m_receiveThread.Join();
 }
@@ -38,21 +39,22 @@ PacketDemuxer::~PacketDemuxer()
     I.e. return class Subscription { which wraps a Subscriber }; Then on unsubscribe, we pass
     the subscription back to COmCentre which can search for and remove the subscriber record.
 */
-PacketDemuxer::Subscription PacketDemuxer::Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback )
+PacketSubscription PacketDemuxer::Subscribe( ComPacket::Type type, PacketSubscriber::CallBack callback )
 {
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
-    queue.emplace_back( new ComSubscriber( type, *this , callback ) );
-    return queue.back();
+    queue.emplace_back( new PacketSubscriber( type, *this , callback ) );
+    m_nextSubscriberId += 1;
+    return PacketSubscription( queue.back() );
 }
 
-void PacketDemuxer::Unsubscribe( ComSubscriber* pSubscriber )
+void PacketDemuxer::Unsubscribe( PacketSubscriber* pSubscriber )
 {
     /// @todo - how to locate the subscription? By raw pointer value?
     ComPacket::Type type = pSubscriber->GetType();
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
 
     // Search through all subscribers of this type for the specific subscriber:
-    auto itr = std::remove_if( queue.begin(), queue.end(), [pSubscriber]( const PacketDemuxer::Subscription& subscriber ) {
+    auto itr = std::remove_if( queue.begin(), queue.end(), [pSubscriber]( const PacketDemuxer::Subscriber& subscriber ) {
         return subscriber.get() == pSubscriber;
     });
 
@@ -70,7 +72,7 @@ void PacketDemuxer::Receive()
         {
             GLK::MutexLock lock( m_rxLock );
             ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
-            auto sptr = std::make_shared<ComPacket>(std::move(packet));
+            auto sptr = std::make_shared<ComPacket>( std::move(packet) );
             m_rxQueues[ packetType ].push( sptr );
             m_rxReady.WakeOne();
 
@@ -90,6 +92,12 @@ void PacketDemuxer::Receive()
 */
 bool PacketDemuxer::ReceivePacket( ComPacket& packet )
 {
+    const int timeoutInMilliseconds = 1000;
+    if ( m_transport.WaitForData( timeoutInMilliseconds ) == false )
+    {
+        return false;
+    }
+
     uint32_t type = 0;
     uint32_t size = 0;
 

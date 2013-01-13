@@ -33,19 +33,19 @@
 class PacketDemuxer
 {
 public:
-    typedef std::shared_ptr<ComSubscriber> Subscription;
+    typedef std::shared_ptr<PacketSubscriber> Subscriber;
 
     PacketDemuxer( Socket& socket );
     virtual ~PacketDemuxer();
 
-    Subscription Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback );
-    void Unsubscribe( ComSubscriber* subscriber );
+    PacketSubscription Subscribe( ComPacket::Type type, PacketSubscriber::CallBack callback );
+    void Unsubscribe( PacketSubscriber* subscriber );
 
     void Receive();
     bool ReceivePacket( ComPacket& packet );
 
     /**
-        Class that wllows external clients to hold a queue resource with appropriate locks.
+        Class that allows external clients to hold a queue resource with appropriate locks.
         The resources are released automatically when a QueueLock goes out of scope.
     */
     class QueueLock
@@ -72,7 +72,7 @@ public:
 
 protected:
     typedef std::pair< ComPacket::Type, ComPacket::PacketContainer > MapEntry;
-    typedef std::pair< ComPacket::Type, std::vector<Subscription> > SubscriptionEntry;
+    typedef std::pair< ComPacket::Type, std::vector<Subscriber> > SubscriptionEntry;
 
     bool ReadBytes( uint8_t* buffer, size_t& size );
 
@@ -84,10 +84,12 @@ private:
     GLK::Mutex m_rxLock;
     std::unordered_map< MapEntry::first_type, MapEntry::second_type > m_rxQueues;
 
+    int m_nextSubscriberId;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
 
     Socket& m_transport;
     bool m_transportError;
+
 };
 
 #endif /* __PACKET_DEMUXER_H__ */

@@ -26,11 +26,11 @@ PacketMuxer::PacketMuxer( Socket& socket )
 
 PacketMuxer::~PacketMuxer()
 {
-    m_transportError = true; /// Causes threads to exit (@todo use better method)
-
-    m_txLock.Lock();
-    m_txReady.WakeAll();
-    m_txLock.Unlock();
+    {
+        GLK::MutexLock lock( m_txLock );
+        m_transportError = true; /// Causes threads to exit (@todo use better method)
+        m_txReady.WakeAll();
+    }
 
     m_sendThread.Join();
 }
@@ -46,10 +46,10 @@ bool PacketMuxer::Ok() const
 void PacketMuxer::Send()
 {
     //std::cerr << "Send thread started." << std::endl;
+    GLK::MutexLock lock( m_txLock );
 
     while ( m_transportError == false )
     {
-        GLK::MutexLock lock( m_txLock );
         if ( m_numPosted == m_numSent )
         {
             // Wait until new data is posted (don't care to which queue it is
@@ -88,9 +88,9 @@ void PacketMuxer::PostPacket( ComPacket&& packet )
     Optimised version of ComCentre::PostPacket() which uses forwarding to efficiently
     construct the packet in-place (no std::move required as in PostPacket).
 
-    @param args Variadic argument list to forward to the ComPacket constructor.
+    @param args @todo Variadic argument list to forward to the ComPacket constructor.
 
-    @note There is a g++ bug which doesn;t allow perfect forwarding in cases like this:
+    @note There is a g++ bug which doesn't allow perfect forwarding in cases like this:
     when it is fixed variadic arguments can be forwarded directly to any ComPacket constructor.
 */
 void PacketMuxer::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )

@@ -38,7 +38,7 @@
 class PacketMuxer
 {
 public:
-    typedef std::shared_ptr<ComSubscriber> Subscription;
+    typedef std::shared_ptr<PacketSubscriber> Subscription;
 
     PacketMuxer( Socket& socket );
     virtual ~PacketMuxer();

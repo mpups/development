@@ -26,7 +26,7 @@ solution 'robolib'
     location( TARGET_DIR )
     targetdir( TARGET_DIR )
     language 'C++'
-    
+
     buildoptions ( BUILD_OPTIONS )
     linkoptions ( LINK_OPTIONS )
     flags { 'NoExceptions','NoRTTI','ExtraWarnings','NoPCH' }
@@ -34,7 +34,7 @@ solution 'robolib'
     includedirs { INCLUDE_DIRS }
     libdirs { LIB_DIRS }
     defines ( DEFINES )
-    
+
     configuration 'release'
         defines { 'NDEBUG' }
         flags { 'OptimizeSpeed','NoFramePointer' }
@@ -82,13 +82,13 @@ solution 'robolib'
         links { 'robolib' }
         links ( GLK_LINKS )
         links { LINKS }
-            
+
     project 'puppybot-comms'
         kind 'ConsoleApp'
-        
+
         files { SRC .. 'puppybot/RobotServer.cpp' }
         files { SRC .. 'puppybot/puppybot_comms.cpp' }
-        files { SRC .. 'puppybot/Com*.cpp' }
+        files { SRC .. 'puppybot/*.cpp' }
         excludes { SRC .. 'puppybot/puppybot_test.cpp' }
 
         configuration {}
