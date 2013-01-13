@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "../../../src/puppybot/PacketMuxer.h"
+#include "../../../src/puppybot/PacketDemuxer.h"
 
 double milliseconds( struct timespec& t )
 {
@@ -133,10 +134,10 @@ int runClient( int argc, char** argv )
 
     if ( client.Connect( argv[1], atoi( argv[2] ) ) )
     {
-        PacketMuxer comms( client );
+        PacketDemuxer comms( client );
 
         {
-            PacketMuxer::Subscription sub = comms.Subscribe( ComPacket::Type::AvData, []( const ComPacket::ConstSharedPacket& packet ) {
+            PacketDemuxer::Subscription sub = comms.Subscribe( ComPacket::Type::AvData, []( const ComPacket::ConstSharedPacket& packet ) {
                 assert( packet->GetType() == ComPacket::Type::AvData );
             });
         }
@@ -145,7 +146,7 @@ int runClient( int argc, char** argv )
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&comms]( uint8_t* buffer, int size ) {
 
             // Following lock is released when 'lock' object goes out of scope:
-            PacketMuxer::QueueLock lock = comms.WaitForPackets( ComPacket::Type::AvData );
+            PacketDemuxer::QueueLock lock = comms.WaitForPackets( ComPacket::Type::AvData );
 
             ComPacket::PacketContainer& avPackets = comms.GetAvDataQueue();
 

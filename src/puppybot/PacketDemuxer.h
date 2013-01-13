@@ -38,8 +38,37 @@ public:
     PacketDemuxer( Socket& socket );
     virtual ~PacketDemuxer();
 
+    Subscription Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback );
+    void Unsubscribe( ComSubscriber* subscriber );
+
     void Receive();
     bool ReceivePacket( ComPacket& packet );
+
+    /**
+        Class that wllows external clients to hold a queue resource with appropriate locks.
+        The resources are released automatically when a QueueLock goes out of scope.
+    */
+    class QueueLock
+    {
+    friend class PacketDemuxer;
+
+    public:
+        virtual ~QueueLock() { if ( m_lock != nullptr ) { m_lock->Unlock(); } };
+        QueueLock( const QueueLock& ) = delete;
+        QueueLock( QueueLock&& ql ) : m_type(ql.m_type), m_lock(ql.m_lock) { ql.m_lock = nullptr; };
+
+    protected:
+        QueueLock( ComPacket::Type type, GLK::Mutex& mutex ) : m_type(type), m_lock(&mutex) {
+            // m_lock should already be locked - it will be unlocked when the QueueLock goes out of scope.
+        };
+
+    private:
+        ComPacket::Type m_type;
+        GLK::Mutex* m_lock;
+    };
+
+    ComPacket::PacketContainer& GetAvDataQueue();
+    QueueLock WaitForPackets( ComPacket::Type type );
 
 protected:
     typedef std::pair< ComPacket::Type, ComPacket::PacketContainer > MapEntry;

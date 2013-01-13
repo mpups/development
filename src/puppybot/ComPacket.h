@@ -57,5 +57,18 @@ private:
     std::vector<uint8_t> m_data;
 };
 
+// Need to define a hash function to use strongly typed enum as a map key:
+namespace std
+{
+    template <>
+    struct hash<ComPacket::Type>
+    {
+        size_t operator()(const ComPacket::Type& type) const
+        {
+            return hash<int>()( static_cast<int>(type) );
+        }
+    };
+}
+
 #endif /* __COM_PACKET_H__ */
 

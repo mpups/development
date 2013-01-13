@@ -1,5 +1,13 @@
 #include "PacketDemuxer.h"
 
+#include <iostream>
+#include <algorithm>
+
+/**
+    Create a new demuxer that will receive packets from the specified socket.
+
+    This object is guaranteed to only ever read from the socket.
+*/
 PacketDemuxer::PacketDemuxer( Socket& socket )
 :
     m_receiver      ( std::bind(&PacketDemuxer::Receive, std::ref(*this)) ),
@@ -7,10 +15,49 @@ PacketDemuxer::PacketDemuxer( Socket& socket )
     m_transport     ( socket ),
     m_transportError( false )
 {
+    m_transport.SetBlocking( false );
+    m_receiveThread.Start();
 }
 
 PacketDemuxer::~PacketDemuxer()
 {
+    m_transportError = true; /// Causes receive-thread to exit (@todo use better method)
+
+    m_rxLock.Lock();
+    m_rxReady.WakeAll();
+    m_rxLock.Unlock();
+
+    m_receiveThread.Join();
+}
+
+/**
+    Returns a subscriber object.
+
+    @todo - This is all wrong. Problem here using Subscription(shared_ptr) here is that it won't get deleted
+    automatically. Need to return an object that wraps a reference to the subscriber.
+    I.e. return class Subscription { which wraps a Subscriber }; Then on unsubscribe, we pass
+    the subscription back to COmCentre which can search for and remove the subscriber record.
+*/
+PacketDemuxer::Subscription PacketDemuxer::Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback )
+{
+    SubscriptionEntry::second_type& queue = m_subscribers[ type ];
+    queue.emplace_back( new ComSubscriber( type, *this , callback ) );
+    return queue.back();
+}
+
+void PacketDemuxer::Unsubscribe( ComSubscriber* pSubscriber )
+{
+    /// @todo - how to locate the subscription? By raw pointer value?
+    ComPacket::Type type = pSubscriber->GetType();
+    SubscriptionEntry::second_type& queue = m_subscribers[ type ];
+
+    // Search through all subscribers of this type for the specific subscriber:
+    auto itr = std::remove_if( queue.begin(), queue.end(), [pSubscriber]( const PacketDemuxer::Subscription& subscriber ) {
+        return subscriber.get() == pSubscriber;
+    });
+
+    assert( itr != queue.end() );
+    queue.erase( itr );
 }
 
 void PacketDemuxer::Receive()
@@ -91,3 +138,24 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size )
     return true;
 }
 
+ComPacket::PacketContainer& PacketDemuxer::GetAvDataQueue()
+{
+    size_t odoSize = m_rxQueues[ ComPacket::Type::Odometry ].size();
+    if ( odoSize )
+    {
+        std::cerr << "Odo queue asize := " << odoSize << "front data := " << m_rxQueues[ ComPacket::Type::Odometry ].front()->GetData().size() << std::endl;
+    }
+    return m_rxQueues[ ComPacket::Type::AvData ];
+}
+
+PacketDemuxer::QueueLock PacketDemuxer::WaitForPackets( ComPacket::Type type )
+{
+    m_rxLock.Lock();
+
+    while ( m_transportError == false && m_rxQueues[ type ].empty() )
+    {
+        m_rxReady.Wait( m_rxLock ); // sleep until a packet is received
+    }
+
+    return QueueLock( type, m_rxLock ); // at this point m_rxLock is locked and will be unlocked when the returned object goes out of scope
+}

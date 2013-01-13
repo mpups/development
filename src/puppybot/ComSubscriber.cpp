@@ -1,8 +1,8 @@
 #include "ComSubscriber.h"
 
-#include "PacketMuxer.h"
+#include "PacketDemuxer.h"
 
-ComSubscriber::ComSubscriber(ComPacket::Type type, PacketMuxer& comms, CallBack& callback )
+ComSubscriber::ComSubscriber(ComPacket::Type type, PacketDemuxer& comms, CallBack& callback )
 :
     m_type      (type),
     m_comms     ( comms ),
@@ -12,5 +12,5 @@ ComSubscriber::ComSubscriber(ComPacket::Type type, PacketMuxer& comms, CallBack&
 
 ComSubscriber::~ComSubscriber()
 {
-    m_comms.Unsubscribe( this );
+   /// @todo m_comms.Unsubscribe( this );
 }

@@ -8,11 +8,10 @@
 
 #include "ComPacket.h"
 
-class PacketMuxer;
+class PacketDemuxer;
 
 class ComSubscriber
 {
-friend class PacketMuxer;
 friend class PacketDemuxer;
 
 public:
@@ -26,11 +25,11 @@ public:
 
 protected:
     // Constructor is protected: only a ComCentre object can create SubScribers.
-    ComSubscriber( ComPacket::Type type, PacketMuxer&, CallBack& );
+    ComSubscriber( ComPacket::Type type, PacketDemuxer&, CallBack& );
 
 private:
     ComPacket::Type m_type;
-    PacketMuxer&      m_comms;
+    PacketDemuxer&      m_comms;
     CallBack        m_callback;
 };
 
