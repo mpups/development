@@ -136,19 +136,30 @@ int runClient( int argc, char** argv )
     {
         PacketDemuxer comms( client );
 
+        /// @todo - the following form a message queue which should be encapsulated:
+        GLK::Mutex avDataLock;
+        GLK::ConditionVariable avDataReady;
+        std::queue< ComPacket > avPackets;
 
-        PacketSubscription sub = comms.Subscribe( ComPacket::Type::AvData, []( const ComPacket::ConstSharedPacket& packet ) {
-            assert( packet->GetType() == ComPacket::Type::AvData );
-            std::cerr << "Subscriber got an AV packet" << std::endl;
+        PacketSubscription sub = comms.Subscribe( ComPacket::Type::AvData, [&]( const ComPacket::ConstSharedPacket& packet )
+        {
+            // When we get a packet from our subscription we simply queue it and wake anything waiting onthe queue.
+            /// @todo Makes a copy of the packet because of the way it is used in the videoIO lambda - if videoIO
+            /// could work without modifying the packets then we could just pass on the const shared packet.
+            ComPacket copyOfPacket( ComPacket::Type::AvData, packet->GetDataSize() );
+            copyOfPacket.GetData() = packet->GetData();
+            avPackets.push( std::move(copyOfPacket) );
+            avDataReady.WakeOne();
         });
 
         // Create a video writer object that passes a lamba function that reads from socket:
-        FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&comms]( uint8_t* buffer, int size ) {
+        FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&]( uint8_t* buffer, int size ) {
 
-            // Following lock is released when 'lock' object goes out of scope:
-            PacketDemuxer::QueueLock lock = comms.WaitForPackets( ComPacket::Type::AvData );
-
-            ComPacket::PacketContainer& avPackets = comms.GetAvDataQueue();
+            GLK::MutexLock lock( avDataLock );
+            while ( comms.Ok() && avPackets.empty() )
+            {
+                avDataReady.Wait( avDataLock ); // sleep until a packet is received
+            }
 
             std::cerr << "Queued packet count := " << avPackets.size() << std::endl;
 //            std::cerr << "Requested Packet size := " << size << std::endl;
@@ -158,9 +169,7 @@ int runClient( int argc, char** argv )
             int required = size;
             while ( required > 0 && !avPackets.empty() )
             {
-                ComPacket::SharedPacket sharedPacket = avPackets.front();
-                assert( sharedPacket.get() != nullptr );
-                ComPacket& packet = *sharedPacket.get();
+                ComPacket& packet = avPackets.front();
                 const int availableSize = packet.GetData().size();
 
 //                std::cerr << "\tCurrent Packet size := " << availableSize << std::endl;

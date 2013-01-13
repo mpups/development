@@ -23,13 +23,20 @@ PacketDemuxer::PacketDemuxer( Socket& socket )
 PacketDemuxer::~PacketDemuxer()
 {
     {
-        GLK::MutexLock lock( m_rxLock );
         m_transportError = true; /// Causes receive-thread to exit (@todo use better method)
-        m_rxReady.WakeAll();
     }
 
     m_receiveThread.Join();
 }
+
+/**
+    Return false if ther ehave been any communication errors, true otherwise.
+*/
+bool PacketDemuxer::Ok() const
+{
+    return m_transportError == false;
+}
+
 
 /**
     Returns a subscriber object.
@@ -70,11 +77,8 @@ void PacketDemuxer::Receive()
     {
         if ( ReceivePacket( packet ) )
         {
-            GLK::MutexLock lock( m_rxLock );
             ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
             auto sptr = std::make_shared<ComPacket>( std::move(packet) );
-            m_rxQueues[ packetType ].push( sptr );
-            m_rxReady.WakeOne();
 
             // Post the new packet to the message queues of all the subscribers for this packet type:
             SubscriptionEntry::second_type& queue = m_subscribers[ packetType ];
@@ -144,26 +148,4 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size )
     }
 
     return true;
-}
-
-ComPacket::PacketContainer& PacketDemuxer::GetAvDataQueue()
-{
-    size_t odoSize = m_rxQueues[ ComPacket::Type::Odometry ].size();
-    if ( odoSize )
-    {
-        std::cerr << "Odo queue asize := " << odoSize << "front data := " << m_rxQueues[ ComPacket::Type::Odometry ].front()->GetData().size() << std::endl;
-    }
-    return m_rxQueues[ ComPacket::Type::AvData ];
-}
-
-PacketDemuxer::QueueLock PacketDemuxer::WaitForPackets( ComPacket::Type type )
-{
-    m_rxLock.Lock();
-
-    while ( m_transportError == false && m_rxQueues[ type ].empty() )
-    {
-        m_rxReady.Wait( m_rxLock ); // sleep until a packet is received
-    }
-
-    return QueueLock( type, m_rxLock ); // at this point m_rxLock is locked and will be unlocked when the returned object goes out of scope
 }

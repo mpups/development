@@ -38,40 +38,15 @@ public:
     PacketDemuxer( Socket& socket );
     virtual ~PacketDemuxer();
 
+    bool Ok() const;
+
     PacketSubscription Subscribe( ComPacket::Type type, PacketSubscriber::CallBack callback );
     void Unsubscribe( PacketSubscriber* subscriber );
 
     void Receive();
     bool ReceivePacket( ComPacket& packet );
 
-    /**
-        Class that allows external clients to hold a queue resource with appropriate locks.
-        The resources are released automatically when a QueueLock goes out of scope.
-    */
-    class QueueLock
-    {
-    friend class PacketDemuxer;
-
-    public:
-        virtual ~QueueLock() { if ( m_lock != nullptr ) { m_lock->Unlock(); } };
-        QueueLock( const QueueLock& ) = delete;
-        QueueLock( QueueLock&& ql ) : m_type(ql.m_type), m_lock(ql.m_lock) { ql.m_lock = nullptr; };
-
-    protected:
-        QueueLock( ComPacket::Type type, GLK::Mutex& mutex ) : m_type(type), m_lock(&mutex) {
-            // m_lock should already be locked - it will be unlocked when the QueueLock goes out of scope.
-        };
-
-    private:
-        ComPacket::Type m_type;
-        GLK::Mutex* m_lock;
-    };
-
-    ComPacket::PacketContainer& GetAvDataQueue();
-    QueueLock WaitForPackets( ComPacket::Type type );
-
 protected:
-    typedef std::pair< ComPacket::Type, ComPacket::PacketContainer > MapEntry;
     typedef std::pair< ComPacket::Type, std::vector<Subscriber> > SubscriptionEntry;
 
     bool ReadBytes( uint8_t* buffer, size_t& size );
@@ -79,10 +54,6 @@ protected:
 private:
     RunnableFunction m_receiver;
     GLK::Thread m_receiveThread;
-
-    GLK::ConditionVariable m_rxReady;
-    GLK::Mutex m_rxLock;
-    std::unordered_map< MapEntry::first_type, MapEntry::second_type > m_rxQueues;
 
     int m_nextSubscriberId;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
