@@ -13,6 +13,7 @@ class PacketMuxer;
 class ComSubscriber
 {
 friend class PacketMuxer;
+friend class PacketDemuxer;
 
 public:
     typedef std::function< void( const ComPacket::ConstSharedPacket& ) > CallBack;

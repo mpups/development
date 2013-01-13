@@ -1,9 +1,10 @@
 /*
     Copyright (C) Mark Pupilli 2012, All rights reserved
 */
-#ifndef __COM_CENTRE_H__
-#define __COM_CENTRE_H__
+#ifndef _PACKET_MUXER_H_
+#define _PACKET_MUXER_H_
 
+/// @todo Need VideoLib and GLK for Locks and Sockets - should be independent of these ideally.
 #include <glkcore.h>
 #include <VideoLib.h>
 
@@ -42,12 +43,14 @@ namespace std
     for muxing/demuxing packets into different send/receive queues.
     All serialisation of the actual packet data must be done externally.
 
+    The muxer receives packets posted to it from any number of threads
+    as messages and then sends the packets over the transport layer.
+
     The data itself is currently sent as byte stream over TCP.
 */
 class PacketMuxer
 {
 public:
-    typedef std::queue< ComPacket::SharedPacket > PacketContainer;
     typedef std::shared_ptr<ComSubscriber> Subscription;
 
     PacketMuxer( Socket& socket );
@@ -62,7 +65,7 @@ public:
     PacketMuxer::Subscription Subscribe( ComPacket::Type type, ComSubscriber::CallBack callback );
     void Unsubscribe( ComSubscriber* subscriber );
 
-    PacketContainer& GetAvDataQueue() {
+    ComPacket::PacketContainer& GetAvDataQueue() {
         size_t odoSize = m_rxQueues[ ComPacket::Type::Odometry ].size();
         if ( odoSize )
         {
@@ -106,10 +109,10 @@ public:
     };
 
 protected:
-    typedef std::pair< ComPacket::Type, PacketContainer > MapEntry;
+    typedef std::pair< ComPacket::Type, ComPacket::PacketContainer > MapEntry;
     typedef std::pair< ComPacket::Type, std::vector<Subscription> > SubscriptionEntry;
 
-    void SendAll( PacketContainer& packets );
+    void SendAll( ComPacket::PacketContainer& packets );
     void SendPacket( const ComPacket& packet );
     bool ReceivePacket( ComPacket& packet );
 
@@ -140,5 +143,4 @@ private:
     bool m_transportError;
 };
 
-#endif /* __COMMS_CENTRE_H__ */
-
+#endif /* _PACKET_MUXER_H_ */

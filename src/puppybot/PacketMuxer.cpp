@@ -164,7 +164,7 @@ void PacketMuxer::Unsubscribe( ComSubscriber* pSubscriber )
     @note Assumes you have acquired the appropriate
     lock to access the specified PacketContainer.
 */
-void PacketMuxer::SendAll( PacketContainer& packets )
+void PacketMuxer::SendAll( ComPacket::PacketContainer& packets )
 {
     while ( m_transportError == false && packets.empty() == false )
     {

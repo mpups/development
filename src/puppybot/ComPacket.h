@@ -8,12 +8,14 @@
 #include <vector>
 #include <type_traits>
 #include <memory>
+#include <queue>
 
 class ComPacket
 {
 public:
      typedef std::shared_ptr<ComPacket> SharedPacket;
      typedef std::shared_ptr<const ComPacket> ConstSharedPacket;
+     typedef std::queue< SharedPacket > PacketContainer;
 
      enum class Type : uint32_t {
         Invalid = 0,

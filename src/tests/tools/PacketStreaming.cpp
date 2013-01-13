@@ -147,7 +147,7 @@ int runClient( int argc, char** argv )
             // Following lock is released when 'lock' object goes out of scope:
             PacketMuxer::QueueLock lock = comms.WaitForPackets( ComPacket::Type::AvData );
 
-            PacketMuxer::PacketContainer& avPackets = comms.GetAvDataQueue();
+            ComPacket::PacketContainer& avPackets = comms.GetAvDataQueue();
 
             std::cerr << "Queued packet count := " << avPackets.size() << std::endl;
 //            std::cerr << "Requested Packet size := " << size << std::endl;

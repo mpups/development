@@ -6,6 +6,8 @@
 
 #include <glkcore.h>
 
+#include <functional>
+
 /**
     This allows us to create a Runnable directly from a std::function.
     In turn this means the std::function can be executed asynchronously
