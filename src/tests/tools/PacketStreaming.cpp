@@ -148,8 +148,16 @@ int runClient( int argc, char** argv )
             /// could work without modifying the packets then we could just pass on the const shared packet.
             ComPacket copyOfPacket( ComPacket::Type::AvData, packet->GetDataSize() );
             copyOfPacket.GetData() = packet->GetData();
+
+            GLK::MutexLock lock( avDataLock );
             avPackets.push( std::move(copyOfPacket) );
             avDataReady.WakeOne();
+        });
+
+        PacketSubscription odoSub = comms.Subscribe( ComPacket::Type::Odometry, [&]( const ComPacket::ConstSharedPacket& packet )
+        {
+            assert( packet->GetType() == ComPacket::Type::Odometry );
+            std::cerr << "Odometry packet arrived and was discarded." << std::endl;
         });
 
         // Create a video writer object that passes a lamba function that reads from socket:
