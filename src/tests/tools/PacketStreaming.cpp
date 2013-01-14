@@ -139,75 +139,61 @@ int runClient( int argc, char** argv )
         /// @todo - the following form a message queue which should be encapsulated:
         GLK::Mutex avDataLock;
         GLK::ConditionVariable avDataReady;
-        std::queue< ComPacket > avPackets;
+        std::queue< ComPacket::ConstSharedPacket > avPackets;
 
         PacketSubscription sub = comms.Subscribe( ComPacket::Type::AvData, [&]( const ComPacket::ConstSharedPacket& packet )
         {
-            // When we get a packet from our subscription we simply queue it and wake anything waiting onthe queue.
-            /// @todo Makes a copy of the packet because of the way it is used in the videoIO lambda - if videoIO
-            /// could work without modifying the packets then we could just pass on the const shared packet.
-            ComPacket copyOfPacket( ComPacket::Type::AvData, packet->GetDataSize() );
-            copyOfPacket.GetData() = packet->GetData();
-
+            // When we get an AV data packet from our subscription we simply queue it and wake anything waiting on the queue:
             GLK::MutexLock lock( avDataLock );
-            avPackets.push( std::move(copyOfPacket) );
+            avPackets.emplace( packet );
             avDataReady.WakeOne();
         });
 
         PacketSubscription odoSub = comms.Subscribe( ComPacket::Type::Odometry, [&]( const ComPacket::ConstSharedPacket& packet )
         {
             assert( packet->GetType() == ComPacket::Type::Odometry );
-            std::cerr << "Odometry packet arrived and was discarded." << std::endl;
+            std::cerr << "Odometry packet discarded." << std::endl;
         });
 
         // Create a video writer object that passes a lamba function that reads from socket:
+        int packetOffset = 0; // This is the offset into partially read packets.
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&]( uint8_t* buffer, int size ) {
-
             GLK::MutexLock lock( avDataLock );
             while ( comms.Ok() && avPackets.empty() )
             {
                 avDataReady.Wait( avDataLock ); // sleep until a packet is received
             }
 
-            std::cerr << "Queued packet count := " << avPackets.size() << std::endl;
-//            std::cerr << "Requested Packet size := " << size << std::endl;
-
             // We were asked for more than packet contains so loop through packets until
             // we have returned what we needed or there are no more packets:
             int required = size;
             while ( required > 0 && !avPackets.empty() )
             {
-                ComPacket& packet = avPackets.front();
-                const int availableSize = packet.GetData().size();
-
-//                std::cerr << "\tCurrent Packet size := " << availableSize << std::endl;
-//                std::cerr << "\tRemaining required bytes := " << required << std::endl;
+                const ComPacket::ConstSharedPacket packet = avPackets.front();
+                const int availableSize = packet->GetData().size() - packetOffset;
 
                 if ( availableSize <= required )
                 {
                     // Current packet contains less than required so copy the whole packet
                     // and continue:
-                    std::copy( packet.GetData().begin(), packet.GetData().end(), buffer );
+                    std::copy( packet->GetData().begin() + packetOffset, packet->GetData().end(), buffer );
+                    packetOffset = 0; // Reset the packet offset so the next packet will be read from beginning.
                     avPackets.pop();
                     buffer += availableSize;
-//                    std::cerr << "\tSent " << availableSize << " bytes." << std::endl;
                     required -= availableSize;
                 }
                 else
                 {
                     assert( availableSize > required );
-                    // Current packet contains at least enough to fulfill the request
+                    // Current packet contains more than enough to fulfill the request
                     // so copy what is required and save the rest for later:
-                    std::copy( packet.GetData().begin(), packet.GetData().begin()+required, buffer );
-                    const size_t remainder = availableSize - required;
-                    std::copy( packet.GetData().begin()+required, packet.GetData().end(), packet.GetData().begin() );
-                    packet.GetData().resize( remainder );
-//                    std::cerr << "\tSent " << required << " bytes. Remainder:=" << remainder << ". Finished" << std::endl;
+                    auto startItr = packet->GetData().begin() + packetOffset;
+                    std::copy( startItr, startItr+required, buffer );
+                    packetOffset += required; // Increment the packet offset by the amount read from this packet.
                     required = 0;
                 }
             }
 
-//            std::cerr << "\tTotal Sent " << size - required << std::endl;
             return size - required;
         });
 
