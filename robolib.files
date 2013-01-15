@@ -943,3 +943,5 @@
 /home/mark/code/robolib/tools/robo_script/main.cpp
 src/puppybot/ComSubscriber.h
 src/puppybot/ComSubscriber.cpp
+src/puppybot/RobotClient.h
+src/puppybot/RobotClient.cpp

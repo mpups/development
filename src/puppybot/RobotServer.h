@@ -31,4 +31,3 @@ private:
 };
 
 #endif // ROBOT_SERVER_H
-
