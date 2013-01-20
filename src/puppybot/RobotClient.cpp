@@ -206,7 +206,7 @@ bool RobotClient::ReceiveVideoFrame()
 int RobotClient::FfmpegReadPacket( uint8_t* buffer, int size )
 {
     SimpleQueue::LockedQueue lock = m_avPackets.Lock();
-    while ( m_demuxer->Ok() && m_avPackets.Empty() )
+    while ( m_avPackets.Empty() ) /// @note this used to check the state of the muxer (incase of comms error)
     {
         m_avPackets.WaitNotEmpty( lock );
     }
