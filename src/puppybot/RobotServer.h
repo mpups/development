@@ -3,6 +3,8 @@
 
 #include "../../include/RoboLib.h"
 #include "../opencv/opencv_utils.h"
+#include "PacketMuxer.h"
+#include "PacketDemuxer.h"
 
 #include <arpa/inet.h>
 
@@ -22,8 +24,12 @@ private:
     void StreamVideo( TeleJoystick& joy );
 
     GLK::String m_serialPort;
+
+    /// @todo use std::unique_ptr for all of these:
     DiffDrive*  m_drive;
     MotionMind* m_motors;
+    PacketMuxer*   m_muxer;
+    PacketDemuxer* m_demuxer;
     TcpSocket*  m_server;
     TcpSocket*  m_con;
     UnicapCamera* m_camera;

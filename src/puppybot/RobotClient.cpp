@@ -1,5 +1,8 @@
 #include "RobotClient.h"
 
+#include "PacketDemuxer.h"
+#include "PacketMuxer.h"
+
 static double milliseconds( struct timespec& t )
 {
     return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
@@ -12,8 +15,11 @@ static void message( const char* msg )
 
 RobotClient::RobotClient()
 :
-    m_joystick   ( "/dev/input/js0" ),
-    m_imageBuffer( nullptr ),
+    m_demuxer     ( nullptr ),
+    m_muxer       ( nullptr ),
+    m_packetOffset(0),
+    m_joystick    ( "/dev/input/js0" ),
+    m_imageBuffer ( nullptr ),
 
 #ifndef ARM_BUILD
     m_display(320,240)
@@ -24,6 +30,8 @@ RobotClient::RobotClient()
 
 RobotClient::~RobotClient()
 {
+    delete m_demuxer;
+    delete m_muxer;
     m_client.Shutdown();
     free( m_imageBuffer );
 }
@@ -32,6 +40,11 @@ bool RobotClient::Connect( const char* host, int port )
 {
     m_client.SetNagleBufferingOff();
     bool connected = m_client.Connect( host, port );
+    if ( connected )
+    {
+        m_demuxer = new PacketDemuxer( m_client );
+        m_muxer   = new PacketMuxer( m_client );
+    }
     return connected;
 }
 
@@ -41,6 +54,15 @@ bool RobotClient::RunCommsLoop()
     {
         m_joystick.Start();
     }
+
+    // Lambda which subscribes to the packets containing video-data:
+    PacketSubscription sub = m_demuxer->Subscribe( ComPacket::Type::AvData, [&]( const ComPacket::ConstSharedPacket& packet )
+    {
+        // When we get an AV data packet from our subscription we simply queue it and wake anything waiting on the queue:
+        GLK::MutexLock lock( m_avDataLock );
+        m_avPackets.emplace( packet );
+        m_avDataReady.WakeOne();
+    });
 
     if ( InitialiseVideoStream() == false )
     {
@@ -68,8 +90,6 @@ bool RobotClient::RunCommsLoop()
         {
 #ifndef ARM_BUILD
             m_display.PostImage( m_postData );
-#else
-            std::clog << "got frame " << std::endl; // on ARM build simply indicate that we have successfully got a frame
 #endif
             numFrames += 1;
             if ( numFrames == 45 ) // Output rolling averages after certain number of frames
@@ -77,7 +97,7 @@ bool RobotClient::RunCommsLoop()
                 clock_gettime( CLOCK_MONOTONIC, &t2 );
 
                 double secs = (milliseconds(t2) - milliseconds(t1))/1000.0;
-                uint64_t bytesRx = m_videoIO->BytesRead();
+                uint64_t bytesRx = 0;//m_videoIO->BytesRead();
                 double bits_per_sec = ( bytesRx - videoBytes )*(8.0/secs);
                 videoBytes = bytesRx;
                 std::clog << "Through-put: " << numFrames/secs << " fps @ " << bits_per_sec/(1024.0*1024.0) << "Mbps" << std::endl;
@@ -93,7 +113,7 @@ bool RobotClient::RunCommsLoop()
 bool RobotClient::InitialiseVideoStream()
 {
     // Create a video reader object that uses socket IO:
-    m_videoIO.reset( new FFMpegSocketIO( m_client, false ) );
+    m_videoIO.reset( new FFMpegStdFunctionIO( FFMpegCustomIO::ReadBuffer, std::bind( &RobotClient::FfmpegReadPacket, std::ref(*this), std::placeholders::_1, std::placeholders::_2 ) ) );
     m_streamer.reset( new LibAvCapture( *m_videoIO ) );
     if ( m_streamer->IsOpen() == false )
     {
@@ -124,13 +144,7 @@ bool RobotClient::InitialiseVideoStream()
     assert( err == 0 );
 
 #ifndef ARM_BUILD
-    // Initialise the post data for sending to the display window:
-    m_postData.mode = GLK::ImageWindow::FixedAspectRatio;
-    m_postData.w = w;
-    m_postData.h = h;
-    m_postData.stride = w*3;
-    m_postData.ptr = m_imageBuffer;
-    m_postData.isColourBgr = true;
+    SetupImagePostData( w, h );
 #endif
 
     return true;
@@ -154,7 +168,8 @@ bool RobotClient::ReceiveVideoFrame()
 
 void RobotClient::SendJoystickData()
 {
-    int32_t joyData[3] = { 0,0,1 };
+    constexpr int dataSize = 3;
+    int32_t joyData[dataSize] = { htonl(0),htonl(0),htonl(1024) };
 
     if ( m_joystick.IsAvailable() )
     {
@@ -164,5 +179,60 @@ void RobotClient::SendJoystickData()
         joyData[2] = htonl( 32767 );
     }
 
-    m_client.Write( reinterpret_cast<char*>( joyData ), 3*sizeof(int32_t) ); // Have to write data anyway or server side will complain.
+    m_muxer->EmplacePacket( ComPacket::Type::Joystick, reinterpret_cast<uint8_t*>(joyData), dataSize*sizeof(int32_t) );
+}
+
+void RobotClient::SetupImagePostData( int w, int h )
+{
+    // Initialise the post data for sending to the display window:
+    m_postData.mode = GLK::ImageWindow::FixedAspectRatio;
+    m_postData.w = w;
+    m_postData.h = h;
+    m_postData.stride = w*3;
+    m_postData.ptr = m_imageBuffer;
+    m_postData.isColourBgr = true;
+}
+
+/**
+    This is bound to a std::function and passed to an FFMpegStdFunctionIO object.
+*/
+int RobotClient::FfmpegReadPacket( uint8_t* buffer, int size )
+{
+    GLK::MutexLock lock( m_avDataLock );
+    while ( m_demuxer->Ok() && m_avPackets.empty() )
+    {
+        m_avDataReady.Wait( m_avDataLock ); // sleep until a packet is received
+    }
+
+    // We were asked for more than packet contains so loop through packets until
+    // we have returned what we needed or there are no more packets:
+    int required = size;
+    while ( required > 0 && !m_avPackets.empty() )
+    {
+        const ComPacket::ConstSharedPacket packet = m_avPackets.front();
+        const int availableSize = packet->GetData().size() - m_packetOffset;
+
+        if ( availableSize <= required )
+        {
+            // Current packet contains less than required so copy the whole packet
+            // and continue:
+            std::copy( packet->GetData().begin() + m_packetOffset, packet->GetData().end(), buffer );
+            m_packetOffset = 0; // Reset the packet offset so the next packet will be read from beginning.
+            m_avPackets.pop();
+            buffer += availableSize;
+            required -= availableSize;
+        }
+        else
+        {
+            assert( availableSize > required );
+            // Current packet contains more than enough to fulfill the request
+            // so copy what is required and save the rest for later:
+            auto startItr = packet->GetData().begin() + m_packetOffset;
+            std::copy( startItr, startItr+required, buffer );
+            m_packetOffset += required; // Increment the packet offset by the amount read from this packet.
+            required = 0;
+        }
+    }
+
+    return size - required;
 }

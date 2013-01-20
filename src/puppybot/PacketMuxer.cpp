@@ -60,9 +60,10 @@ void PacketMuxer::Send()
         // Send in priority order:
         /// @todo if one queue is always full we could get starvation here...how to fix?
         /// (But in that case the system is overloaded anyway so what would we like to do when overloaded?)
-        SendAll( m_txQueues[ ComPacket::Type::AvInfo ] );
-        SendAll( m_txQueues[ ComPacket::Type::AvData ] );
-        SendAll( m_txQueues[ ComPacket::Type::Odometry ] );
+        for ( auto& pair : m_txQueues )
+        {
+            SendAll( pair.second );
+        }
     }
 }
 

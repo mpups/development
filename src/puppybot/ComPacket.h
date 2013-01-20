@@ -17,11 +17,12 @@ public:
      typedef std::shared_ptr<const ComPacket> ConstSharedPacket;
      typedef std::queue< SharedPacket > PacketContainer;
 
-     enum class Type : uint32_t {
+     enum class Type : std::uint32_t {
         Invalid = 0,
         AvInfo,
         AvData,
         Odometry,
+        Joystick,
         Last,
      };
 

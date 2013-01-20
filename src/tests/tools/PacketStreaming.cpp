@@ -30,7 +30,7 @@ int reportError( const char* error, bool fatal=true )
 }
 
 /**
-    Open the camera device and enter a loop that wills tream video over the specified socket.
+    Open the camera device and enter a loop that will stream video over the specified socket.
 */
 int streamVideo( TcpSocket& client )
 {

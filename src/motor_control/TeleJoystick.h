@@ -4,7 +4,7 @@
 #include <glkcore.h>
 #include "DiffDrive.h"
 
-class Socket;
+class PacketDemuxer;
 
 /**
     Class which receives tele-operation joystick commands and passes
@@ -27,8 +27,8 @@ class Socket;
 class TeleJoystick : public GLK::Runnable
 {
 public:
-    TeleJoystick( Socket& socket );
-    TeleJoystick( Socket& socket, DiffDrive* drive );
+    TeleJoystick( PacketDemuxer& muxer );
+    TeleJoystick( PacketDemuxer& muxer, DiffDrive* drive );
     virtual ~TeleJoystick();
 
     virtual void Run();
@@ -40,7 +40,7 @@ protected:
 
 private:
     GLK::Thread m_thread;
-    Socket&     m_socket;
+    PacketDemuxer& m_muxer;
     DiffDrive*  m_drive;
     int32_t     m_failedReads;
     volatile bool m_terminate;

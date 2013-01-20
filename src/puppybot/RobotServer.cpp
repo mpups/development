@@ -18,11 +18,13 @@ static double milliseconds( struct timespec& t )
 RobotServer::RobotServer( int tcpPort, const char* motorSerialPort )
 :
     m_serialPort( motorSerialPort ),
-    m_drive ( 0 ),
-    m_motors( 0 ),
-    m_server( 0 ),
-    m_con   ( 0 ),
-    m_camera( 0 )
+    m_drive ( nullptr ),
+    m_motors( nullptr ),
+    m_muxer ( nullptr ),
+    m_demuxer( nullptr),
+    m_server( nullptr ),
+    m_con   ( nullptr ),
+    m_camera( nullptr )
 {   
     // Setup a server socket for receiving client commands:
     m_server = new TcpSocket();
@@ -35,6 +37,8 @@ RobotServer::RobotServer( int tcpPort, const char* motorSerialPort )
 
 RobotServer::~RobotServer()
 {
+    delete m_muxer;
+    delete m_demuxer;
     delete m_camera;
     delete m_con;
     delete m_server;
@@ -106,6 +110,10 @@ void RobotServer::PostConnectionSetup()
         delete m_camera;
         m_camera = 0;
     }
+
+    assert( m_con != nullptr );
+    m_muxer   = new PacketMuxer(   *m_con );
+    m_demuxer = new PacketDemuxer( *m_con );
 }
 
 /**
@@ -134,7 +142,7 @@ void RobotServer::RunCommsLoop()
 {
     // Setup a TeleJoystick object:
     TeleJoystick* teljoy = 0;
-    if ( m_con )
+    if ( m_muxer != nullptr && m_demuxer != nullptr )
     {
         Ipv4Address clientAddress;
         m_con->GetPeerAddress( clientAddress );
@@ -145,7 +153,7 @@ void RobotServer::RunCommsLoop()
             fprintf( stderr, "Client %s connected to robot.\n", name.c_str() );
         }
 
-        teljoy = new TeleJoystick( *m_con, m_drive ); // Will start receiving and processing remote joystick cammands immediately.
+        teljoy = new TeleJoystick( *m_demuxer, m_drive ); // Will start receiving and processing remote joystick cammands immediately.
         teljoy->Go();
 
         GLK::Thread::Sleep( 100 );
@@ -180,8 +188,11 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 {
     assert( m_con );
 
-    // Create a video writer object that uses socket IO:
-    FFMpegSocketIO videoIO( *m_con, true );
+    // Lambda function that enqueues video packets via the Muxing system:
+    FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [this]( uint8_t* buffer, int size ) {
+        m_muxer->EmplacePacket( ComPacket::Type::AvData, buffer, size );
+        return m_muxer->Ok() ? size : -1;
+    });
     LibAvWriter streamer( videoIO );
 
     // Setup an MPEG4 video stream for half-size video:
