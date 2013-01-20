@@ -4,9 +4,6 @@
 #include <memory>
 #include <queue>
 
-#include "ComPacket.h"
-#include "../packetcomms/SimpleQueue.h"
-
 #include "../../include/RoboLib.h"
 
 #include <glkcore.h>
@@ -29,11 +26,11 @@ public:
     bool RunCommsLoop();
 
 protected:
-    bool InitialiseVideoStream();
-    bool ReceiveVideoFrame();
     void SendJoystickData();
     void SetupImagePostData( int w, int h );
 
+    bool InitialiseVideoStream();
+    bool ReceiveVideoFrame();
     int FfmpegReadPacket( uint8_t* buffer, int size );
 
 private:

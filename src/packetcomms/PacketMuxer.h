@@ -15,9 +15,9 @@
 #include <functional>
 #include <memory>
 
-#include "ComPacket.h"
-#include "ComSubscriber.h"
-#include "RunnableFunction.h"
+#include "../packetcomms/ComPacket.h"
+#include "../packetcomms/ComSubscriber.h"
+#include "../utility/RunnableFunction.h"
 
 /**
     Class which manages communications to and from the robot.

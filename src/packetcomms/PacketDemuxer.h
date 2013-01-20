@@ -10,9 +10,9 @@
 
 #include <unordered_map>
 
-#include "RunnableFunction.h"
-#include "ComPacket.h"
-#include "ComSubscriber.h"
+#include "../utility/RunnableFunction.h"
+#include "../packetcomms/ComPacket.h"
+#include "../packetcomms/ComSubscriber.h"
 
 /**
     Class which manages communications to and from the robot.

@@ -57,6 +57,7 @@ solution 'robolib'
         excludes { SRC .. 'sse/test/*' }
         excludes { SRC .. 'tests/**' }
         excludes { SRC .. 'sse/*' }
+        excludes { SRC .. 'puppybot/*' }
         if ( CONFIGURING_ARM ) then
             excludes { SRC .. 'video/Dc1394Camera.*' }
             excludes { SRC .. 'visualisation/*' }
@@ -88,7 +89,6 @@ solution 'robolib'
 
         files { SRC .. 'puppybot/Robot*.cpp' }
         files { SRC .. 'puppybot/puppybot_comms.cpp' }
-        files { SRC .. 'puppybot/*.cpp' }
         excludes { SRC .. 'puppybot/puppybot_test.cpp' }
 
         configuration {}

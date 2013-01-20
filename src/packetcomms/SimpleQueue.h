@@ -8,7 +8,7 @@
 #include <glkcore.h>
 
 #include <assert.h>
-#include "../puppybot/ComPacket.h"
+#include "../packetcomms/ComPacket.h"
 
 /**
     Simple FIFO message queue for com-packets.

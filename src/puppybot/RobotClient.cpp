@@ -1,7 +1,7 @@
 #include "RobotClient.h"
 
-#include "PacketDemuxer.h"
-#include "PacketMuxer.h"
+#include "../packetcomms/PacketDemuxer.h"
+#include "../packetcomms/PacketMuxer.h"
 
 static double milliseconds( struct timespec& t )
 {
@@ -111,6 +111,33 @@ bool RobotClient::RunCommsLoop()
     return true;
 }
 
+void RobotClient::SendJoystickData()
+{
+    constexpr int dataSize = 3;
+    int32_t joyData[dataSize] = { htonl(0), htonl(0), htonl(1024) };
+
+    if ( m_joystick.IsAvailable() )
+    {
+        // Read joystick and send
+        joyData[0] = htonl( m_joystick.GetAxis(1) ); // left hat-stick on ps3 controller
+        joyData[1] = htonl( m_joystick.GetAxis(2) ); // right hat-stick on ps3 controller
+        joyData[2] = htonl( 32767 );
+    }
+
+    m_muxer->EmplacePacket( ComPacket::Type::Joystick, reinterpret_cast<uint8_t*>(joyData), dataSize*sizeof(int32_t) );
+}
+
+void RobotClient::SetupImagePostData( int w, int h )
+{
+    // Initialise the post data for sending to the display window:
+    m_postData.mode = GLK::ImageWindow::FixedAspectRatio;
+    m_postData.w = w;
+    m_postData.h = h;
+    m_postData.stride = w*3;
+    m_postData.ptr = m_imageBuffer;
+    m_postData.isColourBgr = true;
+}
+
 bool RobotClient::InitialiseVideoStream()
 {
     // Create a video reader object that uses socket IO:
@@ -165,33 +192,6 @@ bool RobotClient::ReceiveVideoFrame()
     }
 
     return gotFrame;
-}
-
-void RobotClient::SendJoystickData()
-{
-    constexpr int dataSize = 3;
-    int32_t joyData[dataSize] = { htonl(0), htonl(0), htonl(1024) };
-
-    if ( m_joystick.IsAvailable() )
-    {
-        // Read joystick and send
-        joyData[0] = htonl( m_joystick.GetAxis(1) ); // left hat-stick on ps3 controller
-        joyData[1] = htonl( m_joystick.GetAxis(2) ); // right hat-stick on ps3 controller
-        joyData[2] = htonl( 32767 );
-    }
-
-    m_muxer->EmplacePacket( ComPacket::Type::Joystick, reinterpret_cast<uint8_t*>(joyData), dataSize*sizeof(int32_t) );
-}
-
-void RobotClient::SetupImagePostData( int w, int h )
-{
-    // Initialise the post data for sending to the display window:
-    m_postData.mode = GLK::ImageWindow::FixedAspectRatio;
-    m_postData.w = w;
-    m_postData.h = h;
-    m_postData.stride = w*3;
-    m_postData.ptr = m_imageBuffer;
-    m_postData.isColourBgr = true;
 }
 
 /**

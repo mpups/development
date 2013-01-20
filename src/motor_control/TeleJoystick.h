@@ -5,7 +5,7 @@
 
 #include <glkcore.h>
 #include "DiffDrive.h"
-#include "../puppybot/ComPacket.h"
+#include "../packetcomms/ComPacket.h"
 #include "../packetcomms/SimpleQueue.h"
 
 class PacketDemuxer;

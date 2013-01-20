@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include <VideoLib.h>
-#include "../puppybot/PacketDemuxer.h"
+#include "../packetcomms/PacketDemuxer.h"
 
 TeleJoystick::TeleJoystick( PacketDemuxer& muxer )
 :

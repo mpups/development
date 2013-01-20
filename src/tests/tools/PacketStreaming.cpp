@@ -7,8 +7,8 @@
 #include <queue>
 #include <iostream>
 
-#include "../../../src/puppybot/PacketMuxer.h"
-#include "../../../src/puppybot/PacketDemuxer.h"
+#include "../../../src/packetcomms/PacketMuxer.h"
+#include "../../../src/packetcomms/PacketDemuxer.h"
 
 double milliseconds( struct timespec& t )
 {

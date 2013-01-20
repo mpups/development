@@ -12,6 +12,12 @@
 
 #include "../src/motor_control/TeleJoystick.h"
 
+#include "../src/packetcomms/ComPacket.h"
+#include "../src/packetcomms/ComSubscriber.h"
+#include "../src/packetcomms/PacketDemuxer.h"
+#include "../src/packetcomms/PacketMuxer.h"
+#include "../src/packetcomms/SimpleQueue.h"
+
 #ifndef ARM_BUILD
 #include "../src/sse/VectorVector.h"
 #include "../src/sse/BatchOperations.h"
