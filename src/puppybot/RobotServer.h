@@ -8,6 +8,8 @@
 
 #include <arpa/inet.h>
 
+#include <memory>
+
 class RobotServer
 {
 public:
@@ -25,14 +27,13 @@ private:
 
     GLK::String m_serialPort;
 
-    /// @todo use std::unique_ptr for all of these:
-    DiffDrive*  m_drive;
-    MotionMind* m_motors;
-    PacketMuxer*   m_muxer;
-    PacketDemuxer* m_demuxer;
-    TcpSocket*  m_server;
-    TcpSocket*  m_con;
-    UnicapCamera* m_camera;
+    std::unique_ptr<MotionMind>     m_motors;
+    std::unique_ptr<DiffDrive>      m_drive;
+    std::unique_ptr<PacketMuxer>    m_muxer;
+    std::unique_ptr<PacketDemuxer>  m_demuxer;
+    std::unique_ptr<TcpSocket>      m_server;
+    std::unique_ptr<TcpSocket>      m_con;
+    std::unique_ptr<UnicapCamera>   m_camera;
     uint8_t* m_lum;
 };
 

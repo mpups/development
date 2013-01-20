@@ -1,8 +1,12 @@
 #ifndef TELE_JOYSTICK_H
 #define TELE_JOYSTICK_H
 
+#include <queue>
+
 #include <glkcore.h>
 #include "DiffDrive.h"
+#include "../puppybot/ComPacket.h"
+#include "../packetcomms/SimpleQueue.h"
 
 class PacketDemuxer;
 
@@ -32,9 +36,9 @@ public:
     virtual ~TeleJoystick();
 
     virtual void Run();
-
-    void Go() { m_thread.Start(); };
-    bool IsRunning() const { return m_thread.IsRunning(); };
+    void ProcessPacket( SimpleQueue & joyPackets, int32_t& jx, int32_t& jy, int32_t& jmax );
+    void Go();
+    bool IsRunning() const;
 
 protected:
 
@@ -42,7 +46,6 @@ private:
     GLK::Thread m_thread;
     PacketDemuxer& m_muxer;
     DiffDrive*  m_drive;
-    int32_t     m_failedReads;
     volatile bool m_terminate;
 };
 

@@ -18,33 +18,17 @@ static double milliseconds( struct timespec& t )
 RobotServer::RobotServer( int tcpPort, const char* motorSerialPort )
 :
     m_serialPort( motorSerialPort ),
-    m_drive ( nullptr ),
-    m_motors( nullptr ),
-    m_muxer ( nullptr ),
-    m_demuxer( nullptr),
-    m_server( nullptr ),
-    m_con   ( nullptr ),
-    m_camera( nullptr )
-{   
+    m_server( new TcpSocket() )
+{
     // Setup a server socket for receiving client commands:
-    m_server = new TcpSocket();
     if ( m_server->Bind( tcpPort ) == false )
     {
-        delete m_server;
-        m_server = 0;
+        m_server.reset();
     }
 }
 
 RobotServer::~RobotServer()
 {
-    delete m_muxer;
-    delete m_demuxer;
-    delete m_camera;
-    delete m_con;
-    delete m_server;
-    delete m_server;
-    delete m_drive;
-    delete m_motors;
 }
 
 /**
@@ -56,7 +40,7 @@ bool RobotServer::Listen()
     {
         fprintf( stderr, "Waiting for new connection...\n" );
         m_server->Listen( 0 ); // Wait for connection - no queue
-        m_con = m_server->Accept(); // Create connection
+        m_con.reset( m_server->Accept() ); // Create connection
         m_con->SetBlocking( false );
 
         PostConnectionSetup();
@@ -77,10 +61,10 @@ bool RobotServer::Listen()
 void RobotServer::PostConnectionSetup()
 {
     // Setup comms to motors:
-    m_motors = new MotionMind( m_serialPort.cStr() );
+    m_motors.reset( new MotionMind( m_serialPort.cStr() ) );
     if ( m_motors->Available() )
     {
-        m_drive = new DiffDrive( *m_motors );
+        m_drive.reset( new DiffDrive( *m_motors ) );
         float amps = 1.5f;
         int32_t currentLimit = roundf( amps/0.02f );
         int32_t pwmLimit = (72*1024)/120; // motor voltage / battery voltage
@@ -92,12 +76,11 @@ void RobotServer::PostConnectionSetup()
     }
     else
     {
-        delete m_motors;
-        m_motors = 0;
+        m_motors.reset();
     }
 
     // Setup camera:
-    m_camera = new UnicapCamera();
+    m_camera.reset( new UnicapCamera() );
     size_t imageBufferSize = m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t);
     if ( m_camera->IsOpen() )
     {
@@ -107,13 +90,12 @@ void RobotServer::PostConnectionSetup()
     }
     else
     {
-        delete m_camera;
-        m_camera = 0;
+        m_camera.reset();
     }
 
-    assert( m_con != nullptr );
-    m_muxer   = new PacketMuxer(   *m_con );
-    m_demuxer = new PacketDemuxer( *m_con );
+    assert( m_con.get() != nullptr );
+    m_muxer.reset( new PacketMuxer( *m_con ) );
+    m_demuxer.reset( new PacketDemuxer( *m_con ) );
 }
 
 /**
@@ -122,15 +104,12 @@ void RobotServer::PostConnectionSetup()
 void RobotServer::PostCommsCleanup()
 {
     // These must be deleted in this order:
-    delete m_drive;
-    delete m_motors;
-    m_drive = 0;
-    m_motors = 0;
+    m_drive.reset();
+    m_motors.reset();
     
     if ( m_camera )
     {
         m_camera->StopCapture();
-        delete m_camera;
         free( m_lum );
     }
 }
@@ -140,8 +119,6 @@ void RobotServer::PostCommsCleanup()
 **/
 void RobotServer::RunCommsLoop()
 {
-    // Setup a TeleJoystick object:
-    TeleJoystick* teljoy = 0;
     if ( m_muxer != nullptr && m_demuxer != nullptr )
     {
         Ipv4Address clientAddress;
@@ -153,34 +130,36 @@ void RobotServer::RunCommsLoop()
             fprintf( stderr, "Client %s connected to robot.\n", name.c_str() );
         }
 
-        teljoy = new TeleJoystick( *m_demuxer, m_drive ); // Will start receiving and processing remote joystick cammands immediately.
-        teljoy->Go();
-
-        GLK::Thread::Sleep( 100 );
-        fprintf( stderr, "running: %d\n", teljoy->IsRunning() );
+        // Setup a TeleJoystick object:
+        TeleJoystick teljoy( *m_demuxer, m_drive.get() ); // Will start receiving and processing remote joystick cammands immediately.
+        teljoy.Go();
+        while ( teljoy.IsRunning() == false )
+        {
+            GLK::Thread::Sleep( 20 );
+        }
 
         // Start capturing and transmitting images:
         if ( m_camera )
         {
-            StreamVideo( *teljoy );
+            StreamVideo( teljoy );
         }
         else
         {
             // No video so this thread can just sleep while joystick control runs:
-            while ( teljoy->IsRunning() ) {
-                sleep(100);
+            while ( teljoy.IsRunning() ) {
+                sleep( 100 );
             }
         }
 
         fprintf( stderr, "Control terminated\n" );
     } // end if
 
-    delete teljoy;
-
     PostCommsCleanup();
 }
 
 /**
+  @param joy This is only used to ensure that the streaming loop exits when joystick task exits.
+
     Assumptions:
         m_con is not null.
 */

@@ -5,6 +5,7 @@
 #include <queue>
 
 #include "ComPacket.h"
+#include "../packetcomms/SimpleQueue.h"
 
 #include "../../include/RoboLib.h"
 
@@ -40,10 +41,7 @@ private:
     PacketDemuxer* m_demuxer;
     PacketMuxer*   m_muxer;
 
-    /// @todo - the following form a message queue which should be encapsulated:
-    GLK::Mutex m_avDataLock;
-    GLK::ConditionVariable m_avDataReady;
-    std::queue< ComPacket::ConstSharedPacket > m_avPackets;
+    SimpleQueue m_avPackets;
     int m_packetOffset;
 
     std::unique_ptr<FFMpegStdFunctionIO> m_videoIO;

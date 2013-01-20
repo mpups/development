@@ -58,10 +58,7 @@ bool RobotClient::RunCommsLoop()
     // Lambda which subscribes to the packets containing video-data:
     PacketSubscription sub = m_demuxer->Subscribe( ComPacket::Type::AvData, [&]( const ComPacket::ConstSharedPacket& packet )
     {
-        // When we get an AV data packet from our subscription we simply queue it and wake anything waiting on the queue:
-        GLK::MutexLock lock( m_avDataLock );
-        m_avPackets.emplace( packet );
-        m_avDataReady.WakeOne();
+        m_avPackets.Emplace( packet ); // The callback simply queues up all the packets.
     });
 
     if ( InitialiseVideoStream() == false )
@@ -84,6 +81,10 @@ bool RobotClient::RunCommsLoop()
     while ( gotFrame )
 #endif
     {
+        /// @todo - having SendJoystickData() in same thread as ReceiveVideoFrame()
+        /// means that if  ReceiveVideoFrame() blocks (because the server is not sending video),
+        /// then no joystick data is sent from the client which, in-turn, causes the server to
+        /// shutdown for safety because it is receiving no control.
         SendJoystickData();
         gotFrame = ReceiveVideoFrame();
         if ( gotFrame )
@@ -169,7 +170,7 @@ bool RobotClient::ReceiveVideoFrame()
 void RobotClient::SendJoystickData()
 {
     constexpr int dataSize = 3;
-    int32_t joyData[dataSize] = { htonl(0),htonl(0),htonl(1024) };
+    int32_t joyData[dataSize] = { htonl(0), htonl(0), htonl(1024) };
 
     if ( m_joystick.IsAvailable() )
     {
@@ -198,18 +199,18 @@ void RobotClient::SetupImagePostData( int w, int h )
 */
 int RobotClient::FfmpegReadPacket( uint8_t* buffer, int size )
 {
-    GLK::MutexLock lock( m_avDataLock );
-    while ( m_demuxer->Ok() && m_avPackets.empty() )
+    SimpleQueue::LockedQueue lock = m_avPackets.Lock();
+    while ( m_demuxer->Ok() && m_avPackets.Empty() )
     {
-        m_avDataReady.Wait( m_avDataLock ); // sleep until a packet is received
+        m_avPackets.WaitNotEmpty( lock );
     }
 
     // We were asked for more than packet contains so loop through packets until
     // we have returned what we needed or there are no more packets:
     int required = size;
-    while ( required > 0 && !m_avPackets.empty() )
+    while ( required > 0 && m_avPackets.Empty() == false )
     {
-        const ComPacket::ConstSharedPacket packet = m_avPackets.front();
+        const ComPacket::ConstSharedPacket packet = m_avPackets.Front();
         const int availableSize = packet->GetData().size() - m_packetOffset;
 
         if ( availableSize <= required )
@@ -218,7 +219,7 @@ int RobotClient::FfmpegReadPacket( uint8_t* buffer, int size )
             // and continue:
             std::copy( packet->GetData().begin() + m_packetOffset, packet->GetData().end(), buffer );
             m_packetOffset = 0; // Reset the packet offset so the next packet will be read from beginning.
-            m_avPackets.pop();
+            m_avPackets.Pop();
             buffer += availableSize;
             required -= availableSize;
         }
