@@ -55,10 +55,14 @@ bool RobotClient::RunCommsLoop()
         m_joystick.Start();
     }
 
+    uint64_t lastTotalVideoBytes = 0;
+    uint64_t totalVideoBytes     = 0;
+
     // Lambda which subscribes to the packets containing video-data:
     PacketSubscription sub = m_demuxer->Subscribe( ComPacket::Type::AvData, [&]( const ComPacket::ConstSharedPacket& packet )
     {
         m_avPackets.Emplace( packet ); // The callback simply queues up all the packets.
+        totalVideoBytes += packet->GetDataSize();
     });
 
     if ( InitialiseVideoStream() == false )
@@ -66,8 +70,13 @@ bool RobotClient::RunCommsLoop()
         return false;
     }
 
+#ifndef ARM_BUILD
+    const int w = m_streamer->GetFrameWidth();
+    const int h = m_streamer->GetFrameHeight();
+    SetupImagePostData( w, h );
+#endif
+
     int numFrames = 0;
-    uint64_t videoBytes = 0;
 
     struct timespec t1;
     struct timespec t2;
@@ -98,9 +107,10 @@ bool RobotClient::RunCommsLoop()
                 clock_gettime( CLOCK_MONOTONIC, &t2 );
 
                 double secs = (milliseconds(t2) - milliseconds(t1))/1000.0;
-                uint64_t bytesRx = 0;//m_videoIO->BytesRead();
-                double bits_per_sec = ( bytesRx - videoBytes )*(8.0/secs);
-                videoBytes = bytesRx;
+                double bits_per_sec = ( totalVideoBytes - lastTotalVideoBytes )*(8.0/secs);
+
+                lastTotalVideoBytes = totalVideoBytes;
+
                 std::clog << "Through-put: " << numFrames/secs << " fps @ " << bits_per_sec/(1024.0*1024.0) << "Mbps" << std::endl;
                 numFrames = 0;
                 clock_gettime( CLOCK_MONOTONIC, &t1 );
@@ -170,10 +180,6 @@ bool RobotClient::InitialiseVideoStream()
     // Create a buffer for image data:
     int err = posix_memalign( (void**)&m_imageBuffer, 16, w * h * 3 * sizeof(uint8_t) );
     assert( err == 0 );
-
-#ifndef ARM_BUILD
-    SetupImagePostData( w, h );
-#endif
 
     return true;
 }

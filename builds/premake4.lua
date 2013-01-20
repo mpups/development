@@ -87,8 +87,7 @@ solution 'robolib'
     project 'puppybot-comms'
         kind 'ConsoleApp'
 
-        files { SRC .. 'puppybot/Robot*.cpp' }
-        files { SRC .. 'puppybot/puppybot_comms.cpp' }
+        files { SRC .. 'puppybot/*.cpp' }
         excludes { SRC .. 'puppybot/puppybot_test.cpp' }
 
         configuration {}
