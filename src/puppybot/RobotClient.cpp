@@ -2,6 +2,7 @@
 
 #include "../packetcomms/PacketDemuxer.h"
 #include "../packetcomms/PacketMuxer.h"
+#include "VideoClient.h"
 
 static double milliseconds( struct timespec& t )
 {
@@ -15,23 +16,17 @@ static void message( const char* msg )
 
 RobotClient::RobotClient()
 :
-    m_demuxer     ( nullptr ),
-    m_muxer       ( nullptr ),
-    m_packetOffset(0),
     m_joystick    ( "/dev/input/js0" ),
     m_imageBuffer ( nullptr ),
 
 #ifndef ARM_BUILD
     m_display(320,240)
 #endif // ARM_BUILD
-
 {
 }
 
 RobotClient::~RobotClient()
 {
-    delete m_demuxer;
-    delete m_muxer;
     m_client.Shutdown();
     free( m_imageBuffer );
 }
@@ -42,37 +37,35 @@ bool RobotClient::Connect( const char* host, int port )
     bool connected = m_client.Connect( host, port );
     if ( connected )
     {
-        m_demuxer = new PacketDemuxer( m_client );
-        m_muxer   = new PacketMuxer( m_client );
+        m_demuxer.reset( new PacketDemuxer( m_client ) );
+        m_muxer.reset( new PacketMuxer( m_client ) );
     }
     return connected;
 }
 
 bool RobotClient::RunCommsLoop()
 {
+    assert( m_demuxer != nullptr );
+
     if ( m_joystick.IsAvailable() )
     {
         m_joystick.Start();
     }
 
-    uint64_t lastTotalVideoBytes = 0;
-    uint64_t totalVideoBytes     = 0;
+    m_videoClient.reset( new VideoClient( *m_demuxer ) );
 
-    // Lambda which subscribes to the packets containing video-data:
-    PacketSubscription sub = m_demuxer->Subscribe( ComPacket::Type::AvData, [&]( const ComPacket::ConstSharedPacket& packet )
+    if ( m_videoClient->InitialiseVideoStream() == false )
     {
-        m_avPackets.Emplace( packet ); // The callback simply queues up all the packets.
-        totalVideoBytes += packet->GetDataSize();
-    });
-
-    if ( InitialiseVideoStream() == false )
-    {
+        message( "Could not initialise video stream." );
         return false;
     }
 
+    const int w = m_videoClient->GetFrameWidth();
+    const int h = m_videoClient->GetFrameHeight();
+    // Create a buffer for image data:
+    int err = posix_memalign( (void**)&m_imageBuffer, 16, w * h * 3 * sizeof(uint8_t) );
+    assert( err == 0 );
 #ifndef ARM_BUILD
-    const int w = m_streamer->GetFrameWidth();
-    const int h = m_streamer->GetFrameHeight();
     SetupImagePostData( w, h );
 #endif
 
@@ -95,7 +88,10 @@ bool RobotClient::RunCommsLoop()
         /// then no joystick data is sent from the client which, in-turn, causes the server to
         /// shutdown for safety because it is receiving no control.
         SendJoystickData();
-        gotFrame = ReceiveVideoFrame();
+        gotFrame = m_videoClient->ReceiveVideoFrame( [this]( LibAvCapture& stream ){
+            stream.ExtractBgrImage( m_imageBuffer, stream.GetFrameWidth()*3 );
+        });
+
         if ( gotFrame )
         {
 #ifndef ARM_BUILD
@@ -107,14 +103,16 @@ bool RobotClient::RunCommsLoop()
                 clock_gettime( CLOCK_MONOTONIC, &t2 );
 
                 double secs = (milliseconds(t2) - milliseconds(t1))/1000.0;
-                double bits_per_sec = ( totalVideoBytes - lastTotalVideoBytes )*(8.0/secs);
-
-                lastTotalVideoBytes = totalVideoBytes;
+                double bits_per_sec = m_videoClient->ComputeVideoBandwidthConsumed( secs );
 
                 std::clog << "Through-put: " << numFrames/secs << " fps @ " << bits_per_sec/(1024.0*1024.0) << "Mbps" << std::endl;
                 numFrames = 0;
                 clock_gettime( CLOCK_MONOTONIC, &t1 );
             }
+        }
+        else
+        {
+            message( "Could not get video frame." );
         }
     }
 
@@ -146,100 +144,4 @@ void RobotClient::SetupImagePostData( int w, int h )
     m_postData.stride = w*3;
     m_postData.ptr = m_imageBuffer;
     m_postData.isColourBgr = true;
-}
-
-bool RobotClient::InitialiseVideoStream()
-{
-    // Create a video reader object that uses socket IO:
-    m_videoIO.reset( new FFMpegStdFunctionIO( FFMpegCustomIO::ReadBuffer, std::bind( &RobotClient::FfmpegReadPacket, std::ref(*this), std::placeholders::_1, std::placeholders::_2 ) ) );
-    m_streamer.reset( new LibAvCapture( *m_videoIO ) );
-    if ( m_streamer->IsOpen() == false )
-    {
-        message( "Could not create stream capture." );
-        return false;
-    }
-
-    // Get some frames so we can extract correct image dimensions:
-    bool gotFrame = false;
-    for ( int i=0;i<2;++i )
-    {
-        gotFrame = m_streamer->GetFrame();
-        m_streamer->DoneFrame();
-    }
-
-    if ( gotFrame == false )
-    {
-        message( "Could not interpret video stream." );
-        return false;
-    }
-
-    const int w = m_streamer->GetFrameWidth();
-    const int h = m_streamer->GetFrameHeight();
-    std::clog << "Received frame dimensions: " << w << "x" << h << std::endl;
-
-    // Create a buffer for image data:
-    int err = posix_memalign( (void**)&m_imageBuffer, 16, w * h * 3 * sizeof(uint8_t) );
-    assert( err == 0 );
-
-    return true;
-}
-
-bool RobotClient::ReceiveVideoFrame()
-{
-    bool gotFrame = m_streamer->GetFrame();
-    if ( gotFrame )
-    {
-        m_streamer->ExtractBgrImage( m_imageBuffer, m_streamer->GetFrameWidth()*3 );
-        m_streamer->DoneFrame();
-    }
-    else
-    {
-        message( "Could not get frame." );
-    }
-
-    return gotFrame;
-}
-
-/**
-    This is bound to a std::function and passed to an FFMpegStdFunctionIO object.
-*/
-int RobotClient::FfmpegReadPacket( uint8_t* buffer, int size )
-{
-    SimpleQueue::LockedQueue lock = m_avPackets.Lock();
-    while ( m_avPackets.Empty() ) /// @note this used to check the state of the muxer (incase of comms error)
-    {
-        m_avPackets.WaitNotEmpty( lock );
-    }
-
-    // We were asked for more than packet contains so loop through packets until
-    // we have returned what we needed or there are no more packets:
-    int required = size;
-    while ( required > 0 && m_avPackets.Empty() == false )
-    {
-        const ComPacket::ConstSharedPacket packet = m_avPackets.Front();
-        const int availableSize = packet->GetData().size() - m_packetOffset;
-
-        if ( availableSize <= required )
-        {
-            // Current packet contains less than required so copy the whole packet
-            // and continue:
-            std::copy( packet->GetData().begin() + m_packetOffset, packet->GetData().end(), buffer );
-            m_packetOffset = 0; // Reset the packet offset so the next packet will be read from beginning.
-            m_avPackets.Pop();
-            buffer += availableSize;
-            required -= availableSize;
-        }
-        else
-        {
-            assert( availableSize > required );
-            // Current packet contains more than enough to fulfill the request
-            // so copy what is required and save the rest for later:
-            auto startItr = packet->GetData().begin() + m_packetOffset;
-            std::copy( startItr, startItr+required, buffer );
-            m_packetOffset += required; // Increment the packet offset by the amount read from this packet.
-            required = 0;
-        }
-    }
-
-    return size - required;
 }

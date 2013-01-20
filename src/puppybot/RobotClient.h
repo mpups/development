@@ -14,6 +14,7 @@
 
 class PacketDemuxer;
 class PacketMuxer;
+class VideoClient;
 
 class RobotClient
 {
@@ -35,14 +36,10 @@ protected:
 
 private:
     TcpSocket     m_client;
-    PacketDemuxer* m_demuxer;
-    PacketMuxer*   m_muxer;
+    std::unique_ptr<PacketDemuxer> m_demuxer;
+    std::unique_ptr<PacketMuxer>   m_muxer;
 
-    SimpleQueue m_avPackets;
-    int m_packetOffset;
-
-    std::unique_ptr<FFMpegStdFunctionIO> m_videoIO;
-    std::unique_ptr<LibAvCapture> m_streamer;
+    std::unique_ptr<VideoClient> m_videoClient;
 
     Joystick m_joystick;
     uint8_t* m_imageBuffer;

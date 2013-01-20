@@ -1,13 +1,17 @@
 #include "VideoClient.h"
 
 VideoClient::VideoClient( PacketDemuxer &demuxer )
+:
+    m_packetOffset (0),
+    m_subscription (
+      // Lambda which subscribes to the packets containing video-data:
+      demuxer.Subscribe( ComPacket::Type::AvData, [this]( const ComPacket::ConstSharedPacket& packet )
+      {
+          m_avPackets.Emplace( packet ); // The callback simply queues up all the packets.
+          m_totalVideoBytes += packet->GetDataSize();
+      })
+    )
 {
-    // Lambda which subscribes to the packets containing video-data:
-    PacketSubscription sub = demuxer.Subscribe( ComPacket::Type::AvData, [this]( const ComPacket::ConstSharedPacket& packet )
-    {
-        m_avPackets.Emplace( packet ); // The callback simply queues up all the packets.
-        m_totalVideoBytes += packet->GetDataSize();
-    });
 }
 
 VideoClient::~VideoClient()
@@ -56,6 +60,17 @@ bool VideoClient::ReceiveVideoFrame( std::function< void(LibAvCapture&) > callba
     }
 
     return gotFrame;
+}
+
+/**
+    @param seconds Time elapsed since last call to this function (assumes video has benn constantly streaming for this whole time).
+    @return Bandwidth used by video stream in bits per second.
+*/
+double VideoClient::ComputeVideoBandwidthConsumed( double seconds )
+{
+    double bits_per_sec = ( m_totalVideoBytes - m_lastTotalVideoBytes )*(8.0/seconds);
+    m_lastTotalVideoBytes = m_totalVideoBytes;
+    return bits_per_sec;
 }
 
 int VideoClient::ReadPacket( uint8_t* buffer, int size )
