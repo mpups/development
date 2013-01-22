@@ -2,7 +2,7 @@
 
 #include "../packetcomms/PacketDemuxer.h"
 #include "../packetcomms/PacketMuxer.h"
-#include "VideoClient.h"
+#include "../robotcomms/VideoClient.h"
 
 static double milliseconds( struct timespec& t )
 {

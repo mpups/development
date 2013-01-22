@@ -18,6 +18,8 @@
 #include "../src/packetcomms/PacketMuxer.h"
 #include "../src/packetcomms/SimpleQueue.h"
 
+#include "../src/robotcomms/VideoClient.h"
+
 #ifndef ARM_BUILD
 #include "../src/sse/VectorVector.h"
 #include "../src/sse/BatchOperations.h"
