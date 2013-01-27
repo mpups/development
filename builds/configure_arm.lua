@@ -29,9 +29,9 @@ OPENCV_LINKS = { 'opencv_core', 'opencv_contrib' }
 OPENGL_LINKS = {}
 SYSTEM_LINKS = { 'pthread', 'rt', 'dl' }
 FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
-LINKS = { 'lua', 'freetype' }
+LINKS = {}
 
-GLK_LINKS = { 'glkcore' }
+GLK_LINKS = { 'glkcore', 'lua', 'freetype' }
 VIDEO_LINKS = { 'videolib','unicap' }
 
 CONFIGURING_ARM = true

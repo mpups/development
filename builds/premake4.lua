@@ -12,6 +12,7 @@ end
 --append( LINKS, OPENCV_LINKS )
 --append( LINKS, OPENGL_LINKS )
 append( LINKS, VIDEO_LINKS )
+append( LINKS, GLK_LINKS )
 append( LINKS, FFMPEG_LINKS )
 append( LINKS, SYSTEM_LINKS )
 --for i,v in pairs(LINKS) do print(i,v) end
@@ -117,16 +118,14 @@ end
         includedirs { "../include" }
         files { SRC .. 'tests/tools/VideoStreaming.cpp' }
         configuration {}
-        links { 'robolib' }
-        links ( GLK_LINKS )
         links ( LINKS )
+        links { 'robolib' }
 
     project 'packet-streaming'
         kind 'ConsoleApp'
         includedirs { "../include" }
         files { SRC .. 'tests/tools/PacketStreaming.cpp' }
         configuration {}
-        links ( GLK_LINKS )
         links ( LINKS )
         links { 'robolib' }
 
@@ -138,8 +137,7 @@ end
             excludes { SRC .. 'tests/unit/VideoTests*' }
         end
         configuration {}
+        links ( LINKS )
         links { 'robolib' }
-        links ( SYSTEM_LINKS )
-        links ( FFMPEG_LINKS )
         links ( 'gtest' )
 
