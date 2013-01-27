@@ -2,7 +2,6 @@
 #define ROBOT_SERVER_H
 
 #include "../../include/RoboLib.h"
-#include "../opencv/opencv_utils.h"
 
 #include <arpa/inet.h>
 

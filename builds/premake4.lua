@@ -2,18 +2,18 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
-dofile( 'configure.lua' )
---dofile( 'configure_arm.lua' )
+--dofile( 'configure.lua' )
+dofile( 'configure_arm.lua' )
 
 -- Append individual link groups together so we can use LINKS to link to all libs:
 function append( A, B )
   for i,v in pairs(B) do table.insert(A,v) end
 end
-append( LINKS, OPENCV_LINKS )
-append( LINKS, OPENGL_LINKS )
-append( LINKS, SYSTEM_LINKS )
-append( LINKS, FFMPEG_LINKS )
+--append( LINKS, OPENCV_LINKS )
+--append( LINKS, OPENGL_LINKS )
 append( LINKS, VIDEO_LINKS )
+append( LINKS, FFMPEG_LINKS )
+append( LINKS, SYSTEM_LINKS )
 --for i,v in pairs(LINKS) do print(i,v) end
 
 SRC = '../src/'
@@ -52,15 +52,15 @@ solution 'robolib'
         linkoptions( '-pg' )
         
     project 'robolib'
-        kind 'StaticLib'
+        kind(LIB_TYPE)
         files { SRC .. '**.h', SRC .. '**.cpp', SRC .. '**.c' }
         excludes { SRC .. 'sse/test/*' }
         excludes { SRC .. 'tests/**' }
         excludes { SRC .. 'sse/*' }
         excludes { SRC .. 'puppybot/*' }
         if ( CONFIGURING_ARM ) then
-            excludes { SRC .. 'video/Dc1394Camera.*' }
             excludes { SRC .. 'visualisation/*' }
+            excludes { SRC .. 'opencv/*' }
         end
 
         -- Exclude files which are platform specific:
@@ -126,9 +126,9 @@ end
         includedirs { "../include" }
         files { SRC .. 'tests/tools/PacketStreaming.cpp' }
         configuration {}
-        links { 'robolib' }
         links ( GLK_LINKS )
         links ( LINKS )
+        links { 'robolib' }
 
     project 'gtests' -- unit tests
         kind 'ConsoleApp'

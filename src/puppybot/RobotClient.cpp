@@ -17,10 +17,10 @@ static void message( const char* msg )
 RobotClient::RobotClient()
 :
     m_joystick    ( "/dev/input/js0" ),
-    m_imageBuffer ( nullptr ),
+    m_imageBuffer ( nullptr )
 
 #ifndef ARM_BUILD
-    m_display(320,240)
+    ,m_display(320,240)
 #endif // ARM_BUILD
 {
 }
@@ -65,9 +65,7 @@ bool RobotClient::RunCommsLoop()
     // Create a buffer for image data:
     int err = posix_memalign( (void**)&m_imageBuffer, 16, w * h * 3 * sizeof(uint8_t) );
     assert( err == 0 );
-#ifndef ARM_BUILD
     SetupImagePostData( w, h );
-#endif
 
     int numFrames = 0;
 
@@ -137,6 +135,7 @@ void RobotClient::SendJoystickData()
 
 void RobotClient::SetupImagePostData( int w, int h )
 {
+#ifndef ARM_BUILD
     // Initialise the post data for sending to the display window:
     m_postData.mode = GLK::ImageWindow::FixedAspectRatio;
     m_postData.w = w;
@@ -144,4 +143,5 @@ void RobotClient::SetupImagePostData( int w, int h )
     m_postData.stride = w*3;
     m_postData.ptr = m_imageBuffer;
     m_postData.isColourBgr = true;
+#endif
 }
