@@ -1,10 +1,11 @@
 -- You can change these variables so that
 -- they are appropriate for your system:
 
-TARGET_DIR   = 'arm_build'
+TARGET_DIR   = 'beagle_build_g++4.6_static'
 
-ARM_DEPLOYMENT = '/home/mark/code/beagle_builds/deploy'
-TOOLCHAIN = 'arm-angstrom-linux-gnueabi-'
+ARM_DEPLOYMENT = '/home/mark/code/beagle_builds_g++4.6/deploy'
+TOOLCHAIN = 'arm-linux-gnueabi-'
+LIB_TYPE = 'StaticLib'
 
 INCLUDE_DIRS = {
     '../../glk/include',
@@ -20,14 +21,12 @@ LIB_DIRS = {
 }
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
-BUILD_OPTIONS = { '-mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
-LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib:/home/mark/code/beagle_builds/deploy/lib' }
+BUILD_OPTIONS = { '-std=c++0x -static -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
+LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib:/home/mark/code/beagle_builds_g++4.6/deploy' }
 
-OPENCV_LINKS = { 'opencv_core', 'opencv_contrib' }
-OPENGL_LINKS = {}
+FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
+LINKS = { 'lua', 'freetype', 'unicap' }
 SYSTEM_LINKS = { 'pthread', 'rt' }
-FFMPEG_LINKS = { 'avcodec', 'avformat', 'avutil', 'swscale' }
-LINKS = { 'lua5.1', 'freetype', 'unicap' }
 
 GLK_LINKS = { 'glkcore' }
 

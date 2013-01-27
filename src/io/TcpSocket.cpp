@@ -61,6 +61,8 @@ bool TcpSocket::Listen( int queueSize )
 
     This socket must be bound or null will be returned.
 
+    @note It is the caller's responsibility to delete the returned object.
+
     @return New client socket connection - or null on error or timeout.
 **/
 TcpSocket* TcpSocket::Accept()

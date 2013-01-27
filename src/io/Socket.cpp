@@ -9,6 +9,7 @@
 
 #include <netinet/tcp.h>
 #include <fcntl.h>
+#include <poll.h>
 
 #include "Ipv4Address.h"
 
@@ -108,18 +109,16 @@ bool Socket::Connect( const Ipv4Address& addr )
     
     In the case of non-blocking IO Read returns 0 if no bytes were
     immediately available.
-    
+
+    @note  On error (return of -1) errno will still be set, but EAGAIN and EWOULDBLOCK are
+    never returned as errors - instead they return 0 bytes read).
+
     @param message Storage for received bytes.
     @return Number of bytes read or -1 if there was an error.
 **/
 int Socket::Read( char* message, size_t maxBytes )
 {
     int n = recv( m_socket, message, maxBytes, MSG_NOSIGNAL );
-
-    if ( n < 0 )
-    {
-        //fprintf( stderr, "socket error: %s\n", strerror(errno) );
-    }
 
     if ( n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK) )
     {
@@ -135,6 +134,10 @@ int Socket::Read( char* message, size_t maxBytes )
     In the case of non-blocking IO Write returns 0 if the write would have
     caused the process to block.
 
+    @note  On error (return of -1) errno will still be set, but EAGAIN and EWOULDBLOCK are
+    never returned as errors - instead they return 0 bytes read).
+
+    @param message Bytes to send, must be at least size bytes in the buffer.
     @return Number of bytes written or -1 if there was an error.
 **/
 int Socket::Write( const char* message, size_t size )
@@ -192,5 +195,30 @@ bool Socket::GetPeerAddress( Ipv4Address& address )
     }
 
     return false;
+}
+
+/**
+    Wait (sleep) until data is available for reading from the socket.
+
+    @param timeout Maximum time to wait in milliseconds.
+    @return true if data is ready, false if the wait timedout or there was an error.
+*/
+bool Socket::WaitForData( int timeoutInMilliseconds ) const
+{
+    struct pollfd pfds;
+    pfds.fd = m_socket;
+    pfds.events = POLLIN;
+    pfds.revents = 0;
+    int val = poll( &pfds, 1, timeoutInMilliseconds );
+    assert( val >= 0 ); // Will only get this on error - on timeout 0 shoul dbe returned
+
+    if ( val == 1 && pfds.revents & POLLIN ) // val should be one because we were only waiting on 1 descriptor
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 

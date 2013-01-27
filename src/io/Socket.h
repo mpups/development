@@ -37,6 +37,8 @@ public:
 
     bool GetPeerAddress( Ipv4Address& address );
 
+    bool WaitForData( int timeoutInMilliseconds = -1 ) const;
+
 protected:
     int m_socket;
 

@@ -41,8 +41,8 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
         //camera->m_time += buffer->fill_time.tv_usec;
         camera->m_frameCount += 1;
 
-        camera->m_mutex.Unlock();
         camera->m_cond.WakeOne();
+        camera->m_mutex.Unlock();
     }
 }
 
