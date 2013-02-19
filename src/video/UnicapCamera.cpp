@@ -36,6 +36,7 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
         //memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
         clock_gettime( CLOCK_MONOTONIC, &t2 );
 
+        /// @todo this is a hack for benchmarking - remove it
         double time_us = (milliseconds(t2) - milliseconds(t1))*1000.0;
         camera->m_time = time_us;// buffer->fill_time.tv_sec * 1000000;
         //camera->m_time += buffer->fill_time.tv_usec;
@@ -114,6 +115,10 @@ void UnicapCamera::StartCapture()
     {
         status = unicap_start_capture( m_handle );
         assert( SUCCESS(status) );
+        if ( SUCCESS(status) )
+        {
+            fprintf( stderr, "UnicapCamera: Capture started.\n" );
+        }
     }
 }
 
@@ -405,8 +410,8 @@ void UnicapCamera::SetDefaultProperties()
        fprintf( stderr, "Falure: Could not set sharpness!\n" );
     }
 
-    status = unicap_set_property_manual( m_handle, "Autogain" );
-    status = unicap_set_property_value( m_handle, "Autogain", 1.0 );
+    status = unicap_set_property_manual( m_handle, "Auto Gain" );
+    status = unicap_set_property_value( m_handle, "Auto Gain", 1.0 );
     if ( SUCCESS( status ) )
     {
         fprintf( stderr, "Success: Turned on auto-gain!\n" );

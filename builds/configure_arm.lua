@@ -1,11 +1,11 @@
 -- You can change these variables so that
 -- they are appropriate for your system:
 
-TARGET_DIR   = 'beagle_build_g++4.6_static'
+TARGET_DIR   = 'beagle_build_g++4.6'
 
 ARM_DEPLOYMENT = '/home/mark/code/beagle_builds_g++4.6/deploy'
 TOOLCHAIN = 'arm-linux-gnueabi-'
-LIB_TYPE = 'StaticLib'
+LIB_TYPE = 'SharedLib'
 
 INCLUDE_DIRS = {
     '../../glk/include',
@@ -26,7 +26,7 @@ LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib:/home/mark/c
 
 FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
 LINKS = { 'lua', 'freetype', 'unicap' }
-SYSTEM_LINKS = { 'pthread', 'rt' }
+SYSTEM_LINKS = { 'pthread', 'rt', 'dl' }
 
 GLK_LINKS = { 'glkcore' }
 
