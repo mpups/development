@@ -1,11 +1,11 @@
 -- You can change these variables so that
 -- they are appropriate for your system:
 
-TARGET_DIR   = 'beagle_build_g++4.6_static'
+TARGET_DIR   = 'beagle_build_g++4.6'
 
-ARM_DEPLOYMENT = '/home/mark/code/beagle_builds_g++4.6/deploy'
+ARM_DEPLOYMENT = '/home/mark/custom_bb_kernel/deploy'
 TOOLCHAIN = 'arm-linux-gnueabi-'
-LIB_TYPE = 'StaticLib'
+LIB_TYPE = 'SharedLib'
 
 INCLUDE_DIRS = {
     '../../glk/include',
@@ -13,12 +13,13 @@ INCLUDE_DIRS = {
     ARM_DEPLOYMENT .. '/include',
     ARM_DEPLOYMENT .. '/include/unicap',
     ARM_DEPLOYMENT .. '/include/freetype2',
+    '/home/mark/custom_bb_kernel/packages/lua-5.1.4/src'
 }
 
 LIB_DIRS = {
-    '../../glk/premake/beagle_build/debug',
-    '../../glk/premake/beagle_build/release',
-    ARM_DEPLOYMENT .. '/lib',
+    '../../glk/premake/beagle_build_g++4.6/debug',
+    '../../glk/premake/beagle_build_g++4.6/release',
+    ARM_DEPLOYMENT .. '/lib', '/home/mark/custom_bb_kernel/packages/lua-5.1.4/src'
 }
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }

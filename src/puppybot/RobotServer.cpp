@@ -110,6 +110,7 @@ void RobotServer::PostCommsCleanup()
     if ( m_camera )
     {
         m_camera->StopCapture();
+        m_camera.reset();
         free( m_lum );
     }
 }
@@ -153,6 +154,10 @@ void RobotServer::RunCommsLoop()
 
         fprintf( stderr, "Control terminated\n" );
     } // end if
+
+    m_muxer.reset();
+    m_demuxer.reset();
+    m_con->Shutdown();
 
     PostCommsCleanup();
 }

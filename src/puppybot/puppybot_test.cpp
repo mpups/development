@@ -45,8 +45,8 @@ int main( int argc, char** argv )
         
         // Move the robot forwards for a short time, capturing images as it goes.
         int32_t position;
-        motors.SetSpeed( 1, -600, position );
-        motors.SetSpeed( 2, 600, position );
+        motors.SetSpeed( 1, 0, position );
+        motors.SetSpeed( 2, 0, position );
 
         // repeat - it seems to miss the first command sometimes
         motors.SetSpeed( 1, -600, position );

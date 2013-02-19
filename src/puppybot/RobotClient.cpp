@@ -39,6 +39,7 @@ bool RobotClient::Connect( const char* host, int port )
     {
         m_demuxer.reset( new PacketDemuxer( m_client ) );
         m_muxer.reset( new PacketMuxer( m_client ) );
+        SendJoystickData();
     }
     return connected;
 }
@@ -54,6 +55,7 @@ bool RobotClient::RunCommsLoop()
 
     m_videoClient.reset( new VideoClient( *m_demuxer ) );
 
+    SendJoystickData();
     if ( m_videoClient->InitialiseVideoStream() == false )
     {
         message( "Could not initialise video stream." );
