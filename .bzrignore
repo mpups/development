@@ -4,3 +4,4 @@ docs/html
 cmake-build
 qtcreator
 qtcreator-build
+./builds/beagle_build_g++4.6

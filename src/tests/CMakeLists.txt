@@ -28,14 +28,17 @@ add_executable( utest WIN32
     unit/VideoTests.cpp
     unit/VideoTests.h
 )
-
 target_link_libraries( utest videolib ${LIBS} )
 
 add_executable( transcode WIN32
     tools/transcode.cpp
 )
-
 target_link_libraries( transcode videolib ${LIBS} )
+
+add_executable( capture WIN32
+    tools/capture.cpp
+)
+target_link_libraries( capture videolib ${LIBS} )
 
 install( TARGETS utest DESTINATION bin )
 
