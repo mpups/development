@@ -33,7 +33,7 @@ int main( int argc, char** argv )
 
     if ( capture->IsOpen() == false )
     {
-        std::cerr << "Error: no video source." << std::endl;
+        std::cerr << "Error: no valid capture source." << std::endl;
         return EXIT_FAILURE;
     }
 

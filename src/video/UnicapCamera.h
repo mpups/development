@@ -50,7 +50,7 @@ protected:
 
 private:
     bool OpenDevice();
-    bool FindFormat( int width, int height, unsigned int fourcc, unicap_format_t& format );
+    bool FindFormat( int width, int height, uint32_t fourcc, unicap_format_t& format );
     void EnumerateProperties();
     void SetDefaultProperties();
 

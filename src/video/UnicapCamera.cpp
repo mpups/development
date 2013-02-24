@@ -1,4 +1,5 @@
 #include "UnicapCamera.h"
+#include "FourCc.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -32,14 +33,12 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
 
         clock_gettime( CLOCK_MONOTONIC, &t1 );
         /// @todo This shouldn't be hard coded - wasting a lot of time everytime I forget about this!
-        halfscale_yuyv422_to_yuv420p( 640, 480, buffer->data, camera->m_buffer );
-        //memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
+        //halfscale_yuyv422_to_yuv420p( 640, 480, buffer->data, camera->m_buffer );
+        memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
         clock_gettime( CLOCK_MONOTONIC, &t2 );
 
-        /// @todo this is a hack for benchmarking - remove it
-        double time_us = (milliseconds(t2) - milliseconds(t1))*1000.0;
-        camera->m_time = time_us;// buffer->fill_time.tv_sec * 1000000;
-        //camera->m_time += buffer->fill_time.tv_usec;
+        camera->m_time = buffer->fill_time.tv_sec * 1000000;
+        camera->m_time += buffer->fill_time.tv_usec;
         camera->m_frameCount += 1;
 
         camera->m_cond.WakeOne();
@@ -61,11 +60,14 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
         unicap_format_t format;
         memset( &format, 0, sizeof(format) );
 
-        // Try to get YUYV422 format.
-        bool success = FindFormat( 640, 480, 0x56595559, format );
+        const char fstring[] = "YUYV";
+        uint32_t fourcc = video::FourCcToInt32( fstring[0], fstring[1],fstring[2],fstring[3] );
+        fprintf(stderr, "Unicap: Requesting format %s (fourcc := 0x%x)\n", fstring, fourcc );
+
+        bool success = FindFormat( 640, 480, fourcc, format );
         if ( success )
         {
-            fprintf( stderr, "Format '%s': %dx%dx%d (%x)\n", format.identifier, format.size.width, format.size.height, format.bpp, format.fourcc );
+            //fprintf( stderr, "Format '%s': %dx%dx%d (%x)\n", format.identifier, format.size.width, format.size.height, format.bpp, format.fourcc );
 
             format.buffer_type = UNICAP_BUFFER_TYPE_SYSTEM;
 
@@ -313,7 +315,7 @@ bool UnicapCamera::OpenDevice()
 
     If successful then return value is true and result will contain the desired format (currently the first one found).
 **/
-bool UnicapCamera::FindFormat( int width, int height, unsigned int fourcc, unicap_format_t& result )
+bool UnicapCamera::FindFormat( int width, int height, uint32_t fourcc, unicap_format_t& result )
 {
     bool success = false;
     int numFormats = 0;
@@ -328,6 +330,7 @@ bool UnicapCamera::FindFormat( int width, int height, unsigned int fourcc, unica
         
         if ( SUCCESS(status) )
         {
+            //fprintf(stderr,"Unicap format available: %x (%x) count := %d\n",format.fourcc, fourcc, format.size_count );
             if ( format.fourcc == fourcc )
             {
                 for ( int s=0; s<format.size_count; ++s )
@@ -400,7 +403,7 @@ void UnicapCamera::SetDefaultProperties()
        fprintf( stderr, "Falure: Could not turn on auto-exposure!\n" );
     }*/
 
-    status = unicap_set_property_value( m_handle, "Sharpness", 8.0 );
+    status = unicap_set_property_value( m_handle, "Sharpness", 0.0 );
     if ( SUCCESS( status ) )
     {
         fprintf( stderr, "Success: Set sharpness!\n" );
@@ -421,7 +424,7 @@ void UnicapCamera::SetDefaultProperties()
        fprintf( stderr, "Failure: Could not turn on auto-gain!\n" );
     }
 
-    const double framerate_hz = 60;
+    const double framerate_hz = 30;
     status = unicap_set_property_value( m_handle, "frame rate", framerate_hz );
     if ( SUCCESS( status ) )
     {
