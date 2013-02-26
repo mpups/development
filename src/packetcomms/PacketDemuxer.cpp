@@ -40,11 +40,6 @@ bool PacketDemuxer::Ok() const
 
 /**
     Returns a subscriber object.
-
-    @todo - This is all wrong. Problem here using Subscription(shared_ptr) here is that it won't get deleted
-    automatically. Need to return an object that wraps a reference to the subscriber.
-    I.e. return class Subscription { which wraps a Subscriber }; Then on unsubscribe, we pass
-    the subscription back to COmCentre which can search for and remove the subscriber record.
 */
 PacketSubscription PacketDemuxer::Subscribe( ComPacket::Type type, PacketSubscriber::CallBack callback )
 {
@@ -119,10 +114,14 @@ bool PacketDemuxer::ReceivePacket( ComPacket& packet )
     ComPacket p( static_cast<ComPacket::Type>(type), size );
     byteCount = p.GetDataSize();
     ok = ReadBytes( reinterpret_cast<uint8_t*>(p.GetDataPtr()), byteCount );
-    if ( !ok ) return false;
+    if ( !ok )
+    {
+        return false;
+    }
 
     std::swap( p, packet );
     assert( packet.GetType() != ComPacket::Type::Invalid ); // Catch invalid packets at the lowest level.
+
     return true;
 }
 

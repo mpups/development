@@ -52,10 +52,10 @@ DiffDrive::MotorData DiffDrive::SetSpeeds( float left_counts_per_sec, float righ
     int32_t left  = left_counts_per_sec;
     int32_t right = right_counts_per_sec;
     
-    //fprintf( stderr, "\n\t counts per sec: %d %d\n", left, right );
-    m_motors.SetSpeed( LEFT_WHEEL,  left,  data.leftPos );
-    m_motors.SetSpeed( RIGHT_WHEEL, right, data.rightPos );
-    
+    bool leftValid  = m_motors.SetSpeed( LEFT_WHEEL,  left,  data.leftPos );
+    bool rightValid = m_motors.SetSpeed( RIGHT_WHEEL, right, data.rightPos );
+    data.valid = leftValid && rightValid;
+
     data.leftPos = -data.leftPos;
     return data;
 }
@@ -70,9 +70,11 @@ DiffDrive::MotorData DiffDrive::SetMoves( float left_counts, float right_counts 
 
     int32_t left  = left_counts;
     int32_t right = right_counts;
-    m_motors.Move( LEFT_WHEEL,  left,  data.leftPos );
-    m_motors.Move( RIGHT_WHEEL, right, data.rightPos );
-    
+
+    bool leftValid  = m_motors.Move( LEFT_WHEEL,  left,  data.leftPos );
+    bool rightValid = m_motors.Move( RIGHT_WHEEL, right, data.rightPos );
+    data.valid = leftValid && rightValid;
+
     data.leftPos = -data.leftPos;
     return data;
 }

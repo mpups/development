@@ -51,7 +51,7 @@ int streamVideo( TcpSocket& client )
 
         // Setup an MPEG4 video stream:
         // @note Unicap capture is currently hard-coded to half scale the images so the stream must be half-sized to work:
-        streamer.AddVideoStream( camera.GetFrameWidth()/2, camera.GetFrameHeight()/2, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+        streamer.AddVideoStream( camera.GetFrameWidth()/2, camera.GetFrameHeight()/2, 30, video::FourCc( 'F','M','P','4' ) );
 
         struct timespec t1;
         struct timespec t2;

@@ -8,6 +8,7 @@
 #include "../packetcomms/ComPacket.h"
 #include "../packetcomms/SimpleQueue.h"
 
+class PacketMuxer;
 class PacketDemuxer;
 
 /**
@@ -31,8 +32,8 @@ class PacketDemuxer;
 class TeleJoystick : public GLK::Runnable
 {
 public:
-    TeleJoystick( PacketDemuxer& muxer );
-    TeleJoystick( PacketDemuxer& muxer, DiffDrive* drive );
+    TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers );
+    TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers, DiffDrive* drive );
     virtual ~TeleJoystick();
 
     virtual void Run();
@@ -44,7 +45,8 @@ protected:
 
 private:
     GLK::Thread m_thread;
-    PacketDemuxer& m_muxer;
+    PacketMuxer&   m_muxer;
+    PacketDemuxer& m_demuxer;
     DiffDrive*  m_drive;
     volatile bool m_terminate;
 };

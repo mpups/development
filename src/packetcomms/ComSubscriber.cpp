@@ -39,6 +39,7 @@ PacketSubscription& PacketSubscription::operator=( PacketSubscription&& toMove )
     m_subscriber->Unsubscribe();
     m_subscriber.reset();
     std::swap( m_subscriber, toMove.m_subscriber );
+    return *this;
 }
 
 /**

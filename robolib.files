@@ -870,9 +870,6 @@
 /home/mark/code/robolib/src/motor_control/TeleJoystick.h
 /home/mark/code/robolib/src/opencv/opencv_utils.cpp
 /home/mark/code/robolib/src/opencv/opencv_utils.h
-/home/mark/code/robolib/src/puppybot/PacketMuxer.cpp
-/home/mark/code/robolib/src/puppybot/PacketMuxer.h
-/home/mark/code/robolib/src/puppybot/ComPacket.h
 /home/mark/code/robolib/src/puppybot/puppybot_comms.cpp
 /home/mark/code/robolib/src/puppybot/puppybot_test.cpp
 /home/mark/code/robolib/src/puppybot/RobotServer.cpp
@@ -941,7 +938,5 @@
 /home/mark/code/robolib/tools/robo_script/init-motors.lua
 /home/mark/code/robolib/tools/robo_script/joy-control.lua
 /home/mark/code/robolib/tools/robo_script/main.cpp
-src/puppybot/ComSubscriber.h
-src/puppybot/ComSubscriber.cpp
 src/puppybot/RobotClient.h
 src/puppybot/RobotClient.cpp

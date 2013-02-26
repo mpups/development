@@ -132,7 +132,8 @@ void RobotServer::RunCommsLoop()
         }
 
         // Setup a TeleJoystick object:
-        TeleJoystick teljoy( *m_demuxer, m_drive.get() ); // Will start receiving and processing remote joystick cammands immediately.
+        auto muxerPair = std::make_pair( std::ref(*m_muxer), std::ref(*m_demuxer) );
+        TeleJoystick teljoy( muxerPair, m_drive.get() ); // Will start receiving and processing remote joystick cammands immediately.
         teljoy.Go();
         while ( teljoy.IsRunning() == false )
         {
@@ -182,7 +183,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     // Setup an MPEG4 video stream for half-size video:
     int streamWidth = 320; // m_camera->GetFrameWidth()
     int streamHeight = 240; // m_camera->GetFrameHeight()
-    streamer.AddVideoStream( streamWidth, streamHeight, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+    streamer.AddVideoStream( streamWidth, streamHeight, 30, video::FourCc( 'F','M','P','4' ) );
 
     struct timespec t1;
     struct timespec t2;

@@ -5,7 +5,7 @@
 #include <glkcore.h>
 #include <glk.h>
 
-#include <boost/scoped_ptr.hpp>
+#include <memory>
 
 extern "C"
 {
@@ -17,7 +17,7 @@ extern "C"
 */
 int main( int argc, char** argv )
 {
-    boost::scoped_ptr<Capture> capture;
+    std::unique_ptr<Capture> capture;
     CameraCapture* camera = 0;
 
     if ( argc > 1 )

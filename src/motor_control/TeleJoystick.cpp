@@ -4,21 +4,24 @@
 #include <iostream>
 
 #include <VideoLib.h>
+#include "../packetcomms/PacketMuxer.h"
 #include "../packetcomms/PacketDemuxer.h"
 
-TeleJoystick::TeleJoystick( PacketDemuxer& muxer )
+TeleJoystick::TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers )
 :
     m_thread    ( *this ),
-    m_muxer     ( muxer ),
+    m_muxer     ( muxers.first ),
+    m_demuxer   ( muxers.second ),
     m_drive     ( 0 ),
     m_terminate (false)
 {
 }
 
-TeleJoystick::TeleJoystick( PacketDemuxer& muxer, DiffDrive* drive )
+TeleJoystick::TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers, DiffDrive* drive )
 :
     m_thread    ( *this ),
-    m_muxer     ( muxer ),
+    m_muxer     ( muxers.first ),
+    m_demuxer   ( muxers.second ),
     m_drive     ( drive ),
     m_terminate (false)
 {
@@ -43,13 +46,13 @@ void TeleJoystick::Run()
 
     // Setup subscription callback to enqueue joystick packets:
     SimpleQueue joyPackets;
-    PacketSubscription joystickSubscription = m_muxer.Subscribe( ComPacket::Type::Joystick, [&]( const ComPacket::ConstSharedPacket& packet )
+    PacketSubscription joystickSubscription = m_demuxer.Subscribe( ComPacket::Type::Joystick, [&]( const ComPacket::ConstSharedPacket& packet )
     {
         assert( packet->GetType() == ComPacket::Type::Joystick );
         joyPackets.Emplace( packet );
     });
 
-    while ( !m_terminate && m_muxer.Ok() && timeSinceLastCommand_secs < taskTimeout_secs )
+    while ( !m_terminate && m_demuxer.Ok() && timeSinceLastCommand_secs < taskTimeout_secs )
     {
         timeSinceLastCommand_secs = timer.GetSeconds();
         {
@@ -82,11 +85,22 @@ void TeleJoystick::Run()
         if ( m_drive )
         {
             DiffDrive::MotorData odometry = m_drive->JoyControl( jx, jy, jmax );
-            /// @todo send back odometry packet
+            if ( odometry.valid == true )
+            {
+                m_muxer.EmplacePacket( ComPacket::Type::Odometry, reinterpret_cast<uint8_t*>(&odometry), sizeof(odometry) );
+            }
         }
         else
         {
             fprintf( stderr, "Drive control (interval %f secs) := %d,%d (%d)\n", timeSinceLastCommand_secs, jx, jy, jmax );
+            DiffDrive::MotorData odometry;
+            odometry.leftTime = 0;
+            odometry.rightPos = 0;
+            odometry.rightTime= 0;
+            odometry.leftPos  = 0;
+            odometry.valid = false;
+            // Send a fake packet for testing/debugging:
+            m_muxer.EmplacePacket( ComPacket::Type::Odometry, reinterpret_cast<uint8_t*>(&odometry), sizeof(odometry) );
         }
     }
 

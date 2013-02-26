@@ -15,10 +15,11 @@ public:
 
     struct MotorData
     {
-        double leftTime;
-        double rightTime;
+        double  leftTime;
+        double  rightTime;
         int32_t leftPos;
         int32_t rightPos;
+        bool    valid;
     };
 
     DiffDrive( MotionMind& motors );

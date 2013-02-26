@@ -55,6 +55,7 @@ solution 'robolib'
     project 'robolib'
         kind(LIB_TYPE)
         files { SRC .. '**.h', SRC .. '**.cpp', SRC .. '**.c' }
+        files { SRC .. 'motor_control/*.cpp' }
         excludes { SRC .. 'sse/test/*' }
         excludes { SRC .. 'tests/**' }
         excludes { SRC .. 'sse/*' }
@@ -103,15 +104,6 @@ if ( not CONFIGURING_ARM ) then
         links ( GLK_LINKS )
         links ( LINKS )
 end
-
-    project 'transcode'
-        kind 'ConsoleApp'
-        includedirs { "../include" }
-        files { SRC .. 'tests/tools/transcode.cpp' }
-        configuration {}
-        links { 'robolib' }
-        links ( GLK_LINKS )
-        links ( LINKS )
 
     project 'video-streaming'
         kind 'ConsoleApp'

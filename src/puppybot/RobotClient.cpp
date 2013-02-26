@@ -77,6 +77,19 @@ bool RobotClient::RunCommsLoop()
 
     bool gotFrame = true;
 
+    PacketSubscription odometrySubscriber = m_demuxer->Subscribe( ComPacket::Type::Odometry, []( const ComPacket::ConstSharedPacket& packet ) {
+        DiffDrive::MotorData odometry;
+        std::copy( packet->GetDataPtr(), packet->GetDataPtr()+packet->GetDataSize(), reinterpret_cast<uint8_t*>(&odometry) );
+        if ( odometry.valid )
+        {
+            std::cout << "Odometry: left pos := " << odometry.leftPos << " right pos := " << odometry.rightPos << std::endl;
+        }
+        else
+        {
+            std::cout << "Odometry packet containing invalid data" << std::endl;
+        }
+    });
+
 #ifndef ARM_BUILD
     while ( m_display.IsRunning() && gotFrame )
 #else

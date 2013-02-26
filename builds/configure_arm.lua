@@ -19,11 +19,12 @@ INCLUDE_DIRS = {
 }
 
 LIB_DIRS = {
+    './',
     '../../glk/premake/beagle_build_g++4.6/debug',
     '../../glk/premake/beagle_build_g++4.6/release',
     ARM_DEPLOYMENT .. '/lib',
     ARM_PACKAGES .. '/lua-5.1.4/src',
-    ARM_DEPLOYMENT .. '/usr/local/lib'
+    ARM_DEPLOYMENT .. '/usr/local/lib' -- THIS IS STUPID, KEEP PIKCING UP OLD VERSION OF THE LIBRARY I AM BUILDING
 }
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
