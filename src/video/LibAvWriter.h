@@ -44,8 +44,6 @@ public:
 
     bool PutVideoFrame( VideoFrame& frame );
 
-    static int32_t FourCc( char, char, char, char );
-
 protected:
     //bool PutFrame( uint8_t* buffer, uint32_t width, uint32_t height, uint32_t stride, PixelFormat format );
     bool WriteCodecFrame( AVFrame* );

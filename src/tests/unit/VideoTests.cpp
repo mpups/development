@@ -1,5 +1,6 @@
 #include "VideoTests.h"
 
+#include "../../video/FourCc.h"
 #include "../../video/LibAvWriter.h"
 #include "../../video/LibAvCapture.h"
 #include "../../video/FFmpegCustomIO.h"
@@ -28,7 +29,7 @@ void RunWriter( FFMpegCustomIO& videoIO )
     LibAvWriter writer( videoIO );
     ASSERT_TRUE( writer.IsOpen() );
 
-    bool streamCreated = writer.AddVideoStream( STREAM_WIDTH, STREAM_HEIGHT, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+    bool streamCreated = writer.AddVideoStream( STREAM_WIDTH, STREAM_HEIGHT, 30, video::FourCc( 'F','M','P','4' ) );
     ASSERT_TRUE( streamCreated );
 
     uint8_t* buffer;
@@ -79,7 +80,7 @@ void RunReader( FFMpegCustomIO& videoIn )
 void TestVideo()
 {
     // test fourcc code generation:
-    int32_t fourcc = LibAvWriter::FourCc( 'y','u','y','v' );
+    int32_t fourcc = video::FourCc( 'y','u','y','v' );
     EXPECT_EQ( fourcc, 0x56595559 );
 
     FFMpegFileIO videoOut( "test.avi", false );

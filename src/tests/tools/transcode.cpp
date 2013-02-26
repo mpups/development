@@ -33,7 +33,7 @@ int main( int argc, char** argv )
     }
 
     LibAvWriter out( argv[2] );
-    out.AddVideoStream( 320, 240, 30, LibAvWriter::FourCc( 'F','M','P','4' ) );
+    out.AddVideoStream( 320, 240, 30, video::FourCc( 'F','M','P','4' ) );
 
     uint8_t* buffer;
     err = posix_memalign( (void**)&buffer, 16, video.GetFrameWidth() * video.GetFrameHeight() * 3 * sizeof(uint8_t) );

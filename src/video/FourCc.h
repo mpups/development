@@ -4,6 +4,9 @@
 #ifndef FOURCC_H
 #define FOURCC_H
 
+#include <cstdint>
+#include <cctype>
+
 namespace video
 {
 
@@ -12,9 +15,9 @@ namespace video
 
     Lower case characters are converted to upper case before computing the code.
 */
-int32_t FourCcToInt32( char c1, char c2, char c3, char c4 )
+std::int32_t FourCc( char c1, char c2, char c3, char c4 )
 {
-    int32_t fourcc = toupper(c4);
+    std::int32_t fourcc = std::toupper(c4);
     fourcc <<= 8;
     fourcc |= toupper(c3);
     fourcc <<= 8;

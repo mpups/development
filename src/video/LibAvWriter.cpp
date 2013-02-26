@@ -9,30 +9,12 @@ extern "C" {
 #include <libavutil/mathematics.h>
 }
 
-#include <ctype.h>
 #include <assert.h>
 #include <time.h>
 
 static double milliseconds( struct timespec& t )
 {
     return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
-}
-
-/**
-    Static method returns an 32-bit integer representing the four character code (fourcc).
-
-    Lower case characters are converted to upper case before computing the code.
-*/
-int32_t LibAvWriter::FourCc( char c1, char c2, char c3, char c4 )
-{
-    int32_t fourcc = toupper(c4);
-    fourcc <<= 8;
-    fourcc |= toupper(c3);
-    fourcc <<= 8;
-    fourcc |= toupper(c2);
-    fourcc <<= 8;
-    fourcc |= toupper(c1);
-    return fourcc;
 }
 
 /**

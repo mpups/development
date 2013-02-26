@@ -61,7 +61,7 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
         memset( &format, 0, sizeof(format) );
 
         const char fstring[] = "YUYV";
-        uint32_t fourcc = video::FourCcToInt32( fstring[0], fstring[1],fstring[2],fstring[3] );
+        uint32_t fourcc = video::FourCc( fstring[0], fstring[1],fstring[2],fstring[3] );
         fprintf(stderr, "Unicap: Requesting format %s (fourcc := 0x%x)\n", fstring, fourcc );
 
         bool success = FindFormat( 640, 480, fourcc, format );

@@ -4,6 +4,7 @@
 #include "../src/video/CameraCapture.h"
 #include "../src/video/UnicapCamera.h"
 
+#include "../src/video/FourCc.h"
 #include "../src/video/video_conversion.h"
 #include "../src/video/VideoFrame.h"
 #include "../src/video/LibAvCapture.h"
