@@ -5,7 +5,7 @@
 DiffDrive::DiffDrive( MotionMind& motors )
 :
     m_motors    ( motors ),
-    m_config    ( 0.275f, 6800.f, 52.f, 12.f )
+    m_config    ( 0.28f, 6850.f, 52.f, 12.f )
 {
     m_motors.WriteRegister( LEFT_WHEEL, MotionMind::POSITION, 0 );
     m_motors.WriteRegister( RIGHT_WHEEL, MotionMind::POSITION, 0 );

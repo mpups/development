@@ -77,12 +77,57 @@ bool RobotClient::RunCommsLoop()
 
     bool gotFrame = true;
 
-    PacketSubscription odometrySubscriber = m_demuxer->Subscribe( ComPacket::Type::Odometry, []( const ComPacket::ConstSharedPacket& packet ) {
+    // Testing: integrate odometry into pposition:
+    const float wheelBaseInMetres = 0.28f;
+    const float countsPerMetre = 6850.f;
+    const float metresPerCount = 1.f / countsPerMetre;
+    const float encoderMultiplier = metresPerCount / wheelBaseInMetres; // units are 1/counts
+    float x  = 0.f;
+    float y  = 0.f;
+    float th = 0.f;
+    int32_t lastCountLeft  = 0;
+    int32_t lastCountRight = 0;
+
+    PacketSubscription odometrySubscriber = m_demuxer->Subscribe( ComPacket::Type::Odometry, [&]( const ComPacket::ConstSharedPacket& packet ) {
         DiffDrive::MotorData odometry;
         std::copy( packet->GetDataPtr(), packet->GetDataPtr()+packet->GetDataSize(), reinterpret_cast<uint8_t*>(&odometry) );
         if ( odometry.valid )
         {
+            float cl = (odometry.leftPos - lastCountLeft);
+            float cr = (odometry.rightPos - lastCountRight);
+            lastCountLeft  = odometry.leftPos;
+            lastCountRight = odometry.rightPos;
+
+            // Compute orientation update:
+            float wdt = (cr - cl) * encoderMultiplier;
+
+            // Compute new x and y:
+            float xn;
+            float yn;
+            if ( (cr-cl) != 0 )
+            {
+                float coswdt = cos(wdt);
+                float sinwdt = sin(wdt);
+                float R = (.5f*wheelBaseInMetres*(cr+cl))/(cr-cl);
+                float ICCx = x - R*sin(th);
+                float ICCy = y + R*cos(th);
+                xn = coswdt*(x-ICCx) - sinwdt*(y-ICCy) + ICCx;
+                yn = sinwdt*(x-ICCx) + coswdt*(y-ICCy) + ICCy;
+            }
+            else
+            {
+                xn = x + metresPerCount*.5f*(cr+cl)*sin(th);
+                yn = y + metresPerCount*.5f*(cr+cl)*cos(th);
+            }
+
+            // Update all coords:
+            x = xn;
+            y = yn;
+            th += wdt;
+
             std::cout << "Odometry: left pos := " << odometry.leftPos << " right pos := " << odometry.rightPos << std::endl;
+            std::cout << "Encoder deltas : left := " << cl << "right : " << cr << std::endl;
+            std::cout << "(x,y) - deg := " << x << "," << y << " - " << th * (180/3.141592654) << std::endl;
         }
         else
         {
