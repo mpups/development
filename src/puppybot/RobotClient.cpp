@@ -81,7 +81,6 @@ bool RobotClient::RunCommsLoop()
     const float wheelBaseInMetres = 0.28f;
     const float countsPerMetre = 6850.f;
     const float metresPerCount = 1.f / countsPerMetre;
-    const float encoderMultiplier = metresPerCount / wheelBaseInMetres; // units are 1/counts
     float x  = 0.f;
     float y  = 0.f;
     float th = 0.f;
@@ -93,41 +92,28 @@ bool RobotClient::RunCommsLoop()
         std::copy( packet->GetDataPtr(), packet->GetDataPtr()+packet->GetDataSize(), reinterpret_cast<uint8_t*>(&odometry) );
         if ( odometry.valid )
         {
-            float cl = (odometry.leftPos - lastCountLeft);
-            float cr = (odometry.rightPos - lastCountRight);
-            lastCountLeft  = odometry.leftPos;
-            lastCountRight = odometry.rightPos;
+            const float dLeft  = (odometry.leftPos - lastCountLeft) * metresPerCount;
+            const float dRight = (odometry.rightPos - lastCountRight) * metresPerCount;
 
-            // Compute orientation update:
-            float wdt = (cr - cl) * encoderMultiplier;
+            // Compute delta in robot's local coordinates:
+            float d = ( dLeft + dRight ) * .5f;
+            float wdt = (dRight - dLeft) / wheelBaseInMetres;
+            const float dx =  cos(wdt) * d;
+            const float dy = -sin(wdt) * d;
 
-            // Compute new x and y:
-            float xn;
-            float yn;
-            if ( (cr-cl) != 0 )
-            {
-                float coswdt = cos(wdt);
-                float sinwdt = sin(wdt);
-                float R = (.5f*wheelBaseInMetres*(cr+cl))/(cr-cl);
-                float ICCx = x - R*sin(th);
-                float ICCy = y + R*cos(th);
-                xn = coswdt*(x-ICCx) - sinwdt*(y-ICCy) + ICCx;
-                yn = sinwdt*(x-ICCx) + coswdt*(y-ICCy) + ICCy;
-            }
-            else
-            {
-                xn = x + metresPerCount*.5f*(cr+cl)*sin(th);
-                yn = y + metresPerCount*.5f*(cr+cl)*cos(th);
-            }
-
-            // Update all coords:
-            x = xn;
-            y = yn;
+            const float costh = cos(th);
+            const float sinth = sin(th);
+            x += costh*dx - sinth*dy;
+            y += sinth*dx + costh*dy;
             th += wdt;
 
             std::cout << "Odometry: left pos := " << odometry.leftPos << " right pos := " << odometry.rightPos << std::endl;
-            std::cout << "Encoder deltas : left := " << cl << "right : " << cr << std::endl;
+            std::cout << "Distances : left := " << dLeft << "right : " << dRight << std::endl;
+            std::cout << "costh := " << costh << std::endl;
             std::cout << "(x,y) - deg := " << x << "," << y << " - " << th * (180/3.141592654) << std::endl;
+
+            lastCountLeft = odometry.leftPos;
+            lastCountRight = odometry.rightPos;
         }
         else
         {
