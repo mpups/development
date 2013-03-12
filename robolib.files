@@ -940,3 +940,13 @@
 /home/mark/code/robolib/tools/robo_script/main.cpp
 src/puppybot/RobotClient.h
 src/puppybot/RobotClient.cpp
+src/robotcomms/VideoClient.h
+src/robotcomms/VideoClient.cpp
+src/packetcomms/SimpleQueue.h
+src/packetcomms/PacketMuxer.h
+src/packetcomms/PacketDemuxer.h
+src/packetcomms/ComSubscriber.h
+src/packetcomms/ComPacket.h
+src/packetcomms/PacketMuxer.cpp
+src/packetcomms/PacketDemuxer.cpp
+src/packetcomms/ComSubscriber.cpp

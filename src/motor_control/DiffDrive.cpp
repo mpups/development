@@ -1,6 +1,7 @@
 #include "DiffDrive.h"
 
 #include <math.h>
+#include <time.h>
 
 DiffDrive::DiffDrive( MotionMind& motors )
 :
@@ -47,16 +48,29 @@ float DiffDrive::ComputeRevsPerMetre() const
 DiffDrive::MotorData DiffDrive::SetSpeeds( float left_counts_per_sec, float right_counts_per_sec )
 {
     MotorData data;
-    data.leftTime = data.rightTime = 0;
     
-    int32_t left  = left_counts_per_sec;
-    int32_t right = right_counts_per_sec;
+    const int32_t left  = left_counts_per_sec;
+    const int32_t right = right_counts_per_sec;
     
+    timespec ts;
+    clock_gettime( CLOCK_MONOTONIC, &ts );
     bool leftValid  = m_motors.SetSpeed( LEFT_WHEEL,  left,  data.leftPos );
+    data.leftTime = (ts.tv_sec*1000) + (ts.tv_nsec/1000000);
+
+    clock_gettime( CLOCK_MONOTONIC, &ts );
     bool rightValid = m_motors.SetSpeed( RIGHT_WHEEL, right, data.rightPos );
+    data.rightTime = (ts.tv_sec*1000) + (ts.tv_nsec/1000000);
+
     data.valid = leftValid && rightValid;
 
     data.leftPos = -data.leftPos;
+
+    if ( left == 0 && right == 0 )
+    {
+        SetMoves( 0, 0 ); // This ensures minimum current draw when stationary.
+        // @todo This results in harsh stops; maybe only set if stationary for an amount of time.
+    }
+
     return data;
 }
 
@@ -66,13 +80,19 @@ DiffDrive::MotorData DiffDrive::SetSpeeds( float left_counts_per_sec, float righ
 DiffDrive::MotorData DiffDrive::SetMoves( float left_counts, float right_counts )
 {
     MotorData data;
-    data.leftTime = data.rightTime = 0;
 
     int32_t left  = left_counts;
     int32_t right = right_counts;
 
+    timespec ts;
+    clock_gettime( CLOCK_MONOTONIC, &ts );
     bool leftValid  = m_motors.Move( LEFT_WHEEL,  left,  data.leftPos );
+    data.leftTime = (ts.tv_sec*1000) + (ts.tv_nsec/1000000);
+
+    clock_gettime( CLOCK_MONOTONIC, &ts );
     bool rightValid = m_motors.Move( RIGHT_WHEEL, right, data.rightPos );
+    data.rightTime = (ts.tv_sec*1000) + (ts.tv_nsec/1000000);
+
     data.valid = leftValid && rightValid;
 
     data.leftPos = -data.leftPos;

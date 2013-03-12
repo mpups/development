@@ -210,7 +210,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 
         double grabTime = milliseconds(t2) - milliseconds(t1);
 
-        fprintf( stderr, "%f %f %f %f %f\n", grabTime, m_camera->GetFrameTimestamp_us()/1000.0,streamer.lastConvertTime_ms, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
+        //fprintf( stderr, "%f %f %f %f %f\n", grabTime, m_camera->GetFrameTimestamp_us()/1000.0,streamer.lastConvertTime_ms, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
         clock_gettime( CLOCK_MONOTONIC, &t1 );
     }
 }

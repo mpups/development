@@ -52,6 +52,11 @@ bool VideoClient::ReceiveVideoFrame( std::function< void(LibAvCapture&) > callba
 {
     assert( m_streamer != nullptr );
 
+    if ( m_streamer == nullptr || m_streamer->IoError() )
+    {
+        return false;
+    }
+
     bool gotFrame = m_streamer->GetFrame();
     if ( gotFrame )
     {
