@@ -43,28 +43,43 @@ bool PacketMuxer::Ok() const
     return m_transportError == false;
 }
 
+/**
+    This function loops sending all the queued packets over the
+    transport layer. The loop exits if there is a transport error
+    (e.g. if the other end hangs up).
+
+    Runs asnchronously in its own thread (it is
+    passed as a RunnableFunction to m_sendThread in the PacketMuxer
+    constructor).
+*/
 void PacketMuxer::Send()
 {
-    //std::cerr << "Send thread started." << std::endl;
+    std::cerr << "PacketMuxer::Send() entered." << std::endl;
+
+    // Grab the lock for the transmit/send queues:
     GLK::MutexLock lock( m_txLock );
 
     while ( m_transportError == false )
     {
         if ( m_numPosted == m_numSent )
         {
-            // Wait until new data is posted (don't care to which queue it is
-            // posted, hence one condition variable for all queues):
+            // Atomically relinquish lock for send queues and wait
+            // until new data is posted (don't care to which queue it
+            // is posted, hence one condition variable for all queues):
             m_txReady.Wait( m_txLock );
         }
 
         // Send in priority order:
-        /// @todo if one queue is always full we could get starvation here...how to fix?
+        /// @todo if one queue is always full we could get starvation here...how to fix? Counter for each queue
+        /// indicating how many send loops it has been not empty?
         /// (But in that case the system is overloaded anyway so what would we like to do when overloaded?)
         for ( auto& pair : m_txQueues )
         {
             SendAll( pair.second );
         }
     }
+
+    std::cerr << "PacketMuxer::Send() exited." << std::endl;
 }
 
 /**
@@ -131,7 +146,6 @@ void PacketMuxer::SendPacket( const ComPacket& packet )
     size_t writeCount = sizeof(uint32_t);
     uint32_t type = htonl( static_cast<uint32_t>( packet.GetType() ) );
     bool ok = WriteBytes( reinterpret_cast<const uint8_t*>(&type), writeCount );
-
 
     // Write the data size:
     uint32_t size = htonl( packet.GetDataSize() );

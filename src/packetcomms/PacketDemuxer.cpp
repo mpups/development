@@ -49,14 +49,14 @@ PacketSubscription PacketDemuxer::Subscribe( ComPacket::Type type, PacketSubscri
     return PacketSubscription( queue.back() );
 }
 
-void PacketDemuxer::Unsubscribe( PacketSubscriber* pSubscriber )
+void PacketDemuxer::Unsubscribe( const PacketSubscriber* pSubscriber )
 {
-    /// @todo - how to locate the subscription? By raw pointer value?
+    /// @todo use FindSubscriber()
     ComPacket::Type type = pSubscriber->GetType();
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
 
     // Search through all subscribers of this type for the specific subscriber:
-    auto itr = std::remove_if( queue.begin(), queue.end(), [pSubscriber]( const PacketDemuxer::Subscriber& subscriber ) {
+    auto itr = std::remove_if( queue.begin(), queue.end(), [pSubscriber]( const PacketDemuxer::SubscriberPtr& subscriber ) {
         return subscriber.get() == pSubscriber;
     });
 
@@ -64,9 +64,41 @@ void PacketDemuxer::Unsubscribe( PacketSubscriber* pSubscriber )
     queue.erase( itr );
 }
 
+/**
+    @todo remove redundancy between this and unsubscribe
+*/
+bool PacketDemuxer::IsSubscribed( const PacketSubscriber* pSubscriber ) const
+{
+    ComPacket::Type type = pSubscriber->GetType();
+    auto queueItr = m_subscribers.find( type );
+
+    std::cout << "subs size:=" << m_subscribers.size() << std::endl;
+    if ( queueItr == m_subscribers.end() )
+    {
+        return false;
+    }
+
+    const SubscriptionEntry::second_type& queue = queueItr->second;
+
+    // Search through all subscribers of this type for the specific subscriber:
+    auto itr = std::find_if( queue.begin(), queue.end(), [pSubscriber]( const PacketDemuxer::SubscriberPtr& subscriber ) {
+        return subscriber.get() == pSubscriber;
+    });
+
+    return itr != queue.end();
+}
+
+/**
+    This function loops receiving data from the transport layer, splitting
+    it into packets. The loop exits if there is a transport error
+    (e.g. if the other end hangs up).
+
+    Runs asnchronously in its own thread (it is passed as a RunnableFunction
+    to m_receiveThread in the PacketDemuxer constructor).
+*/
 void PacketDemuxer::Receive()
 {
-    //std::cerr << "Receive thread started." << std::endl;
+    std::cerr << "PacketDemuxer::Receive() entered." << std::endl;
     ComPacket packet;
     while ( m_transportError == false )
     {
@@ -83,6 +115,9 @@ void PacketDemuxer::Receive()
             }
         }
     }
+
+    m_subscribers.clear();
+    std::cerr << "PacketDemuxer::Receive() exited." << std::endl;
 }
 
 /**

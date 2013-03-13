@@ -3,3 +3,4 @@ arm_build
 docs/html
 robolib.creator.user
 builds/arm_build_gcc4.6
+builds/beagle_build_g++4.6

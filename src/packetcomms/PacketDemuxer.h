@@ -33,7 +33,7 @@
 class PacketDemuxer
 {
 public:
-    typedef std::shared_ptr<PacketSubscriber> Subscriber;
+    typedef std::shared_ptr<PacketSubscriber> SubscriberPtr;
 
     PacketDemuxer( Socket& socket );
     virtual ~PacketDemuxer();
@@ -41,13 +41,14 @@ public:
     bool Ok() const;
 
     PacketSubscription Subscribe( ComPacket::Type type, PacketSubscriber::CallBack callback );
-    void Unsubscribe( PacketSubscriber* subscriber );
+    void Unsubscribe( const PacketSubscriber *subscriber );
+    bool IsSubscribed( const PacketSubscriber* subscriber ) const;
 
     void Receive();
     bool ReceivePacket( ComPacket& packet );
 
 protected:
-    typedef std::pair< ComPacket::Type, std::vector<Subscriber> > SubscriptionEntry;
+    typedef std::pair< ComPacket::Type, std::vector<SubscriberPtr> > SubscriptionEntry;
 
     bool ReadBytes( uint8_t* buffer, size_t& size );
 

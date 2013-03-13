@@ -27,6 +27,8 @@ public:
     double ComputeVideoBandwidthConsumed( double seconds );
 
 protected:
+    bool StreamerOk() const;
+    bool StreamerIoError() const;
     int  ReadPacket( uint8_t* buffer, int size );
 
 private:

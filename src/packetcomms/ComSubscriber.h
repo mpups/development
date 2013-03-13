@@ -18,7 +18,8 @@ class PacketDemuxer;
 */
 class PacketSubscriber
 {
-friend class PacketDemuxer;
+friend class PacketDemuxer; /// friended so it can access m_callback directly @todo Expose callback through getter instead?
+friend class PacketSubscription; // friended so it can call Unsubscribe()
 
 public:
     typedef std::function< void( const ComPacket::ConstSharedPacket& ) > CallBack;
@@ -28,10 +29,11 @@ public:
     PacketSubscriber( PacketSubscriber&& ) = delete;
 
     ComPacket::Type GetType() const { return m_type; };
-    void Unsubscribe();
 
 protected:
     PacketSubscriber( ComPacket::Type type, PacketDemuxer&, CallBack& );
+    void Unsubscribe();
+    bool IsSubscribed() const;
 
 private:
     ComPacket::Type m_type;
@@ -39,6 +41,13 @@ private:
     CallBack        m_callback;
 };
 
+/**
+    This class is a wrapper around a shared pointer to a PacketSubscriber.
+    The primary purpose of this class is the automatic unsubscription of the
+    wrapped subscriber when a PacketSubscription object goes out of scope.
+    hence the destructor calls PacketSubscriber::Unsubscribe() on the wrapped
+    subscriber.
+*/
 class PacketSubscription
 {
 public:
@@ -50,6 +59,8 @@ public:
     PacketSubscription& operator=(PacketSubscription&&);
 
     virtual ~PacketSubscription();
+
+    bool IsSubscribed() const;
 
 protected:
 

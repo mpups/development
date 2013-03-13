@@ -52,10 +52,10 @@ bool VideoClient::ReceiveVideoFrame( std::function< void(LibAvCapture&) > callba
 {
     assert( m_streamer != nullptr );
 
-    if ( m_streamer == nullptr || m_streamer->IoError() )
-    {
-        return false;
-    }
+//    if ( StreamerOk() )
+//    {
+//        return false;
+//    }
 
     bool gotFrame = m_streamer->GetFrame();
     if ( gotFrame )
@@ -78,12 +78,34 @@ double VideoClient::ComputeVideoBandwidthConsumed( double seconds )
     return bits_per_sec;
 }
 
+bool VideoClient::StreamerOk() const
+{
+    return m_streamer != nullptr && m_streamer->IoError() == false;
+}
+
+bool VideoClient::StreamerIoError() const
+{
+    if ( m_streamer.get() == nullptr )
+    {
+        return false; // Streamer not allocated yet (obviosuly this does not count as IO error)
+    }
+
+    return m_streamer->IoError();
+}
+
 int VideoClient::ReadPacket( uint8_t* buffer, int size )
 {
+    const int32_t packetTimeout_ms = 1000;
     SimpleQueue::LockedQueue lock = m_avPackets.Lock();
-    while ( m_avPackets.Empty() ) /// @note this used to check the state of the muxer (incase of comms error)
+    while ( m_avPackets.Empty() && m_subscription.IsSubscribed() )
     {
-        m_avPackets.WaitNotEmpty( lock );
+        std::cout << "ReadPacket(): subscribed := " << m_subscription.IsSubscribed() << std::endl;
+        m_avPackets.WaitNotEmpty( lock, packetTimeout_ms );
+    }
+
+    if ( StreamerIoError() )
+    {
+        return -1;
     }
 
     // We were asked for more than packet contains so loop through packets until
