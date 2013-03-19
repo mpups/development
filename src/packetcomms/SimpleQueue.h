@@ -62,7 +62,10 @@ public:
         // Check the caller holds the lock on this queue:
         if ( lock.m_secureLock == &m_lock )
         {
-            m_notEmpty.Wait( m_lock );
+            while ( m_items.empty() )
+            {
+                m_notEmpty.Wait( m_lock );
+            }
         }
         else
         {
@@ -75,7 +78,10 @@ public:
         // Check the caller holds the lock on this queue:
         if ( lock.m_secureLock == &m_lock )
         {
-            m_notEmpty.TimedWait( m_lock, timeoutInMilliseconds );
+            while ( m_items.empty() )
+            {
+                m_notEmpty.TimedWait( m_lock, timeoutInMilliseconds );
+            }
         }
         else
         {

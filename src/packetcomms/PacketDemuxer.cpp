@@ -127,7 +127,7 @@ void PacketDemuxer::Receive()
 bool PacketDemuxer::ReceivePacket( ComPacket& packet )
 {
     const int timeoutInMilliseconds = 1000;
-    if ( m_transport.WaitForData( timeoutInMilliseconds ) == false )
+    if ( m_transport.ReadyForReading( timeoutInMilliseconds ) == false )
     {
         return false;
     }
