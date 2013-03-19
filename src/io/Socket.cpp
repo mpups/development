@@ -200,19 +200,44 @@ bool Socket::GetPeerAddress( Ipv4Address& address )
 /**
     Wait (sleep) until data is available for reading from the socket.
 
-    @param timeout Maximum time to wait in milliseconds.
-    @return true if data is ready, false if the wait timedout or there was an error.
+    @param timeout Maximum time to wait in milliseconds (default value leads to no timeout).
+    @return true if data is ready, false if the wait timed-out or there was an error.
 */
-bool Socket::WaitForData( int timeoutInMilliseconds ) const
+bool Socket::ReadyForReading( int timeoutInMilliseconds ) const
+{
+    return WaitForSingleEvent( POLLIN, timeoutInMilliseconds );
+}
+
+/**
+    Wait (sleep) until a write to the socket will not block.
+
+    @param timeout Maximum time to wait in milliseconds (default value leads to no timeout).
+    @return true if write will not block, false if the wait timed-out or there was an error.
+*/
+bool Socket::ReadyForWriting( int timeoutInMilliseconds ) const
+{
+    return WaitForSingleEvent( POLLOUT, timeoutInMilliseconds );
+}
+
+/**
+    Use system call poll() to wait on the socket's file descriptor
+    for a single poll event.
+
+    @param pollEvent The event to wait and check for - only a single flag may be set.
+    @return true if the event
+*/
+bool Socket::WaitForSingleEvent( const short pollEvent, int timeoutInMilliseconds ) const
 {
     struct pollfd pfds;
     pfds.fd = m_socket;
-    pfds.events = POLLIN;
+    pfds.events = pollEvent;
     pfds.revents = 0;
     int val = poll( &pfds, 1, timeoutInMilliseconds );
-    assert( val >= 0 ); // Will only get this on error - on timeout 0 shoul dbe returned
+    assert( val >= 0 ); // Will only be -ve on error - on timeout return should be 0
 
-    if ( val == 1 && pfds.revents & POLLIN ) // val should be one because we were only waiting on 1 descriptor
+    // If successful then val should be one because
+    // we were only waiting onone file descriptor.
+    if ( val == 1 && pfds.revents & pollEvent )
     {
         return true;
     }
@@ -221,4 +246,3 @@ bool Socket::WaitForData( int timeoutInMilliseconds ) const
         return false;
     }
 }
-

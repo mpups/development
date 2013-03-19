@@ -37,13 +37,15 @@ public:
 
     bool GetPeerAddress( Ipv4Address& address );
 
-    bool WaitForData( int timeoutInMilliseconds = -1 ) const;
+    bool ReadyForReading( int timeoutInMilliseconds = -1 ) const;
+    bool ReadyForWriting( int timeoutInMilliseconds = -1 ) const;
 
 protected:
     int m_socket;
 
-private:
+    bool WaitForSingleEvent( const short pollEvent, int timeoutInMilliseconds ) const;
 
+private:
 };
 
 #endif // GLK_SOCKET_H
