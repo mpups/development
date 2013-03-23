@@ -78,7 +78,7 @@ public:
         // Check the caller holds the lock on this queue:
         if ( lock.m_secureLock == &m_lock )
         {
-            while ( m_items.empty() )
+            if ( m_items.empty() )
             {
                 m_notEmpty.TimedWait( m_lock, timeoutInMilliseconds );
             }

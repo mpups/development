@@ -36,9 +36,10 @@ Joystick::Joystick( JoystickDevice_t device )
 */
 Joystick::~Joystick()
 {
+    m_terminate = true;
+
     if ( m_joy > 0 )
     {
-        m_terminate = true;
         Thread::Join();
 
         close( m_joy );

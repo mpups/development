@@ -51,7 +51,6 @@ PacketSubscription PacketDemuxer::Subscribe( ComPacket::Type type, PacketSubscri
 
 void PacketDemuxer::Unsubscribe( const PacketSubscriber* pSubscriber )
 {
-    /// @todo use FindSubscriber()
     ComPacket::Type type = pSubscriber->GetType();
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
 
@@ -65,14 +64,13 @@ void PacketDemuxer::Unsubscribe( const PacketSubscriber* pSubscriber )
 }
 
 /**
-    @todo remove redundancy between this and unsubscribe
+    @return true if the specified subscriber is subscribed to this demuxer.
 */
 bool PacketDemuxer::IsSubscribed( const PacketSubscriber* pSubscriber ) const
 {
     ComPacket::Type type = pSubscriber->GetType();
     auto queueItr = m_subscribers.find( type );
 
-    std::cout << "subs size:=" << m_subscribers.size() << std::endl;
     if ( queueItr == m_subscribers.end() )
     {
         return false;

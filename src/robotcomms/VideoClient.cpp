@@ -99,7 +99,6 @@ int VideoClient::ReadPacket( uint8_t* buffer, int size )
     SimpleQueue::LockedQueue lock = m_avPackets.Lock();
     while ( m_avPackets.Empty() && m_subscription.IsSubscribed() )
     {
-        std::cout << "ReadPacket(): subscribed := " << m_subscription.IsSubscribed() << std::endl;
         m_avPackets.WaitNotEmpty( lock, packetTimeout_ms );
     }
 

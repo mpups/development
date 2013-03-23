@@ -117,7 +117,7 @@ bool RobotClient::RunCommsLoop()
         }
         else
         {
-            std::cout << "Odometry packet containing invalid data" << std::endl;
+            //std::cout << "Odometry packet containing invalid data" << std::endl;
         }
     });
 
