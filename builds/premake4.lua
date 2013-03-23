@@ -2,15 +2,17 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
---dofile( 'configure.lua' )
-dofile( 'configure_arm.lua' )
+dofile( 'configure.lua' )
+--dofile( 'configure_arm.lua' )
 
 -- Append individual link groups together so we can use LINKS to link to all libs:
 function append( A, B )
   for i,v in pairs(B) do table.insert(A,v) end
 end
---append( LINKS, OPENCV_LINKS )
---append( LINKS, OPENGL_LINKS )
+if ( CONFIGURING_ARM == nil or CONFIGURING_ARM == false ) then
+    append( LINKS, OPENCV_LINKS )
+    append( LINKS, OPENGL_LINKS )
+end
 append( LINKS, VIDEO_LINKS )
 append( LINKS, GLK_LINKS )
 append( LINKS, FFMPEG_LINKS )
@@ -110,16 +112,16 @@ end
         includedirs { "../include" }
         files { SRC .. 'tests/tools/VideoStreaming.cpp' }
         configuration {}
-        links ( LINKS )
         links { 'robolib' }
+        links ( LINKS )
 
     project 'packet-streaming'
         kind 'ConsoleApp'
         includedirs { "../include" }
         files { SRC .. 'tests/tools/PacketStreaming.cpp' }
         configuration {}
-        links ( LINKS )
         links { 'robolib' }
+        links ( LINKS )
 
     project 'gtests' -- unit tests
         kind 'ConsoleApp'
@@ -129,7 +131,7 @@ end
             excludes { SRC .. 'tests/unit/VideoTests*' }
         end
         configuration {}
-        links ( LINKS )
         links { 'robolib' }
+        links ( LINKS )
         links ( 'gtest' )
 

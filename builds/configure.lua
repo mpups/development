@@ -1,6 +1,8 @@
 -- You can change these variables so that
 -- they are appropriate for your system:
 
+LIB_TYPE = 'SharedLib'
+
 TARGET_DIR   = 'linux_build'
 
 INCLUDE_DIRS = {
@@ -30,7 +32,7 @@ OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }
 SYSTEM_LINKS = { 'pthread', 'rt' }
 LINKS = { 'lua5.1', 'freetype', 'unicap' }
 FFMPEG_LINKS = { 'avcodec', 'avformat', 'avutil', 'swscale' }
-GLK_LINKS = { 'glk', 'glkcore' }
+GLK_LINKS = { 'glk_d', 'glkcore_d' }
 VIDEO_LINKS = { 'videolib' }
 
 -- need these defines because ffmpeg libs use C99 standard macros which are not in any C++ standards.
