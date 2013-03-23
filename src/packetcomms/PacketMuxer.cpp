@@ -66,7 +66,7 @@ void PacketMuxer::Send()
             // Atomically relinquish lock for send queues and wait
             // until new data is posted (don't care to which queue it
             // is posted, hence one condition variable for all queues):
-            m_txReady.Wait( m_txLock );
+            m_txReady.TimedWait( m_txLock, 1000 );
         }
 
         // Send in priority order:
@@ -123,6 +123,9 @@ void PacketMuxer::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size
 
     @note Assumes you have acquired the appropriate
     lock to access the specified PacketContainer.
+
+     @bug Bug on shutdown - the queues are always empty so we never attempt to send any packets
+     and therefore never get to state where m_transportError is true, hence the caller loops forever.
 */
 void PacketMuxer::SendAll( ComPacket::PacketContainer& packets )
 {

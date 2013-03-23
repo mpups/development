@@ -50,7 +50,7 @@ public:
 protected:
     typedef std::pair< ComPacket::Type, std::vector<SubscriberPtr> > SubscriptionEntry;
 
-    bool ReadBytes( uint8_t* buffer, size_t& size );
+    bool ReadBytes( uint8_t* buffer, size_t& size, bool transportErrorOnZeroBytes=false );
 
 private:
     RunnableFunction m_receiver;

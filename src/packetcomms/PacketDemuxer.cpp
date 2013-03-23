@@ -114,7 +114,6 @@ void PacketDemuxer::Receive()
         }
     }
 
-    m_subscribers.clear();
     std::cerr << "PacketDemuxer::Receive() exited." << std::endl;
 }
 
@@ -133,8 +132,10 @@ bool PacketDemuxer::ReceivePacket( ComPacket& packet )
     uint32_t type = 0;
     uint32_t size = 0;
 
+    // For the first read we generate a transport error on zero bytes
+    // (because ReadyFoirReading() said there were bytes available):
     size_t byteCount = sizeof(uint32_t);
-    bool ok = ReadBytes( reinterpret_cast<uint8_t*>(&type), byteCount );
+    bool ok = ReadBytes( reinterpret_cast<uint8_t*>(&type), byteCount, true );
     if ( !ok ) return false;
 
     byteCount = sizeof(uint32_t);
@@ -163,14 +164,25 @@ bool PacketDemuxer::ReceivePacket( ComPacket& packet )
 
     On error (return of false) size will contain the number of bytes that were remaining to be read.
 
-    @return true if all bytes were written, false if there was an error at any point.
+    @param transportErrorOnZeroBytes If this is true then in the case that Read() returns zero bytes
+    a transport error will be signalled and ReadBytes() will return false.
+
+    @return true if all bytes were written, false if there was an error at any point. Also see impact
+    of the transportErrorOnZeroBytes parameter on the return value.
 */
-bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size )
+bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size, bool transportErrorOnZeroBytes )
 {
-    while ( size > 0 )
+    while ( size > 0 && m_transportError == false )
     {
         int n = m_transport.Read( reinterpret_cast<char*>( buffer ), size );
-        if ( n < 0 || m_transportError )
+
+        if ( n == 0 && transportErrorOnZeroBytes )
+        {
+            m_transportError = true;
+            return false;
+        }
+
+        if ( n < 0 )
         {
             return false;
         }
