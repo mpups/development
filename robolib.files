@@ -945,8 +945,10 @@ src/robotcomms/VideoClient.cpp
 src/packetcomms/SimpleQueue.h
 src/packetcomms/PacketMuxer.h
 src/packetcomms/PacketDemuxer.h
-src/packetcomms/ComSubscriber.h
+src/packetcomms/PacketSubscription.h
 src/packetcomms/ComPacket.h
 src/packetcomms/PacketMuxer.cpp
 src/packetcomms/PacketDemuxer.cpp
-src/packetcomms/ComSubscriber.cpp
+src/packetcomms/PacketSubscription.cpp
+src/packetcomms/PacketSubscriber.h
+src/packetcomms/PacketSubscriber.cpp

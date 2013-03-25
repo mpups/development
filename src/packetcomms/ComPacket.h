@@ -19,6 +19,7 @@ public:
 
      enum class Type : std::uint32_t {
         Invalid = 0,
+        Control,
         AvInfo,
         AvData,
         Odometry,
@@ -58,6 +59,7 @@ public:
     std::vector<uint8_t>::size_type GetDataSize() const noexcept { return m_data.size(); };
     const std::vector<uint8_t>& GetData() const { return m_data; };
     std::vector<uint8_t>& GetData() { return m_data; };
+
 protected:
 
 private:

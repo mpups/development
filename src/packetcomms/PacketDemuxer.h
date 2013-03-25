@@ -12,7 +12,8 @@
 
 #include "../utility/RunnableFunction.h"
 #include "../packetcomms/ComPacket.h"
-#include "../packetcomms/ComSubscriber.h"
+#include "../packetcomms/PacketSubscription.h"
+#include "../packetcomms/PacketSubscriber.h"
 
 /**
     Class which manages communications to and from the robot.
@@ -62,6 +63,9 @@ private:
     Socket& m_transport;
     bool m_transportError;
 
+    void ReceiveHelloMessage( ComPacket& packet );
+    void HandleControlMessage( const ComPacket::ConstSharedPacket& sptr );
+    int InterpretControlMessage( const ComPacket::ConstSharedPacket& sptr );
 };
 
 #endif /* __PACKET_DEMUXER_H__ */

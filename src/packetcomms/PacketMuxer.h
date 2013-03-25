@@ -16,7 +16,7 @@
 #include <memory>
 
 #include "../packetcomms/ComPacket.h"
-#include "../packetcomms/ComSubscriber.h"
+#include "../packetcomms/PacketSubscription.h"
 #include "../utility/RunnableFunction.h"
 
 /**
@@ -73,6 +73,14 @@ private:
 
     Socket& m_transport;
     bool m_transportError;
+
+    enum ControlMessage
+    {
+        Hello = 0,
+        HeartBeat
+    };
+
+    void SendControlMessage( ControlMessage msg );
 };
 
 #endif /* _PACKET_MUXER_H_ */

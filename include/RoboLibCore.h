@@ -13,7 +13,7 @@
 #include "../src/motor_control/TeleJoystick.h"
 
 #include "../src/packetcomms/ComPacket.h"
-#include "../src/packetcomms/ComSubscriber.h"
+#include "../src/packetcomms/PacketSubscriber.h"
 #include "../src/packetcomms/PacketDemuxer.h"
 #include "../src/packetcomms/PacketMuxer.h"
 #include "../src/packetcomms/SimpleQueue.h"

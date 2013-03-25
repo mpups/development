@@ -98,18 +98,29 @@ void PacketDemuxer::Receive()
 {
     std::cerr << "PacketDemuxer::Receive() entered." << std::endl;
     ComPacket packet;
+    ReceiveHelloMessage( packet );
+
     while ( m_transportError == false )
     {
         if ( ReceivePacket( packet ) )
         {
-            ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
+            const ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
             auto sptr = std::make_shared<ComPacket>( std::move(packet) );
 
-            // Post the new packet to the message queues of all the subscribers for this packet type:
-            SubscriptionEntry::second_type& queue = m_subscribers[ packetType ];
-            for ( auto& subscriber : queue )
+            if ( packetType == ComPacket::Type::Control )
             {
-                subscriber->m_callback( sptr );
+                // Control messages are used by the muxer to communicate
+                // with the demuxer (this is a one way protocol).
+                HandleControlMessage( sptr );
+            }
+            else
+            {
+                // Post the new packet to the message queues of all the subscribers for this packet type:
+                SubscriptionEntry::second_type& queue = m_subscribers[ packetType ];
+                for ( auto& subscriber : queue )
+                {
+                    subscriber->m_callback( sptr );
+                }
             }
         }
     }
@@ -133,7 +144,7 @@ bool PacketDemuxer::ReceivePacket( ComPacket& packet )
     uint32_t size = 0;
 
     // For the first read we generate a transport error on zero bytes
-    // (because ReadyFoirReading() said there were bytes available):
+    // (because ReadyForReading() said there were bytes available):
     size_t byteCount = sizeof(uint32_t);
     bool ok = ReadBytes( reinterpret_cast<uint8_t*>(&type), byteCount, true );
     if ( !ok ) return false;
@@ -192,4 +203,50 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size, bool transportErro
     }
 
     return true;
+}
+
+/**
+    Receive the hello message. The first packet sent from a PacketMuxer to
+    a demuxer will always be an Hello control message. If the first message
+    is not such a message it is considered a transport error and the demuxer
+    will terminate for safety.
+
+    This should make it extremely unlikely that an accidental connection
+    can cause the demuxer to do anything dodgy.
+*/
+void PacketDemuxer::ReceiveHelloMessage( ComPacket& packet )
+{
+    if ( ReceivePacket( packet ) )
+    {
+        bool failHard = true;
+
+        // Very first packet should be a 'Hello' control packet:
+        if ( packet.GetType() == ComPacket::Type::Control )
+        {
+            auto sptr = std::make_shared<ComPacket>( std::move(packet) );
+            /// @todo - use the enum here (need to move it out of class 1st)
+            int msg = InterpretControlMessage( sptr );
+            if ( msg == 0 )
+            {
+                failHard = false; // 'Hello' == 0
+            }
+        }
+
+        if ( failHard )
+        {
+            std::cerr << "Error in PacketDemuxer::Receive() - first message was not 'Hello'." << std::endl;
+            m_transportError = true;
+        }
+    }
+}
+
+void PacketDemuxer::HandleControlMessage( const ComPacket::ConstSharedPacket& sptr )
+{
+}
+
+int PacketDemuxer::InterpretControlMessage( const ComPacket::ConstSharedPacket& sptr )
+{
+    const uint32_t netMsg = *( reinterpret_cast<const uint32_t*>(sptr.get()->GetDataPtr()) );
+    const uint32_t msg = ntohl( netMsg );
+    return msg;
 }

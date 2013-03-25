@@ -56,6 +56,8 @@ void PacketMuxer::Send()
 {
     std::cerr << "PacketMuxer::Send() entered." << std::endl;
 
+    SendControlMessage( Hello );
+
     // Grab the lock for the transmit/send queues:
     GLK::MutexLock lock( m_txLock );
 
@@ -190,4 +192,10 @@ void PacketMuxer::SignalPacketPosted()
 {
     m_numPosted += 1;
     m_txReady.WakeOne();
+}
+
+void PacketMuxer::SendControlMessage( ControlMessage msg )
+{
+    uint32_t netMsg = htonl( msg );
+    EmplacePacket( ComPacket::Type::Control, reinterpret_cast<uint8_t*>(&netMsg), sizeof(uint32_t) );
 }

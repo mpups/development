@@ -135,7 +135,9 @@ void RobotServer::RunCommsLoop()
         auto muxerPair = std::make_pair( std::ref(*m_muxer), std::ref(*m_demuxer) );
         TeleJoystick teljoy( muxerPair, m_drive.get() ); // Will start receiving and processing remote joystick cammands immediately.
         teljoy.Go();
-        while ( teljoy.IsRunning() == false )
+
+        /// @bug - race condition: following can loop forever if teljoy thread runs and then stops before we get to this test
+        //while ( teljoy.IsRunning() == false )
         {
             GLK::Thread::Sleep( 20 );
         }
