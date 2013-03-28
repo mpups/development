@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <type_traits>
 
 /**
     Create a new muxer that will send packets over the specified
@@ -56,7 +57,7 @@ void PacketMuxer::Send()
 {
     std::cerr << "PacketMuxer::Send() entered." << std::endl;
 
-    SendControlMessage( Hello );
+    SendControlMessage( ControlMessage::Hello );
 
     // Grab the lock for the transmit/send queues:
     GLK::MutexLock lock( m_txLock );
@@ -196,6 +197,6 @@ void PacketMuxer::SignalPacketPosted()
 
 void PacketMuxer::SendControlMessage( ControlMessage msg )
 {
-    uint32_t netMsg = htonl( msg );
-    EmplacePacket( ComPacket::Type::Control, reinterpret_cast<uint8_t*>(&netMsg), sizeof(uint32_t) );
+    /// @todo should use this once g++ is updated: std::underlying_type(ControlMessage)
+    EmplacePacket( ComPacket::Type::Control, reinterpret_cast<uint8_t*>(&msg), sizeof(uint8_t) );
 }

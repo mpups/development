@@ -10,10 +10,12 @@
 
 #include <unordered_map>
 
+#include "ComPacket.h"
+#include "PacketSubscription.h"
+#include "PacketSubscriber.h"
+#include "ControlMessage.h"
+
 #include "../utility/RunnableFunction.h"
-#include "../packetcomms/ComPacket.h"
-#include "../packetcomms/PacketSubscription.h"
-#include "../packetcomms/PacketSubscriber.h"
 
 /**
     Class which manages communications to and from the robot.
@@ -52,6 +54,7 @@ protected:
     typedef std::pair< ComPacket::Type, std::vector<SubscriberPtr> > SubscriptionEntry;
 
     bool ReadBytes( uint8_t* buffer, size_t& size, bool transportErrorOnZeroBytes=false );
+    void SignalTransportError();
 
 private:
     RunnableFunction m_receiver;
@@ -65,7 +68,7 @@ private:
 
     void ReceiveHelloMessage( ComPacket& packet );
     void HandleControlMessage( const ComPacket::ConstSharedPacket& sptr );
-    int InterpretControlMessage( const ComPacket::ConstSharedPacket& sptr );
+    ControlMessage GetControlMessage( const ComPacket::ConstSharedPacket& sptr );
 };
 
 #endif /* __PACKET_DEMUXER_H__ */

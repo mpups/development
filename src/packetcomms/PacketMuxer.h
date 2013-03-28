@@ -15,8 +15,10 @@
 #include <functional>
 #include <memory>
 
-#include "../packetcomms/ComPacket.h"
-#include "../packetcomms/PacketSubscription.h"
+#include "ComPacket.h"
+#include "PacketSubscription.h"
+#include "ControlMessage.h"
+
 #include "../utility/RunnableFunction.h"
 
 /**
@@ -73,12 +75,6 @@ private:
 
     Socket& m_transport;
     bool m_transportError;
-
-    enum ControlMessage
-    {
-        Hello = 0,
-        HeartBeat
-    };
 
     void SendControlMessage( ControlMessage msg );
 };

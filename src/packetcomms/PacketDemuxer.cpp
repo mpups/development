@@ -22,9 +22,7 @@ PacketDemuxer::PacketDemuxer( Socket& socket )
 
 PacketDemuxer::~PacketDemuxer()
 {
-    {
-        m_transportError = true; /// Causes receive-thread to exit (@todo use better method)
-    }
+    SignalTransportError(); /// Causes receive-thread to exit (@todo use better method)
 
     m_receiveThread.Join();
 }
@@ -36,7 +34,6 @@ bool PacketDemuxer::Ok() const
 {
     return m_transportError == false;
 }
-
 
 /**
     Returns a subscriber object.
@@ -189,7 +186,7 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size, bool transportErro
 
         if ( n == 0 && transportErrorOnZeroBytes )
         {
-            m_transportError = true;
+            SignalTransportError();
             return false;
         }
 
@@ -205,6 +202,11 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size, bool transportErro
     return true;
 }
 
+void PacketDemuxer::SignalTransportError()
+{
+    m_transportError = true;
+}
+
 /**
     Receive the hello message. The first packet sent from a PacketMuxer to
     a demuxer will always be an Hello control message. If the first message
@@ -212,7 +214,10 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size, bool transportErro
     will terminate for safety.
 
     This should make it extremely unlikely that an accidental connection
-    can cause the demuxer to do anything dodgy.
+    can cause the demuxer to do anything dodgy. This is not intended to be
+    a security measure, if security is important the application must perform
+    its own secure handshaking procedure at a higher level (external to the
+    Muxer/Demuxer system).
 */
 void PacketDemuxer::ReceiveHelloMessage( ComPacket& packet )
 {
@@ -224,18 +229,17 @@ void PacketDemuxer::ReceiveHelloMessage( ComPacket& packet )
         if ( packet.GetType() == ComPacket::Type::Control )
         {
             auto sptr = std::make_shared<ComPacket>( std::move(packet) );
-            /// @todo - use the enum here (need to move it out of class 1st)
-            int msg = InterpretControlMessage( sptr );
-            if ( msg == 0 )
+            ControlMessage msg = GetControlMessage( sptr );
+            if ( msg == ControlMessage::Hello )
             {
-                failHard = false; // 'Hello' == 0
+                failHard = false;
             }
         }
 
         if ( failHard )
         {
             std::cerr << "Error in PacketDemuxer::Receive() - first message was not 'Hello'." << std::endl;
-            m_transportError = true;
+            SignalTransportError();
         }
     }
 }
@@ -244,9 +248,8 @@ void PacketDemuxer::HandleControlMessage( const ComPacket::ConstSharedPacket& sp
 {
 }
 
-int PacketDemuxer::InterpretControlMessage( const ComPacket::ConstSharedPacket& sptr )
+ControlMessage PacketDemuxer::GetControlMessage( const ComPacket::ConstSharedPacket& sptr )
 {
-    const uint32_t netMsg = *( reinterpret_cast<const uint32_t*>(sptr.get()->GetDataPtr()) );
-    const uint32_t msg = ntohl( netMsg );
-    return msg;
+    const uint8_t netMsg = *(sptr.get()->GetDataPtr());
+    return static_cast<ControlMessage>( netMsg );
 }
