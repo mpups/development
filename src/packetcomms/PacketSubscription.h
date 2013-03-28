@@ -7,6 +7,7 @@
 #include <memory>
 
 class PacketSubscriber;
+class PacketDemuxer;
 
 /**
     This class is a wrapper around a shared pointer to a PacketSubscriber.
@@ -28,6 +29,7 @@ public:
     virtual ~PacketSubscription();
 
     bool IsSubscribed() const;
+    const PacketDemuxer& GetDemuxer() const;
 
 protected:
 

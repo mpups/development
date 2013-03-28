@@ -23,6 +23,8 @@ public:
 
     ComPacket::Type GetType() const { return m_type; };
 
+    const PacketDemuxer& GetDemuxer() const { return m_comms; };
+
 protected:
     PacketSubscriber( ComPacket::Type type, PacketDemuxer&, CallBack& );
     void Unsubscribe();

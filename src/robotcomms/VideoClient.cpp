@@ -52,11 +52,6 @@ bool VideoClient::ReceiveVideoFrame( std::function< void(LibAvCapture&) > callba
 {
     assert( m_streamer != nullptr );
 
-//    if ( StreamerOk() )
-//    {
-//        return false;
-//    }
-
     bool gotFrame = m_streamer->GetFrame();
     if ( gotFrame )
     {
@@ -97,7 +92,7 @@ int VideoClient::ReadPacket( uint8_t* buffer, int size )
 {
     const int32_t packetTimeout_ms = 1000;
     SimpleQueue::LockedQueue lock = m_avPackets.Lock();
-    while ( m_avPackets.Empty() )
+    while ( m_avPackets.Empty() && m_subscription.GetDemuxer().Ok() )
     {
         m_avPackets.WaitNotEmpty( lock, packetTimeout_ms );
     }

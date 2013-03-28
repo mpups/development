@@ -39,3 +39,8 @@ bool PacketSubscription::IsSubscribed() const
 {
     return m_subscriber->IsSubscribed();
 }
+
+const PacketDemuxer& PacketSubscription::GetDemuxer() const
+{
+    return m_subscriber->GetDemuxer();
+}

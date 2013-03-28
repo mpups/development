@@ -233,7 +233,6 @@ void PacketDemuxer::ReceiveHelloMessage( ComPacket& packet )
             if ( msg == ControlMessage::Hello )
             {
                 failHard = false;
-                std::cerr << "Received 'Hello' message." << std::endl;
             }
         }
 
@@ -247,7 +246,6 @@ void PacketDemuxer::ReceiveHelloMessage( ComPacket& packet )
 
 void PacketDemuxer::HandleControlMessage( const ComPacket::ConstSharedPacket& sptr )
 {
-    ControlMessage msg = GetControlMessage( sptr );
 }
 
 ControlMessage PacketDemuxer::GetControlMessage( const ComPacket::ConstSharedPacket& sptr )
