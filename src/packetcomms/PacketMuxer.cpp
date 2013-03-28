@@ -16,6 +16,7 @@ PacketMuxer::PacketMuxer( Socket& socket )
 :
     m_sender        ( std::bind(&PacketMuxer::Send, std::ref(*this)) ),
     m_sendThread    ( m_sender ),
+    m_txLock        ( GLK::Mutex::Recursive ), // Had to make this recursive so we can emplace control packets to the queue internally while we already hold the tx lock.
     m_numPosted     (0),
     m_numSent       (0),
     m_transport     ( socket ),
@@ -69,7 +70,17 @@ void PacketMuxer::Send()
             // Atomically relinquish lock for send queues and wait
             // until new data is posted (don't care to which queue it
             // is posted, hence one condition variable for all queues):
-            m_txReady.TimedWait( m_txLock, 1000 );
+            bool ready = m_txReady.TimedWait( m_txLock, 1000 );
+            if ( ready == false )
+            {
+                // If there are no packets to send after waiting for 1 second then
+                // send a 'HeartBeat' message - this serves two purposes:
+                // 1. Lets the other side know we are still connected.
+                // 2. Lets this side detect if the other side has hung up or crashed (Sending the packet will fail at the socket level).
+                // These are similar to TCP keep-alive messages, but there is no defined standard about how to use TCP keepalive to
+                // achieve the same behaviour:
+                SendControlMessage( ControlMessage::HeartBeat );
+            }
         }
 
         // Send in priority order:

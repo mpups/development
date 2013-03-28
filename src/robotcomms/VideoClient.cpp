@@ -97,7 +97,7 @@ int VideoClient::ReadPacket( uint8_t* buffer, int size )
 {
     const int32_t packetTimeout_ms = 1000;
     SimpleQueue::LockedQueue lock = m_avPackets.Lock();
-    while ( m_avPackets.Empty() && m_subscription.IsSubscribed() )
+    while ( m_avPackets.Empty() )
     {
         m_avPackets.WaitNotEmpty( lock, packetTimeout_ms );
     }

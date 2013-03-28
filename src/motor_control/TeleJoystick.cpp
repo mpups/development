@@ -92,7 +92,7 @@ void TeleJoystick::Run()
         }
         else
         {
-            fprintf( stderr, "Drive control (interval %f secs) := %d,%d (%d)\n", timeSinceLastCommand_secs, jx, jy, jmax );
+            //fprintf( stderr, "Drive control (interval %f secs) := %d,%d (%d)\n", timeSinceLastCommand_secs, jx, jy, jmax );
             DiffDrive::MotorData odometry;
             odometry.leftTime = 0;
             odometry.rightPos = 0;
