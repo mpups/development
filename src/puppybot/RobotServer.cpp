@@ -80,15 +80,9 @@ void RobotServer::PostConnectionSetup()
     }
 
     // Setup camera:
-    m_camera.reset( new UnicapCapture() );
-    size_t imageBufferSize = m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t);
-    if ( m_camera->IsOpen() )
-    {
-        m_camera->StartCapture();
-        int err = posix_memalign( (void**)&m_lum, 16, imageBufferSize );
-        assert( err == 0 );
-    }
-    else
+    m_camera.reset( new UnicapCamera() );
+
+    if ( m_camera->IsOpen() == false )
     {
         m_camera.reset();
     }
@@ -109,9 +103,7 @@ void RobotServer::PostCommsCleanup()
     
     if ( m_camera )
     {
-        m_camera->StopCapture();
         m_camera.reset();
-        free( m_lum );
     }
 }
 
@@ -187,32 +179,69 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     int streamHeight = 240; // m_camera->GetFrameHeight()
     streamer.AddVideoStream( streamWidth, streamHeight, 30, video::FourCc( 'F','M','P','4' ) );
 
-    struct timespec t1;
-    struct timespec t2;
-
     int w = m_camera->GetFrameWidth();
     int h = m_camera->GetFrameHeight();
 
-    bool sentOk = true;
-    clock_gettime( CLOCK_MONOTONIC, &t1 );
+    // allocate a buffer for video conversion:
+    uint8_t* m_buffer;
+    const std::size_t bufferSize = m_camera->GetFormatBufferSize();
+    int err = posix_memalign( (void**)&m_buffer, 16, bufferSize );
+    assert( err == 0 );
 
-    // Wrap the camera's internal buffer with a VideoFrame object (this assumes the camera's buffer never gets moved/reallocated):
-    VideoFrame frame( m_camera->UnsafeBufferAccess(), PIX_FMT_YUV420P, w/2, h/2, w/2 ); // YUV420P is native for mpg4
+    // Wrap the conversion buffer in a video frame object (YUV420P is native for mpg4):
+    VideoFrame frame( m_buffer, PIX_FMT_YUV420P, w/2, h/2, w/2 );
 
-    // Get-frame must be last in this condition because if it suceeds DoneFrame() must be called:
-    while ( sentOk && joy.IsRunning() && m_camera->GetFrame() )
+    // Capture control variables:
+    GLK::Mutex bufferLock;
+    GLK::ConditionVariable bufferReady;
+    int framesConverted = 0;
+    int framesCompressed = 0;
+
+    // This lambda will be called back from a separate frame capture thread.
+    // It converts the video frame and then signals the main loop that a new
+    // frame is ready to be compressed:
+    struct timespec conversionStartTime;
+    struct timespec conversionEndTime;
+    double conversionTime = 0.0;
+    m_camera->SetCaptureCallback( [&]( const uint8_t* buffer, const timespec& time ) {
+        GLK::MutexLock locker( bufferLock );
+        clock_gettime( CLOCK_MONOTONIC, &conversionStartTime );
+        halfscale_yuyv422_to_yuv420p( 640, 480, buffer, m_buffer );
+        clock_gettime( CLOCK_MONOTONIC, &conversionEndTime );
+        conversionTime = milliseconds(conversionEndTime) - milliseconds(conversionStartTime);
+        framesConverted += 1;
+        bufferReady.WakeOne();
+    });
+
+    m_camera->StartCapture(); // This must not be called before SetCaptureCallback()
+
     {
-        clock_gettime( CLOCK_MONOTONIC, &t2 );
+        GLK::MutexLock locker( bufferLock );
+        bool sentOk = true;
+        //struct timespec waitStart;
+        //struct timespec waitEnd;
+        while ( sentOk && joy.IsRunning() )
+        {
+            //clock_gettime( CLOCK_MONOTONIC, &waitStart );
 
-        //halfscale_yuyv422_to_yuv420p( w, h, m_camera->UnsafeBufferAccess(), yuv420p );
-        sentOk = streamer.PutVideoFrame( frame );
+            // Wait for a new frame to be captured:
+            bufferReady.TimedWait( bufferLock, 500 );
 
-        m_camera->DoneFrame();
-        sentOk &= !streamer.IoError();
+            if ( framesCompressed != framesConverted )
+            {
+                //clock_gettime( CLOCK_MONOTONIC, &waitEnd );
+                framesCompressed += 1;
+                sentOk = streamer.PutVideoFrame( frame );
+                sentOk &= !streamer.IoError();
 
-        //double grabTime = milliseconds(t2) - milliseconds(t1);
-        //fprintf( stderr, "%f %f %f %f %f\n", grabTime, m_camera->GetFrameTimestamp_us()/1000.0,streamer.lastConvertTime_ms, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
-        clock_gettime( CLOCK_MONOTONIC, &t1 );
-    }
+                //double waitTime = milliseconds(waitEnd) - milliseconds(waitStart);
+                //fprintf( stderr, "%f %f %f %f\n", waitTime, conversionTime, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
+            }
+        }
+    }// extra scope for lock guard
+
+    // Stop the camera and free the conversion buffer:
+    m_camera->StopCapture();
+    free( m_buffer );
 }
 

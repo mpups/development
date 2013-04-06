@@ -107,10 +107,10 @@ bool RobotClient::RunCommsLoop()
             y += sinth*dx + costh*dy;
             th += wdt;
 
-            std::cout << "Odometry: left pos := " << odometry.leftPos << " right pos := " << odometry.rightPos << std::endl;
-            std::cout << "Distances : left := " << dLeft << "right : " << dRight << std::endl;
-            std::cout << "costh := " << costh << std::endl;
-            std::cout << "(x,y) - deg := " << x << "," << y << " - " << th * (180/3.141592654) << std::endl;
+            //std::cout << "Odometry: left pos := " << odometry.leftPos << " right pos := " << odometry.rightPos << std::endl;
+            //std::cout << "Distances : left := " << dLeft << "right : " << dRight << std::endl;
+            //std::cout << "costh := " << costh << std::endl;
+            //std::cout << "(x,y) - deg := " << x << "," << y << " - " << th * (180/3.141592654) << std::endl;
 
             lastCountLeft = odometry.leftPos;
             lastCountRight = odometry.rightPos;

@@ -30,8 +30,7 @@ private:
     std::unique_ptr<PacketDemuxer>  m_demuxer;
     std::unique_ptr<TcpSocket>      m_server;
     std::unique_ptr<TcpSocket>      m_con;
-    std::unique_ptr<UnicapCapture>  m_camera;
-    uint8_t* m_lum;
+    std::unique_ptr<UnicapCamera>   m_camera;
 };
 
 #endif // ROBOT_SERVER_H
