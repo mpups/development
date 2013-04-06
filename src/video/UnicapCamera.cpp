@@ -7,6 +7,7 @@
 #include <memory.h>
 
 #include <functional>
+#include <iostream>
 
 UnicapCamera::UnicapCamera( uint64_t guid )
 {
@@ -66,6 +67,10 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
     fillTime.tv_nsec = buffer->fill_time.tv_usec * 1000;
 
     UnicapCamera* camera = reinterpret_cast<UnicapCamera*>( data );
+    if ( camera->m_captureCallback == false )
+    {
+        std::cout << "Error: no capture callback set - did you call StartCapture() before SetCaptureCallback()?" << std::endl;
+    }
     camera->m_captureCallback( buffer->data, fillTime );
 }
 
@@ -269,7 +274,7 @@ void UnicapCamera::SetDefaultProperties()
     else
     {
        fprintf( stderr, "Falure: Could not turn on auto-brightness!\n" );
-    }
+    }*/
 
     status = unicap_set_property_auto( m_handle, "Exposure" );
     if ( SUCCESS( status ) )
@@ -279,7 +284,7 @@ void UnicapCamera::SetDefaultProperties()
     else
     {
        fprintf( stderr, "Falure: Could not turn on auto-exposure!\n" );
-    }*/
+    }
 
     status = unicap_set_property_value( m_handle, "Sharpness", 0.0 );
     if ( SUCCESS( status ) )

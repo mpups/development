@@ -14,9 +14,13 @@ extern "C" {
 class VideoFrame
 {
 public:
+    VideoFrame( const VideoFrame& ) = delete;
     VideoFrame( PixelFormat format, uint32_t width, uint32_t height );
     VideoFrame( uint8_t* buffer, PixelFormat format, uint32_t width, uint32_t height, uint32_t stride );
     virtual ~VideoFrame();
+
+    void operator = ( const VideoFrame& ) = delete;
+    void operator = ( VideoFrame&& ) = delete;
 
     AVPicture& GetAvPicture();
     const AVPicture& GetAvPicture() const;
@@ -32,7 +36,7 @@ private:
     PixelFormat m_format;
     int         m_width;
     int         m_height;
-    const bool m_freePicture;
+    const bool  m_freePicture;
 };
 
 #endif /* __VIDEO_FRAME_H__ */

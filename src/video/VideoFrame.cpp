@@ -7,10 +7,10 @@
 */
 VideoFrame::VideoFrame( PixelFormat format, uint32_t width, uint32_t height )
 :
-    m_format( format ),
-    m_width ( width  ),
-    m_height( height ),
-    m_freePicture (true)
+    m_format        ( format ),
+    m_width         ( width  ),
+    m_height        ( height ),
+    m_freePicture   ( true )
 {
     avpicture_alloc( &m_picture, format, width, height );
 }
@@ -22,10 +22,10 @@ VideoFrame::VideoFrame( PixelFormat format, uint32_t width, uint32_t height )
 */
 VideoFrame::VideoFrame( uint8_t* buffer, PixelFormat format, uint32_t width, uint32_t height, uint32_t stride )
 :
-    m_format( format ),
-    m_width ( width  ),
-    m_height( height ),
-    m_freePicture (false)
+    m_format        ( format ),
+    m_width         ( width  ),
+    m_height        ( height ),
+    m_freePicture   ( false )
 {
     memset( &m_picture, 0 , sizeof(m_picture) );
 
@@ -54,6 +54,16 @@ VideoFrame::~VideoFrame()
         avpicture_free( &m_picture );
     }
 }
+
+/*void VideoFrame::operator = ( VideoFrame&& moved )
+{
+    std::swap( m_format, moved.m_format );
+    std::swap( m_width, moved.m_width );
+    std::swap( m_height, moved.m_height );
+    std::swap( const_cast<bool&>(m_freePicture), const_cast<bool&>(moved.m_freePicture) );
+    /// @todo - Does this work?:
+    std::swap( m_picture, moved.m_picture );
+}*/
 
 /**
     Copy the internal AVPicture data pointers to the specified AVFrame.

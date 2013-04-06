@@ -13,9 +13,8 @@ UnicapCapture::UnicapCapture()
 {
     if ( m_camera.IsOpen() )
     {
-        std::size_t bufferSize = m_camera.GetFormatBufferSize();
+        const std::size_t bufferSize = m_camera.GetFormatBufferSize();
         int err = posix_memalign( (void**)&m_buffer, 16, bufferSize );
-
         m_camera.SetCaptureCallback( std::bind( &UnicapCapture::OnCapture, std::ref(*this), std::placeholders::_1, std::placeholders::_2 ) );
     }
 }

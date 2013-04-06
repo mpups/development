@@ -29,7 +29,7 @@
     @srcBuffer input yuv420p image of dimension wxh.
     @dstBuffer output yuv420p image of dimension (w/2)x(h/2).
 */
-void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* __restrict__ srcBuffer, uint8_t* __restrict__ dstBuffer )
+void halfscale_yuyv422_to_yuv420p( int w, int h, const uint8_t* __restrict__ srcBuffer, uint8_t* __restrict__ dstBuffer )
 {
     assert( srcBuffer != dstBuffer );
 
@@ -134,7 +134,7 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* __restrict__ srcBuffer
 
     @note The src and dst buffers are allowed to be the same buffer (works correctly in place).
 */
-void halfscale_yuyv422( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
+void halfscale_yuyv422( int w, int h, const uint8_t* srcBuffer, uint8_t* dstBuffer )
 {
     uint8_t perm[] = { 0,8,1,12,2,9,3,13,4,10,5,14,6,11,7,15 };
     uint8x8_t yuyv422_store_permutation1 = vld1_u8( perm );
@@ -199,7 +199,7 @@ void halfscale_yuyv422( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
 
 #else
 
-void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* __restrict__ srcBuffer, uint8_t* __restrict__ dstBuffer )
+void halfscale_yuyv422_to_yuv420p( int w, int h, const uint8_t* __restrict__ srcBuffer, uint8_t* __restrict__ dstBuffer )
 {
     assert( srcBuffer != dstBuffer );
 
@@ -221,7 +221,7 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* __restrict__ srcBuffer
             for ( int p=0;p<4;++p)
             {
                 // Row 1
-                uint8_t* srcRow = srcBuffer;
+                const uint8_t* srcRow = srcBuffer;
                 srcBuffer += 8;
 
                 y1 = srcRow[0];
@@ -333,9 +333,9 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, uint8_t* __restrict__ srcBuffer
 
     @note The src and dst buffers are allowed to be the same buffer (works correctly in place).
 */
-void halfscale_yuyv422( int w, int h, uint8_t* srcBuffer, uint8_t* dstBuffer )
+void halfscale_yuyv422( int w, int h, const uint8_t* srcBuffer, uint8_t* dstBuffer )
 {
-    uint8_t* const pSrc = srcBuffer;
+    const uint8_t* const pSrc = srcBuffer;
     uint8_t* const pDst = dstBuffer;
 
     // On first pass we'll scale horizontally:
