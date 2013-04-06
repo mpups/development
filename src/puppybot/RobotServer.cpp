@@ -167,7 +167,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 {
     assert( m_con );
 
-    // Lambda function that enqueues video packets via the Muxing system:
+    // Lambda that enqueues video packets via the Muxing system:
     FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [this]( uint8_t* buffer, int size ) {
         m_muxer->EmplacePacket( ComPacket::Type::AvData, buffer, size );
         return m_muxer->Ok() ? size : -1;
@@ -175,21 +175,20 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     LibAvWriter streamer( videoIO );
 
     // Setup an MPEG4 video stream for half-size video:
-    int streamWidth = 320; // m_camera->GetFrameWidth()
-    int streamHeight = 240; // m_camera->GetFrameHeight()
-    streamer.AddVideoStream( streamWidth, streamHeight, 30, video::FourCc( 'F','M','P','4' ) );
-
     int w = m_camera->GetFrameWidth();
     int h = m_camera->GetFrameHeight();
+    int streamWidth = w/2;
+    int streamHeight = h/2;
+    streamer.AddVideoStream( streamWidth, streamHeight, 30, video::FourCc( 'F','M','P','4' ) );
 
-    // allocate a buffer for video conversion:
+    // Allocate a buffer for video conversion:
     uint8_t* m_buffer;
     const std::size_t bufferSize = m_camera->GetFormatBufferSize();
     int err = posix_memalign( (void**)&m_buffer, 16, bufferSize );
     assert( err == 0 );
 
     // Wrap the conversion buffer in a video frame object (YUV420P is native for mpg4):
-    VideoFrame frame( m_buffer, PIX_FMT_YUV420P, w/2, h/2, w/2 );
+    VideoFrame frame( m_buffer, PIX_FMT_YUV420P, streamWidth, streamHeight, streamWidth );
 
     // Capture control variables:
     GLK::Mutex bufferLock;
@@ -202,9 +201,17 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     // frame is ready to be compressed:
     struct timespec conversionStartTime;
     struct timespec conversionEndTime;
+    struct timespec lockStart;
+    struct timespec lockEnd;
     double conversionTime = 0.0;
+    double lockTime = 0.0;
     m_camera->SetCaptureCallback( [&]( const uint8_t* buffer, const timespec& time ) {
+
+        clock_gettime( CLOCK_MONOTONIC, &lockStart );
         GLK::MutexLock locker( bufferLock );
+        clock_gettime( CLOCK_MONOTONIC, &lockEnd );
+        lockTime = milliseconds(lockEnd) - milliseconds(lockStart);
+
         clock_gettime( CLOCK_MONOTONIC, &conversionStartTime );
         halfscale_yuyv422_to_yuv420p( 640, 480, buffer, m_buffer );
         clock_gettime( CLOCK_MONOTONIC, &conversionEndTime );
@@ -213,29 +220,29 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
         bufferReady.WakeOne();
     });
 
-    m_camera->StartCapture(); // This must not be called before SetCaptureCallback()
+    m_camera->StartCapture(); // This must not be called before SetCaptureCallback().
 
     {
         GLK::MutexLock locker( bufferLock );
         bool sentOk = true;
-        //struct timespec waitStart;
-        //struct timespec waitEnd;
+        struct timespec waitStart;
+        struct timespec waitEnd;
         while ( sentOk && joy.IsRunning() )
         {
-            //clock_gettime( CLOCK_MONOTONIC, &waitStart );
+            clock_gettime( CLOCK_MONOTONIC, &waitStart );
 
             // Wait for a new frame to be captured:
             bufferReady.TimedWait( bufferLock, 500 );
 
             if ( framesCompressed != framesConverted )
             {
-                //clock_gettime( CLOCK_MONOTONIC, &waitEnd );
+                clock_gettime( CLOCK_MONOTONIC, &waitEnd );
                 framesCompressed += 1;
                 sentOk = streamer.PutVideoFrame( frame );
                 sentOk &= !streamer.IoError();
 
-                //double waitTime = milliseconds(waitEnd) - milliseconds(waitStart);
-                //fprintf( stderr, "%f %f %f %f\n", waitTime, conversionTime, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
+                double waitTime = milliseconds(waitEnd) - milliseconds(waitStart);
+                fprintf( stderr, "%f %f %f %f %f\n", lockTime, waitTime, conversionTime, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
             }
         }
     }// extra scope for lock guard
