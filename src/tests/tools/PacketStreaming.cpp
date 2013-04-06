@@ -34,7 +34,7 @@ int reportError( const char* error, bool fatal=true )
 */
 int streamVideo( TcpSocket& client )
 {
-    UnicapCamera camera;
+    UnicapCapture camera;
 
     if ( camera.IsOpen() )
     {

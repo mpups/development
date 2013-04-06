@@ -80,7 +80,7 @@ void RobotServer::PostConnectionSetup()
     }
 
     // Setup camera:
-    m_camera.reset( new UnicapCamera() );
+    m_camera.reset( new UnicapCapture() );
     size_t imageBufferSize = m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t);
     if ( m_camera->IsOpen() )
     {

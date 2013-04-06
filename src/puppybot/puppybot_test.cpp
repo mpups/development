@@ -22,7 +22,7 @@ void WritePgm( const char* fileName, const uint8_t* buffer, const uint32_t width
 int main( int argc, char** argv )
 {   
     // Try to get camera and motors:
-    UnicapCamera camera;
+    UnicapCapture camera;
     MotionMind motors( "/dev/ttyUSB0" );
 
     if ( camera.IsOpen() && motors.Available() )
