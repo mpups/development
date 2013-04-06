@@ -15,7 +15,7 @@ namespace video
 
     Lower case characters are converted to upper case before computing the code.
 */
-std::int32_t FourCc( char c1, char c2, char c3, char c4 )
+inline std::int32_t FourCc( char c1, char c2, char c3, char c4 )
 {
     std::int32_t fourcc = std::toupper(c4);
     fourcc <<= 8;

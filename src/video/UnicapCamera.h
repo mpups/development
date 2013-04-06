@@ -4,14 +4,13 @@
 #define UNICAP_CAMERA_H
 
 #include <stdint.h>
+#include <string>
 
 extern "C" {
 #include <unicap.h>
 }
 
 #include "FrameConverter.h"
-
-#include <glkcore.h>
 
 #include "CameraCapture.h"
 
@@ -58,8 +57,8 @@ private:
 
     unicap_handle_t m_handle;
 
-    GLK::ConditionVariable m_cond;
-    GLK::Mutex             m_mutex;
+    //GLK::ConditionVariable m_cond;
+    //GLK::Mutex             m_mutex;
     uint32_t               m_frameCount;
     uint32_t               m_retrievedCount;
 
@@ -67,8 +66,8 @@ private:
     uint32_t        m_width;
     uint32_t        m_height;
     uint64_t        m_guid;
-    GLK::String     m_vendor;
-    GLK::String     m_model;
+    std::string     m_vendor;
+    std::string     m_model;
     volatile uint64_t m_time;
 
     FrameConverter m_converter;

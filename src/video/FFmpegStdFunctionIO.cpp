@@ -24,8 +24,11 @@ FFMpegStdFunctionIO::FFMpegStdFunctionIO(  FFMpegCustomIO::BufferType direction,
 
 FFMpegStdFunctionIO::~FFMpegStdFunctionIO()
 {
+    if ( m_io->buffer == m_buffer )
+    {
+        av_free( m_buffer );
+    }
     av_free( m_io );
-    av_free( m_buffer );
 }
 
 AVIOContext* FFMpegStdFunctionIO::GetAVIOContext()

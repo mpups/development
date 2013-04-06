@@ -2,7 +2,7 @@
 
 #include <sys/stat.h>
 #include <iostream>
-
+#include <assert.h>
 #include <VideoLib.h>
 
 /*

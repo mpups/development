@@ -19,6 +19,12 @@ elseif()
   set( GTEST_BUILD_TESTS OFF CACHE BOOL )
 endif()
 
+find_package (GLK REQUIRED)
+if ( GLK_FOUND )
+    include_directories( ${GLK_INCLUDE_DIRS} )
+    set( LIBS ${LIBS} ${GLK_LIBRARIES})
+endif()
+
 project( utest )
 
 add_executable( utest WIN32

@@ -9,7 +9,7 @@ TOOLCHAIN = 'arm-linux-gnueabi-'
 LIB_TYPE = 'SharedLib'
 
 INCLUDE_DIRS = {
-    '../../glk/include',
+--    '../../glk/include',
     ARM_DEPLOYMENT .. '/include',
     ARM_DEPLOYMENT .. '/include/unicap',
     ARM_DEPLOYMENT .. '/include/freetype2',
@@ -17,8 +17,8 @@ INCLUDE_DIRS = {
 }
 
 LIB_DIRS = {
-    '../../glk/premake/beagle_build/debug',
-    '../../glk/premake/beagle_build/release',
+--    '../../glk/premake/beagle_build/debug',
+--    '../../glk/premake/beagle_build/release',
     ARM_DEPLOYMENT .. '/lib',
     ARM_PACKAGES .. '/lua-5.1.4/src'
 }
@@ -31,6 +31,6 @@ FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
 LINKS = { 'lua', 'freetype', 'unicap' }
 SYSTEM_LINKS = { 'pthread', 'rt', 'dl' }
 
-GLK_LINKS = { 'glkcore' }
+--GLK_LINKS = { 'glkcore' }
 
 CONFIGURING_ARM = true

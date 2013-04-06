@@ -26,23 +26,23 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
     UnicapCamera* camera = reinterpret_cast<UnicapCamera*>( data );
 
     {
-        camera->m_mutex.Lock();
+        //camera->m_mutex.Lock();
 
         struct timespec t1;
         struct timespec t2;
 
         clock_gettime( CLOCK_MONOTONIC, &t1 );
         /// @todo This shouldn't be hard coded - wasting a lot of time everytime I forget about this!
-        //halfscale_yuyv422_to_yuv420p( 640, 480, buffer->data, camera->m_buffer );
-        memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
+        halfscale_yuyv422_to_yuv420p( 640, 480, buffer->data, camera->m_buffer );
+        //memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
         clock_gettime( CLOCK_MONOTONIC, &t2 );
 
         camera->m_time = buffer->fill_time.tv_sec * 1000000;
         camera->m_time += buffer->fill_time.tv_usec;
         camera->m_frameCount += 1;
 
-        camera->m_cond.WakeOne();
-        camera->m_mutex.Unlock();
+        //camera->m_cond.WakeOne();
+        //camera->m_mutex.Unlock();
     }
 }
 
@@ -141,10 +141,10 @@ void UnicapCamera::StopCapture()
 **/
 bool UnicapCamera::GetFrame()
 {
-    m_mutex.Lock();
+    //m_mutex.Lock();
     while ( m_retrievedCount >= m_frameCount )
     {
-        m_cond.Wait( m_mutex );
+        //m_cond.Wait( m_mutex );
     }
 
     m_retrievedCount = m_frameCount;
@@ -157,7 +157,7 @@ bool UnicapCamera::GetFrame()
 **/
 void UnicapCamera::DoneFrame()
 {
-    m_mutex.Unlock();
+    //m_mutex.Unlock();
 }
 
 int32_t UnicapCamera::GetFrameWidth() const
@@ -185,12 +185,12 @@ uint64_t UnicapCamera::GetGuid() const
 
 const char* UnicapCamera::GetVendor() const
 {
-    return m_vendor.cStr();
+    return m_vendor.c_str();
 }
 
 const char* UnicapCamera::GetModel() const
 {
-    return m_model.cStr();
+    return m_model.c_str();
 }
 
 /**
@@ -295,8 +295,8 @@ bool UnicapCamera::OpenDevice()
     if ( m_handle )
     {
         m_guid = devices[0].model_id;
-        m_vendor = GLK::String( devices[0].vendor_name );
-        m_model = GLK::String( devices[0].model_name );
+        m_vendor = std::string( devices[0].vendor_name );
+        m_model = std::string( devices[0].model_name );
         fprintf( stderr, "\nUnicap: Opened camera with GUID %lu\n", m_guid );
 
         SetDefaultProperties();

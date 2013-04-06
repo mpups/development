@@ -18,12 +18,6 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/glk/share/cmake/Modules/")
 
-find_package (GLK REQUIRED)
-if ( GLK_FOUND )
-    include_directories( ${GLK_INCLUDE_DIRS} )
-    set( LIBS ${LIBS} ${GLK_LIBRARIES})
-endif()
-
 add_definitions( -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS )
 
 # My custom ffmpeg installation (Ubuntu install is an old broken version):
