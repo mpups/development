@@ -33,6 +33,8 @@ add_library( videolib SHARED
     video/LibAvWriter.h
     video/UnicapCamera.cpp
     video/UnicapCamera.h
+    video/UnicapCapture.cpp
+    video/UnicapCapture.h
     video/video_conversion.cpp
     video/video_conversion.h
     video/VideoFrame.cpp

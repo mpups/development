@@ -3,55 +3,12 @@
 
 #include <stdio.h>
 #include <assert.h>
-
-#include "video_conversion.h"
-
-static double milliseconds( struct timespec& t )
-{
-    return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
-}
 #include <unistd.h>
+#include <memory.h>
 
-/**
-    This gets called in the context of unicap's capture thread when a new frame arrives.
-    It then makes a copy of the capture buffer and signals a semaphore that an image is ready.
+#include <functional>
 
-    @todo Need different capture modes for different purposes - one should simply be a callback
-    to allow access to the raw data without any copy at all.
-**/
-void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unicap_data_buffer_t* buffer, void *data )
-{
-    assert( event == UNICAP_EVENT_NEW_FRAME );
-
-    UnicapCamera* camera = reinterpret_cast<UnicapCamera*>( data );
-
-    {
-        //camera->m_mutex.Lock();
-
-        struct timespec t1;
-        struct timespec t2;
-
-        clock_gettime( CLOCK_MONOTONIC, &t1 );
-        /// @todo This shouldn't be hard coded - wasting a lot of time everytime I forget about this!
-        halfscale_yuyv422_to_yuv420p( 640, 480, buffer->data, camera->m_buffer );
-        //memcpy( camera->m_buffer, buffer->data, buffer->buffer_size );
-        clock_gettime( CLOCK_MONOTONIC, &t2 );
-
-        camera->m_time = buffer->fill_time.tv_sec * 1000000;
-        camera->m_time += buffer->fill_time.tv_usec;
-        camera->m_frameCount += 1;
-
-        //camera->m_cond.WakeOne();
-        //camera->m_mutex.Unlock();
-    }
-}
-
-UnicapCamera::UnicapCamera( unsigned long long guid )
-:
-    m_frameCount    ( 0 ),
-    m_retrievedCount( 0 ),
-    m_buffer        ( 0 ),
-    m_time          (-1 )
+UnicapCamera::UnicapCamera( uint64_t guid )
 {
     if ( OpenDevice() )
     {
@@ -74,8 +31,6 @@ UnicapCamera::UnicapCamera( unsigned long long guid )
             unicap_status_t status = unicap_set_format( m_handle, &format );
             assert( SUCCESS( status ) );
 
-            int err = posix_memalign( (void**)&m_buffer, 16, format.buffer_size );
-
             m_width  = format.size.width;
             m_height = format.size.height;
         }
@@ -92,8 +47,6 @@ UnicapCamera::~UnicapCamera()
     {
         unicap_close( m_handle );
     }
-
-    free( m_buffer );
 }
 
 /**
@@ -102,6 +55,18 @@ UnicapCamera::~UnicapCamera()
 bool UnicapCamera::IsOpen() const
 {
     return m_handle != 0;
+}
+
+void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unicap_data_buffer_t* buffer, void *data )
+{
+    assert( event == UNICAP_EVENT_NEW_FRAME );
+
+    timespec fillTime;
+    fillTime.tv_sec = buffer->fill_time.tv_sec;
+    fillTime.tv_nsec = buffer->fill_time.tv_usec * 1000;
+
+    UnicapCamera* camera = reinterpret_cast<UnicapCamera*>( data );
+    camera->m_captureCallback( buffer->data, fillTime );
 }
 
 /**
@@ -132,34 +97,6 @@ void UnicapCamera::StopCapture()
     unicap_stop_capture( m_handle );
 }
 
-/**
-    Blocks until a frame is captured.
-
-    You must call DoneFrame() after each call to GetFrame().
-
-    @return true if capture was successful.
-**/
-bool UnicapCamera::GetFrame()
-{
-    //m_mutex.Lock();
-    while ( m_retrievedCount >= m_frameCount )
-    {
-        //m_cond.Wait( m_mutex );
-    }
-
-    m_retrievedCount = m_frameCount;
-
-    return true;
-}
-
-/**
-    This releases the frame so that the driver's capture thread can return a new frame.
-**/
-void UnicapCamera::DoneFrame()
-{
-    //m_mutex.Unlock();
-}
-
 int32_t UnicapCamera::GetFrameWidth() const
 {
     return m_width;
@@ -168,14 +105,6 @@ int32_t UnicapCamera::GetFrameWidth() const
 int32_t UnicapCamera::GetFrameHeight() const
 {
     return m_height;
-}
-
-/**
-    @return the frame's timestamp in micro seconds.
-*/
-int64_t UnicapCamera::GetFrameTimestamp_us() const
-{
-    return m_time;
 }
 
 uint64_t UnicapCamera::GetGuid() const
@@ -194,80 +123,29 @@ const char* UnicapCamera::GetModel() const
 }
 
 /**
-    @param data buffer into which image data will be copied - it must be large enough.
-    @param stride - the number of bytes between each row in the specified 'data'
-    buffer. 'stride' must be larger than the camera's image width.
-*/
-void UnicapCamera::ExtractLuminanceImage( uint8_t* data, int stride )
-{
-    unsigned char* pImg = m_buffer;
-    uint32_t h = m_height+1;
-    assert( stride >= m_width );
-    ptrdiff_t skip = stride - m_width;
-    while ( --h )
-    {
-        uint32_t w = m_width/2;
-        do
-        {
-            *data++ = *pImg;
-            pImg += 2;
-            *data++ = *pImg;
-            pImg += 2;
-        } while ( --w );
-        data += skip;
-    }
-}
-
-void UnicapCamera::ExtractRgbImage( uint8_t* dest, int stride )
-{
-    FrameConversion( PIX_FMT_RGB24, dest, stride );
-}
-
-/**
-    @note It seems that conversion to BGR is 2x faster than to RGB. BGR is also
-    preferred format for OpenGL and OpenCV so this method is recommended.
-*/
-void UnicapCamera::ExtractBgrImage( uint8_t* dest, int stride )
-{
-    FrameConversion( PIX_FMT_BGR24, dest, stride );
-}
-
-/**
     @returns the pointer to the internal image buffer which holds data in the format received from the camera.
 
     This is only intended to be used for debugging and critical optimisations.
 
     @note The returned buffer is only valid between the correspoding calls to GetFrame() and DoneFrame().
 */
-uint8_t* UnicapCamera::UnsafeBufferAccess() const
+std::size_t UnicapCamera::GetFormatBufferSize() const
 {
-    return m_buffer;
+    unicap_format_t format;
+    int status = unicap_get_format( m_handle, &format );
+    if ( status == STATUS_SUCCESS )
+    {
+        return format.buffer_size;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
-/**
-    Uses swscale library to convert the most recently captured frame to
-    the specified format.
-
-    @note It is currently assumed the output image will be the same size as that grabbed from
-    the camera.
-
-    @param data pointer to buffer that must be large enough to hold the data.
-    @param stride number of bytes to jump between rows in data.
-
-    @todo - conversion assumes camera image is YUYV422 - need to detect and choose format appropriately.
-*/
-void UnicapCamera::FrameConversion( PixelFormat format, uint8_t* data, int stride )
+void UnicapCamera::SetCaptureCallback( CaptureFunction&& callback )
 {
-    const int w = m_width;
-    const int h = m_height;
-    const int srcStride = w*2;
-    uint8_t* srcPlanes[4] = { m_buffer, 0, 0, 0 };
-    int srcStrides[4] = { srcStride, 0, 0, 0 };
-    uint8_t* dstPlanes[4] = { data, 0, 0, 0 };
-    int dstStrides[4] = { stride, 0, 0, 0 };
-
-    m_converter.Configure( w, h, PIX_FMT_YUYV422, w, h, format );
-    m_converter.Convert( srcPlanes, srcStrides, 0, h, dstPlanes, dstStrides );
+    m_captureCallback = callback;
 }
 
 /**
@@ -424,7 +302,7 @@ void UnicapCamera::SetDefaultProperties()
        fprintf( stderr, "Failure: Could not turn on auto-gain!\n" );
     }
 
-    const double framerate_hz = 30;
+    const double framerate_hz = 60;
     status = unicap_set_property_value( m_handle, "frame rate", framerate_hz );
     if ( SUCCESS( status ) )
     {

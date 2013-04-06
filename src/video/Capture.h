@@ -27,4 +27,3 @@ public:
 };
 
 #endif /* __CAPTURE_H__ */
-

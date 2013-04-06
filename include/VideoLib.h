@@ -3,6 +3,7 @@
 
 #include "../src/video/CameraCapture.h"
 #include "../src/video/UnicapCamera.h"
+#include "../src/video/UnicapCapture.h"
 
 #include "../src/video/FourCc.h"
 #include "../src/video/video_conversion.h"

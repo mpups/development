@@ -12,7 +12,7 @@ int std_function_packet( void* opaque, uint8_t* buffer, int size )
     return io.m_callback( buffer, size );
 }
 
-FFMpegStdFunctionIO::FFMpegStdFunctionIO(  FFMpegCustomIO::BufferType direction, callback_t callable )
+FFMpegStdFunctionIO::FFMpegStdFunctionIO(  FFMpegCustomIO::BufferType direction, callback_t&& callable )
 :
     m_callback( callable )
 {

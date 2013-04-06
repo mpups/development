@@ -27,7 +27,7 @@ int main( int argc, char** argv )
     else
     {
         // Try to capture from camera:
-        capture.reset( new UnicapCamera() );
+        capture.reset( new UnicapCapture() );
         camera = reinterpret_cast<CameraCapture*>( capture.get() );
     }
 

@@ -18,7 +18,7 @@ friend int std_function_packet( void* opaque, uint8_t* buffer, int size );
 public:
     typedef const std::function< int( uint8_t* buffer, int size ) > callback_t;
 
-    FFMpegStdFunctionIO( FFMpegCustomIO::BufferType direction, callback_t callable );
+    FFMpegStdFunctionIO( FFMpegCustomIO::BufferType direction, callback_t&& callable );
     virtual ~FFMpegStdFunctionIO();
 
     virtual AVIOContext* GetAVIOContext();
