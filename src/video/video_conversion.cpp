@@ -51,7 +51,7 @@ void halfscale_yuyv422_to_yuv420p( int w, int h, const uint8_t* __restrict__ src
             // [1] = u1 u2 u3 u4 u5 u6 u7 u8
             // [2] = y2 y4 y6 y8 y10 y12 y14 y16
             // [3] = v1 v2 v3 v4 v5 v6 v7 v8
-            uint8_t* srcRow = srcBuffer;
+            const uint8_t* srcRow = srcBuffer;
             srcBuffer += 32;
             uint8x8x4_t row1_yuyv_lanes = vld4_u8( srcRow );
             srcRow += srcRowBytes;
