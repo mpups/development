@@ -181,14 +181,13 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     int streamHeight = h/2;
     streamer.AddVideoStream( streamWidth, streamHeight, 30, video::FourCc( 'F','M','P','4' ) );
 
-    // Allocate a buffer for video conversion:
-    uint8_t* m_buffer;
+    // Allocate double buffers for video conversion:
+    uint8_t* m_buffer[2];
     const std::size_t bufferSize = m_camera->GetFormatBufferSize();
-    int err = posix_memalign( (void**)&m_buffer, 16, bufferSize );
+    int err = posix_memalign( (void**)&(m_buffer[0]), 16, bufferSize );
     assert( err == 0 );
-
-    // Wrap the conversion buffer in a video frame object (YUV420P is native for mpg4):
-    VideoFrame frame( m_buffer, PIX_FMT_YUV420P, streamWidth, streamHeight, streamWidth );
+    err = posix_memalign( (void**)&(m_buffer[1]), 16, bufferSize );
+    assert( err == 0 );
 
     // Capture control variables:
     GLK::Mutex bufferLock;
@@ -201,43 +200,50 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     // frame is ready to be compressed:
     struct timespec conversionStartTime;
     struct timespec conversionEndTime;
-    struct timespec lockStart;
-    struct timespec lockEnd;
     double conversionTime = 0.0;
     double lockTime = 0.0;
     m_camera->SetCaptureCallback( [&]( const uint8_t* buffer, const timespec& time ) {
 
+        clock_gettime( CLOCK_MONOTONIC, &conversionStartTime );
+        halfscale_yuyv422_to_yuv420p( 640, 480, buffer, m_buffer[0] );
+        clock_gettime( CLOCK_MONOTONIC, &conversionEndTime );
+        conversionTime = milliseconds(conversionEndTime) - milliseconds(conversionStartTime);
+
+        // Double buffered so only need to lock mutex while we swap buffers and
+        // increment the frame count:
+        struct timespec lockStart;
+        struct timespec lockEnd;
         clock_gettime( CLOCK_MONOTONIC, &lockStart );
         GLK::MutexLock locker( bufferLock );
         clock_gettime( CLOCK_MONOTONIC, &lockEnd );
         lockTime = milliseconds(lockEnd) - milliseconds(lockStart);
 
-        clock_gettime( CLOCK_MONOTONIC, &conversionStartTime );
-        halfscale_yuyv422_to_yuv420p( 640, 480, buffer, m_buffer );
-        clock_gettime( CLOCK_MONOTONIC, &conversionEndTime );
-        conversionTime = milliseconds(conversionEndTime) - milliseconds(conversionStartTime);
         framesConverted += 1;
+        std::swap( m_buffer[0], m_buffer[1] );
         bufferReady.WakeOne();
     });
 
     m_camera->StartCapture(); // This must not be called before SetCaptureCallback().
 
     {
-        GLK::MutexLock locker( bufferLock );
         bool sentOk = true;
         struct timespec waitStart;
         struct timespec waitEnd;
+        GLK::MutexLock locker( bufferLock );
         while ( sentOk && joy.IsRunning() )
         {
-            clock_gettime( CLOCK_MONOTONIC, &waitStart );
-
             // Wait for a new frame to be captured:
+            clock_gettime( CLOCK_MONOTONIC, &waitStart );
             bufferReady.TimedWait( bufferLock, 500 );
+            const bool frameReady = framesCompressed != framesConverted;
 
-            if ( framesCompressed != framesConverted )
+            if ( frameReady )
             {
                 clock_gettime( CLOCK_MONOTONIC, &waitEnd );
                 framesCompressed += 1;
+
+                // Wrap the conversion buffer in a video frame object (YUV420P is native for mpg4):
+                VideoFrame frame( m_buffer[1], PIX_FMT_YUV420P, streamWidth, streamHeight, streamWidth );
                 sentOk = streamer.PutVideoFrame( frame );
                 sentOk &= !streamer.IoError();
 
@@ -245,10 +251,11 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
                 fprintf( stderr, "%f %f %f %f %f\n", lockTime, waitTime, conversionTime, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
             }
         }
-    }// extra scope for lock guard
+    } // extra scope for lock guard
 
-    // Stop the camera and free the conversion buffer:
+    // Stop the camera and free the conversion buffers:
     m_camera->StopCapture();
-    free( m_buffer );
+    free( m_buffer[0] );
+    free( m_buffer[1] );
 }
 
