@@ -74,6 +74,7 @@ LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, ui
         CodecContext()->bit_rate_tolerance = 1000000;
         CodecContext()->gop_size = 50;
         CodecContext()->max_b_frames = 0;
+        CodecContext()->thread_count = 1;
 
         assert( width%2 == 0 );
         assert( height%2 == 0 );

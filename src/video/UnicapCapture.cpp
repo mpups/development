@@ -27,17 +27,12 @@ UnicapCapture::~UnicapCapture()
 /**
     This gets called in the context of unicap's capture thread when a new frame arrives.
     It then makes a copy of the capture buffer and signals a semaphore that an image is ready.
-
-    @todo Need different capture modes for different purposes - one should simply be a callback
-    to allow access to the raw data without any copy at all.
-**/
+*/
 void UnicapCapture::OnCapture( uint8_t* buffer, const timespec& time )
 {
     m_mutex.Lock();
 
-    /// @todo This shouldn't be hard coded - wasting a lot of time everytime I forget about this!
-    halfscale_yuyv422_to_yuv420p( 640, 480, buffer, m_buffer );
-    //memcpy( m_buffer, buffer, m_camera.GetFormatBufferSize() );
+    memcpy( m_buffer, buffer, m_camera.GetFormatBufferSize() );
 
     m_time = time.tv_sec * 1000000;
     m_time += time.tv_nsec / 1000;
