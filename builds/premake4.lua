@@ -2,7 +2,6 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
---dofile( 'configure.lua' )
 dofile( 'configure_arm.lua' )
 
 -- Append individual link groups together so we can use LINKS to link to all libs:
@@ -60,7 +59,6 @@ solution 'videolib'
         files { SRC .. 'tests/tools/transcode.cpp' }
         configuration {}
         links { 'videolib' }
-        links ( GLK_LINKS )
         links ( LINKS )
 
     project 'gtests' -- unit tests

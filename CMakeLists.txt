@@ -27,12 +27,6 @@ set( FFMPEG_LIBRARIES "/home/mark/tmp_installs/lib/libavcodec.so" "/home/mark/tm
 
 set( LIBS ${LIBS} ${FFMPEG_LIBRARIES})
 
-find_package (GLK REQUIRED)
-if ( GLK_FOUND )
-    include_directories( ${GLK_INCLUDE_DIRS} )
-    set( LIBS ${LIBS} ${GLK_LIBRARIES})
-endif()
-
 # Unicap and dc1394:
 include_directories( "/usr/include/unicap" )
 set( LIBS ${LIBS} /usr/lib/libunicap.so /usr/lib/x86_64-linux-gnu/libdc1394.so )

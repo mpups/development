@@ -6,8 +6,6 @@
 
 #include "FrameConverter.h"
 
-#include <glkcore.h>
-
 /**
     Class which wraps a UnicapCamera providing it with the
     interface for CameraCapture objects.
@@ -49,8 +47,8 @@ private:
     UnicapCamera m_camera;
     uint8_t*     m_buffer;
 
-    GLK::ConditionVariable m_cond;
-    GLK::Mutex             m_mutex;
+    pthread_cond_t  m_cond;
+    pthread_mutex_t m_mutex;
     uint32_t m_frameCount;
     uint32_t m_retrievedCount;
     volatile uint64_t m_time;

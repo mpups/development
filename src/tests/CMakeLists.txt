@@ -19,12 +19,6 @@ elseif()
   set( GTEST_BUILD_TESTS OFF CACHE BOOL )
 endif()
 
-find_package (GLK REQUIRED)
-if ( GLK_FOUND )
-    include_directories( ${GLK_INCLUDE_DIRS} )
-    set( LIBS ${LIBS} ${GLK_LIBRARIES})
-endif()
-
 project( utest )
 
 add_executable( utest WIN32
@@ -35,6 +29,12 @@ add_executable( utest WIN32
     unit/VideoTests.h
 )
 target_link_libraries( utest videolib ${LIBS} )
+
+find_package (GLK REQUIRED)
+if ( GLK_FOUND )
+    include_directories( ${GLK_INCLUDE_DIRS} )
+    set( LIBS ${LIBS} ${GLK_LIBRARIES})
+endif()
 
 add_executable( transcode WIN32
     tools/transcode.cpp

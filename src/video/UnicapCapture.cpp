@@ -13,6 +13,9 @@ UnicapCapture::UnicapCapture()
 {
     if ( m_camera.IsOpen() )
     {
+        pthread_mutex_init( &m_mutex, 0 );
+        pthread_cond_init( &m_cond, 0 );
+
         const std::size_t bufferSize = m_camera.GetFormatBufferSize();
         int err = posix_memalign( (void**)&m_buffer, 16, bufferSize );
         m_camera.SetCaptureCallback( std::bind( &UnicapCapture::OnCapture, std::ref(*this), std::placeholders::_1, std::placeholders::_2 ) );
@@ -22,6 +25,9 @@ UnicapCapture::UnicapCapture()
 UnicapCapture::~UnicapCapture()
 {
     free( m_buffer );
+
+    pthread_cond_destroy( &m_cond );
+    pthread_mutex_destroy( &m_mutex );
 }
 
 /**
@@ -30,7 +36,7 @@ UnicapCapture::~UnicapCapture()
 */
 void UnicapCapture::OnCapture( uint8_t* buffer, const timespec& time )
 {
-    m_mutex.Lock();
+    pthread_mutex_lock( &m_mutex );
 
     memcpy( m_buffer, buffer, m_camera.GetFormatBufferSize() );
 
@@ -38,8 +44,8 @@ void UnicapCapture::OnCapture( uint8_t* buffer, const timespec& time )
     m_time += time.tv_nsec / 1000;
     m_frameCount += 1;
 
-    m_cond.WakeOne();
-    m_mutex.Unlock();
+    pthread_cond_signal( &m_cond );
+    pthread_mutex_unlock( &m_mutex );
 }
 
 bool UnicapCapture::IsOpen() const
@@ -72,10 +78,10 @@ void UnicapCapture::StopCapture()
 **/
 bool UnicapCapture::GetFrame()
 {
-    m_mutex.Lock();
+    pthread_mutex_lock( &m_mutex );
     while ( m_retrievedCount >= m_frameCount )
     {
-        m_cond.Wait( m_mutex );
+        pthread_cond_wait( &m_cond, &m_mutex );
     }
 
     m_retrievedCount = m_frameCount;
@@ -88,7 +94,7 @@ bool UnicapCapture::GetFrame()
 **/
 void UnicapCapture::DoneFrame()
 {
-    m_mutex.Unlock();
+    pthread_mutex_unlock( &m_mutex );
 }
 
 int32_t UnicapCapture::GetFrameWidth() const
