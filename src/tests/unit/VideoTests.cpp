@@ -5,7 +5,6 @@
 #include "../../video/LibAvCapture.h"
 #include "../../video/FFmpegCustomIO.h"
 #include "../../video/VideoFrame.h"
-#include "../../video/FFmpegBufferIO.h"
 #include "../../video/FFmpegStdFunctionIO.h"
 
 #include <gtest/gtest.h>
