@@ -22,11 +22,6 @@ TEST( video, file )
     TestVideo();
 }
 
-TEST( video, buffer )
-{
-    TestBufferIO();
-}
-
 TEST( video, stdfunction )
 {
     TestStdFunctionIO();

@@ -102,17 +102,6 @@ void TestVideo()
     EXPECT_EQ( -1, fileCreated ); // should return -1 for non existent file
 }
 
-/**
-    Test video read/write using FFMpegBufferIO.
-*/
-void TestBufferIO()
-{
-    FFMpegBufferIO videoIO( FFMpegCustomIO::WriteBuffer );
-    RunWriter( videoIO );
-    videoIO.ChangeDirection( FFMpegCustomIO::ReadBuffer );
-    RunReader( videoIO );
-}
-
 void TestStdFunctionIO()
 {
     using namespace std;

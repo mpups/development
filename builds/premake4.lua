@@ -2,7 +2,8 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
-dofile( 'configure_arm.lua' )
+--dofile( 'configure_arm.lua' )
+dofile( 'configure_android.lua' )
 
 -- Append individual link groups together so we can use LINKS to link to all libs:
 function append( A, B )
@@ -52,7 +53,14 @@ solution 'videolib'
         includedirs { "../include" }
         files { SRC .. 'io/**.cpp' }
         files { SRC .. 'video/**.cpp' }
+        if ( CONFIGURING_ARM ) then
+            excludes { SRC .. 'video/Dc1394Camera.cpp' }
+        end
+        if ( CONFIGURING_ANDROID ) then
+            excludes { SRC .. 'video/Unicap*.cpp' }
+        end
 
+if ( CONFIGURING_ANDROID == nil or CONFIGURING_ANDROID == false ) then
     project 'transcode'
         kind 'ConsoleApp'
         includedirs { "../include" }
@@ -69,4 +77,5 @@ solution 'videolib'
         links { 'videolib' }
         links ( LINKS )
         links ( 'gtest' )
+end
 
