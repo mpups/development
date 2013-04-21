@@ -2,8 +2,6 @@
 #define VIDEO_LIB_H
 
 #include "../src/video/CameraCapture.h"
-#include "../src/video/UnicapCamera.h"
-#include "../src/video/UnicapCapture.h"
 
 #include "../src/video/FourCc.h"
 #include "../src/video/video_conversion.h"
@@ -19,13 +17,20 @@
 #include "../src/io/TcpSocket.h"
 #include "../src/io/UdpSocket.h"
 
+#ifndef ANDROID
+
+#include "../src/video/UnicapCamera.h"
+#include "../src/video/UnicapCapture.h"
+
 #ifndef ARM_BUILD
 // These components are not ready to be used on
 // ARM systems yet:
 
 #include "../src/video/Dc1394Camera.h"
 
-#endif
+#endif // ARM_BUILD
+
+#endif // ANDROID
 
 #endif // VIDEO_LIB_H
 

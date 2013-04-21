@@ -19,7 +19,7 @@ LIB_DIRS = {
 }
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
-BUILD_OPTIONS = { '--sysroot=/home/mark/code/android-ndk-r8b/platforms/android-3/arch-arm -std=c++0x -static -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
+BUILD_OPTIONS = { '--sysroot=/usr/arm-linux-gnueabi -std=c++0x -static -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
 LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/usr/local/lib' }
 
 FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }

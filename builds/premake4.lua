@@ -2,8 +2,8 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
-dofile( 'configure_arm.lua' )
---dofile( 'configure_android.lua' )
+--dofile( 'configure_arm.lua' )
+dofile( 'configure_android.lua' )
 
 -- Append individual link groups together so we can use LINKS to link to all libs:
 function append( A, B )
@@ -59,6 +59,7 @@ solution 'videolib'
         if ( CONFIGURING_ANDROID ) then
             excludes { SRC .. 'video/Unicap*.cpp' }
         end
+        links ( LINKS )
 
 if ( CONFIGURING_ANDROID == nil or CONFIGURING_ANDROID == false ) then
     project 'transcode'
