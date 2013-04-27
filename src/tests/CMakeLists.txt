@@ -23,8 +23,6 @@ project( utest )
 
 add_executable( utest WIN32
     unit/gtests.cpp
-    unit/NetworkingTests.cpp
-    unit/NetworkingTests.h
     unit/VideoTests.cpp
     unit/VideoTests.h
 )

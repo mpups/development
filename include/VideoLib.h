@@ -9,13 +9,7 @@
 #include "../src/video/LibAvCapture.h"
 #include "../src/video/LibAvWriter.h"
 #include "../src/video/FFmpegCustomIO.h"
-#include "../src/video/FFmpegSocketIO.h"
 #include "../src/video/FFmpegStdFunctionIO.h"
-
-#include "../src/io/Ipv4Address.h"
-#include "../src/io/Socket.h"
-#include "../src/io/TcpSocket.h"
-#include "../src/io/UdpSocket.h"
 
 #ifndef ANDROID
 

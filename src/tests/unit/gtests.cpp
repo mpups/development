@@ -7,15 +7,7 @@
 
 #include <gtest/gtest.h>
 
-#include "NetworkingTests.h"
 #include "VideoTests.h"
-
-TEST( io, networking )
-{
-    TestIpv4Address();
-    TestTcp();
-    TestUdp();
-}
 
 TEST( video, file )
 {
