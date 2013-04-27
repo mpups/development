@@ -3,9 +3,9 @@
 
 #include "../../include/RoboLib.h"
 
-#include <arpa/inet.h>
-
 #include <memory>
+
+class TcpSocket;
 
 class RobotServer
 {

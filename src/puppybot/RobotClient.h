@@ -5,6 +5,7 @@
 #include <queue>
 
 #include "../../include/RoboLib.h"
+#include "../network/TcpSocket.h"
 
 #include <glkcore.h>
 

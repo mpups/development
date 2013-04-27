@@ -4,6 +4,8 @@
 #include "../packetcomms/PacketMuxer.h"
 #include "../robotcomms/VideoClient.h"
 
+#include <arpa/inet.h>
+
 static double milliseconds( struct timespec& t )
 {
     return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );

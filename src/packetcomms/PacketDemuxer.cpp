@@ -3,6 +3,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <arpa/inet.h>
+
 /**
     Create a new demuxer that will receive packets from the specified socket.
 

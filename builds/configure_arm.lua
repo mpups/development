@@ -20,12 +20,12 @@ INCLUDE_DIRS = {
 }
 
 LIB_DIRS = {
-    './',
     '../../glk/premake/beagle_build_g++4.6/debug',
     '../../glk/premake/beagle_build_g++4.6/release',
     ARM_DEPLOYMENT .. '/lib',
     ARM_PACKAGES .. '/lua-5.1.4/src',
-    ARM_DEPLOYMENT .. '/usr/local/lib' -- THIS IS STUPID, KEEP PIKCING UP OLD VERSION OF THE LIBRARY I AM BUILDING
+    ARM_DEPLOYMENT .. '/usr/local/lib', -- THIS IS STUPID, KEEP PICKING UP OLD VERSION OF THE LIBRARY I AM BUILDING
+    './',
 }
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
@@ -42,3 +42,4 @@ GLK_LINKS = { 'glkcore', 'lua', 'freetype' }
 VIDEO_LINKS = { 'videolib','unicap' }
 
 CONFIGURING_ARM = true
+

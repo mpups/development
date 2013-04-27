@@ -4,8 +4,9 @@
 #ifndef __VIDEO_CLIENT_H__
 #define __VIDEO_CLIENT_H__
 
-/// @todo use more limited include set:
-#include "../../include/RoboLib.h"
+#include <VideoLib.h>
+
+#include "../packetcomms/PacketComms.h"
 
 #include <memory>
 #include <cinttypes>

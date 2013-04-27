@@ -1,4 +1,6 @@
 #include "RobotServer.h"
+#include "../network/Ipv4Address.h"
+#include "../network/TcpSocket.h"
 
 const int IMG_WIDTH  = 320;
 const int IMG_HEIGHT = 240;

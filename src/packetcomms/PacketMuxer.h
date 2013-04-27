@@ -18,6 +18,7 @@
 #include "ComPacket.h"
 #include "PacketSubscription.h"
 #include "ControlMessage.h"
+#include "../network/Socket.h"
 
 #include "../utility/RunnableFunction.h"
 

@@ -14,6 +14,7 @@
 #include "PacketSubscription.h"
 #include "PacketSubscriber.h"
 #include "ControlMessage.h"
+#include "../network/Socket.h"
 
 #include "../utility/RunnableFunction.h"
 

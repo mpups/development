@@ -9,6 +9,8 @@
 
 #include "../../../src/packetcomms/PacketMuxer.h"
 #include "../../../src/packetcomms/PacketDemuxer.h"
+#include "../../../src/network/Ipv4Address.h"
+#include "../../../src/network/TcpSocket.h"
 
 double milliseconds( struct timespec& t )
 {

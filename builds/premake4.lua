@@ -2,8 +2,8 @@ if ( _ACTION == nil ) then
     dofile ( 'auto_action.lua' ) -- No defualt given so automatically set action based on OS
 end
 
-dofile( 'configure.lua' )
---dofile( 'configure_arm.lua' )
+--dofile( 'configure.lua' )
+dofile( 'configure_arm.lua' )
 
 -- Append individual link groups together so we can use LINKS to link to all libs:
 function append( A, B )
@@ -25,7 +25,7 @@ solution 'robolib'
     configurations { 'debug', 'release', 'profile' }
     platforms { 'native', 'gnucross' }
     toolchain ( TOOLCHAIN )
-        
+
     location( TARGET_DIR )
     targetdir( TARGET_DIR )
     language 'C++'
@@ -106,14 +106,6 @@ if ( not CONFIGURING_ARM ) then
         links ( GLK_LINKS )
         links ( LINKS )
 end
-
-    project 'video-streaming'
-        kind 'ConsoleApp'
-        includedirs { "../include" }
-        files { SRC .. 'tests/tools/VideoStreaming.cpp' }
-        configuration {}
-        links { 'robolib' }
-        links ( LINKS )
 
     project 'packet-streaming'
         kind 'ConsoleApp'
