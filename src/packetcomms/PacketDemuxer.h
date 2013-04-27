@@ -4,9 +4,8 @@
 #ifndef __PACKET_DEMUXER_H__
 #define __PACKET_DEMUXER_H__
 
-/// @todo Need VideoLib and GLK for Locks and Sockets - should be independent of these ideally.
+/// @todo Need GLK for threads - should be independent of this ideally.
 #include <glkcore.h>
-#include <VideoLib.h>
 
 #include <unordered_map>
 
