@@ -16,6 +16,13 @@ PLATFORMINC = PLATFORMDIR + '/usr/include/'
 SRC_FILES  = Glob('src/packetcomms/*.cpp')
 SRC_FILES += Glob('src/network/*.cpp')
 SRC_FILES += Glob('src/robotcomms/*.cpp')
+
+HEADER_FILES = Glob('src/packetcomms/*.h')
+HEADER_FILES += Glob('src/network/*.h')
+HEADER_FILES += Glob('src/robotcomms/*.h')
+
+ANDROID_FFMPEG = '/home/mark/code/android-ffmpeg-build/armeabi'
+
 INC_DIRS  = [ '/usr/local/glk/include', # Luckily the components of GLK used are inline in headers only.
               '/usr/include/lua5.1',
               '/usr/include/freetype2',
@@ -29,9 +36,10 @@ INC_DIRS  = [ '/usr/local/glk/include', # Luckily the components of GLK used are
 
 LIBDIRS = [ PLATFORMDIR + '/usr/lib',
             STLPATH + '/libs/armeabi',
-            '/home/mark/code/videolib/builds/android_build/'
+            '/home/mark/code/videolib/builds/android_build/',
+            ANDROID_FFMPEG + '/lib'
             ]
-libs = [ 'videolib', 'gnustl_shared' ]
+libs = [ 'avformat', 'avcodec', 'avutil', 'swscale', 'videolib', 'gnustl_shared' ]
 
 cxx = 'arm-linux-androideabi-g++'
 cxxflags = '-std=c++11 --sysroot=' + SYSROOT
@@ -43,5 +51,8 @@ env.Append( CPPDEFINES=defines )
 env.Append( LINKFLAGS = [ '-Wl,--allow-shlib-undefined,--soname=' + SONAME ] )
 env.Append( LIBPATH=LIBDIRS )
 env.Append( LIBS=libs )
-env.SharedLibrary( target=LIB_NAME, source=SRC_FILES, CXX=cxx, CXXFLAGS=cxxflags )
+builtLibrary = env.SharedLibrary( target=LIB_NAME, source=SRC_FILES, CXX=cxx, CXXFLAGS=cxxflags )
+
+INSTALL_PREFIX = '/home/mark/workspace/FFmpegJNI/jni/prebuilt/armeabi'
+env.Alias( 'install', env.Install( os.path.join( INSTALL_PREFIX, 'lib' ), builtLibrary ) )
 
