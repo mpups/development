@@ -5,7 +5,11 @@
 #define __SIMPLE_QUEUE_H__
 
 #include <queue>
-#include <glkcore.h>
+
+/// @todo - sort this out:
+#include "/home/mark/code/glk/src/glkcore/thread/MutexLock.h"
+#include "/home/mark/code/glk/src/glkcore/thread/posix/Mutex.h"
+#include "/home/mark/code/glk/src/glkcore/thread/posix/ConditionVariable.h"
 
 #include <assert.h>
 #include "../packetcomms/ComPacket.h"

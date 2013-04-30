@@ -4,8 +4,6 @@
 #ifndef _PACKET_MUXER_H_
 #define _PACKET_MUXER_H_
 
-/// @todo Need VideoLib and GLK for Locks and Sockets - should be independent of these ideally.
-#include <glkcore.h>
 #include <VideoLib.h>
 
 #include <iostream>
@@ -20,7 +18,12 @@
 #include "ControlMessage.h"
 #include "../network/Socket.h"
 
-#include "../utility/RunnableFunction.h"
+#include "../utility/SimpleAsyncFunction.h"
+
+/// @todo - sort this out:
+#include "/home/mark/code/glk/src/glkcore/thread/MutexLock.h"
+#include "/home/mark/code/glk/src/glkcore/thread/posix/Mutex.h"
+#include "/home/mark/code/glk/src/glkcore/thread/posix/ConditionVariable.h"
 
 /**
     Class which manages communications to and from the robot.
@@ -64,8 +67,7 @@ protected:
 private:
     void SignalPacketPosted();
 
-    RunnableFunction m_sender;
-    GLK::Thread m_sendThread;
+    SimpleAsyncFunction m_sender;
 
     GLK::ConditionVariable m_txReady;
     GLK::Mutex m_txLock;

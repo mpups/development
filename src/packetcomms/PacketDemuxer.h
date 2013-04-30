@@ -4,9 +4,6 @@
 #ifndef __PACKET_DEMUXER_H__
 #define __PACKET_DEMUXER_H__
 
-/// @todo Need GLK for threads - should be independent of this ideally.
-#include <glkcore.h>
-
 #include <unordered_map>
 
 #include "ComPacket.h"
@@ -14,8 +11,7 @@
 #include "PacketSubscriber.h"
 #include "ControlMessage.h"
 #include "../network/Socket.h"
-
-#include "../utility/RunnableFunction.h"
+#include "../utility/SimpleAsyncFunction.h"
 
 /**
     Class which manages communications to and from the robot.
@@ -57,8 +53,7 @@ protected:
     void SignalTransportError();
 
 private:
-    RunnableFunction m_receiver;
-    GLK::Thread m_receiveThread;
+    SimpleAsyncFunction m_receiver;
 
     int m_nextSubscriberId;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;

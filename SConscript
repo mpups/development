@@ -23,7 +23,7 @@ HEADER_FILES += Glob('src/robotcomms/*.h')
 
 ANDROID_FFMPEG = '/home/mark/code/android-ffmpeg-build/armeabi'
 
-INC_DIRS  = [ '/usr/local/glk/include', # Luckily the components of GLK used are inline in headers only.
+INC_DIRS  = [
               '/usr/include/lua5.1',
               '/usr/include/freetype2',
               '/usr/local/videolib/include',

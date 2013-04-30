@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include <arpa/inet.h>
+#include <assert.h>
 
 /**
     Create a new demuxer that will receive packets from the specified socket.
@@ -13,20 +14,16 @@
 PacketDemuxer::PacketDemuxer( Socket& socket )
 :
     m_receiver      ( std::bind(&PacketDemuxer::Receive, std::ref(*this)) ),
-    m_receiveThread ( m_receiver ),
     m_nextSubscriberId (0),
     m_transport     ( socket ),
     m_transportError( false )
 {
     m_transport.SetBlocking( false );
-    m_receiveThread.Start();
 }
 
 PacketDemuxer::~PacketDemuxer()
 {
     SignalTransportError(); /// Causes receive-thread to exit (@todo use better method)
-
-    m_receiveThread.Join();
 }
 
 /**

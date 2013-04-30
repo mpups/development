@@ -15,7 +15,6 @@
 PacketMuxer::PacketMuxer( Socket& socket )
 :
     m_sender        ( std::bind(&PacketMuxer::Send, std::ref(*this)) ),
-    m_sendThread    ( m_sender ),
     m_txLock        ( GLK::Mutex::Recursive ), // Had to make this recursive so we can emplace control packets to the queue internally while we already hold the tx lock.
     m_numPosted     (0),
     m_numSent       (0),
@@ -23,7 +22,6 @@ PacketMuxer::PacketMuxer( Socket& socket )
     m_transportError( false )
 {
     m_transport.SetBlocking( false );
-    m_sendThread.Start();
 }
 
 PacketMuxer::~PacketMuxer()
@@ -34,7 +32,13 @@ PacketMuxer::~PacketMuxer()
         m_txReady.WakeAll();
     }
 
-    m_sendThread.Join();
+    {
+        int c = 0;
+        SimpleAsyncFunction( [&](){
+            // do stuff
+            c += 10;
+        });
+    }
 }
 
 /**

@@ -25,6 +25,7 @@ public:
     RunnableFunction( Type& f ) : m_asyncFunction(f) {}; //< Construct by copying the function.
     RunnableFunction( Type&& f ) : m_asyncFunction( std::move(f) ) {}; //< Construct by moving the function.
     virtual void Run() { m_asyncFunction(); }; //override;
+    virtual ~RunnableFunction() {};
 
 private:
     Type m_asyncFunction;
