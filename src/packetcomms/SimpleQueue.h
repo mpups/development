@@ -41,6 +41,7 @@ public:
     };
 
     SimpleQueue() {};
+    SimpleQueue( const SimpleQueue& ) = delete;
     virtual ~SimpleQueue() {};
 
     /**
@@ -93,7 +94,7 @@ public:
         }
     };
 
-    // Yo umay or may not get away with calling these without holding a
+    // You may or may not get away with calling these without holding a
     // LockedQueue object, but technically you should hold one before calling them:
     size_t Size() const { return m_items.size(); };
     bool Empty() const { return m_items.empty(); };

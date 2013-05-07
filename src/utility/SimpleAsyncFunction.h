@@ -37,17 +37,16 @@ public:
     typedef std::function< void(void) > Type;
 
     SimpleAsyncFunction( const SimpleAsyncFunction& ) = delete;
-    SimpleAsyncFunction( SimpleAsyncFunction&& move )
-    {
-        std::swap( m_asyncFunction, move.m_asyncFunction );
-    };
+    SimpleAsyncFunction( SimpleAsyncFunction&& ) = delete;
 
     /**
         Move in a function object and start a thread that will call this function in a separate thread.
     */
-    SimpleAsyncFunction( Type&& f ) : m_asyncFunction( std::move(f) )
+    SimpleAsyncFunction( Type&& f )
+    :
+        m_asyncFunction ( std::move(f) ),
+        m_createError   ( pthread_create( &m_thread, nullptr, SimpleAsyncFunction::Go, this ) )
     {
-        pthread_create( &m_thread, 0, SimpleAsyncFunction::Go, this );
     };
 
     /**
@@ -55,8 +54,13 @@ public:
     */
     virtual ~SimpleAsyncFunction()
     {
-        pthread_join( m_thread, 0 );
+        if ( ThreadWasCreated() )
+        {
+            pthread_join( m_thread, nullptr );
+        }
     };
+
+    bool ThreadWasCreated() const { return m_createError == 0; };
 
 protected:
     virtual void Call() { m_asyncFunction(); };
@@ -65,12 +69,13 @@ protected:
     {
         SimpleAsyncFunction& async = *reinterpret_cast<SimpleAsyncFunction*>( arg );
         async.Call();
+        return nullptr;
     };
 
 private:
     Type m_asyncFunction;
     pthread_t m_thread;
+    int m_createError;
 };
 
 #endif /* __SIMPLE_ASYNC_FUNCTION_H__ */
-

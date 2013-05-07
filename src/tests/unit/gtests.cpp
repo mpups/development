@@ -8,12 +8,33 @@
 #include <gtest/gtest.h>
 
 #include "ImageTests.h"
+#include "NetworkingTests.h"
+#include "UtilityTests.h"
+#include "PacketCommsTests.h"
 
 TEST( vision, image )
 {
     robo::TestImage();
     robo::TestImageFill();
     robo::SadTest();
+}
+
+TEST( network, ip )
+{
+    TestTcp();
+    TestUdp();
+    TestIpv4Address();
+}
+
+TEST( robolib, utililty )
+{
+    TestSimpleAsyncFunction();
+}
+
+TEST( robolib, packetcomms )
+{
+    TestComPacket();
+    TestSimpleQueue();
 }
 
 /**
