@@ -35,6 +35,7 @@ TEST( robolib, packetcomms )
 {
     TestComPacket();
     TestSimpleQueue();
+    TestPacketMuxer();
 }
 
 /**

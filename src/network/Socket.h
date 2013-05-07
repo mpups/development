@@ -10,6 +10,8 @@
 
 class Ipv4Address;
 
+#include "AbstractSocket.h"
+
 /**
     Wrapper object for sockets API.
 
@@ -17,7 +19,7 @@ class Ipv4Address;
 
     @todo TcpSocket should be derived from this base class instead of embedded in it.
 **/
-class Socket
+class Socket : public AbstractSocket
 {
 public:
     Socket();

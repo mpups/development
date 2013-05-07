@@ -16,7 +16,7 @@
 #include "ComPacket.h"
 #include "PacketSubscription.h"
 #include "ControlMessage.h"
-#include "../network/Socket.h"
+#include "../network/AbstractSocket.h"
 
 #include "../utility/SimpleAsyncFunction.h"
 
@@ -43,15 +43,16 @@
 */
 class PacketMuxer
 {
+    friend void TestPacketMuxer();
+
 public:
     typedef std::shared_ptr<PacketSubscriber> Subscription;
 
-    PacketMuxer( Socket& socket );
+    PacketMuxer( AbstractSocket& socket );
     virtual ~PacketMuxer();
 
     bool Ok() const;
 
-    void Send();
     void PostPacket( ComPacket&& packet );
     void EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size );
 
@@ -59,10 +60,14 @@ protected:
     typedef std::pair< ComPacket::Type, ComPacket::PacketContainer > MapEntry;
     typedef std::pair< ComPacket::Type, std::vector<Subscription> > SubscriptionEntry;
 
+    void SendLoop();
     void SendAll( ComPacket::PacketContainer& packets );
     void SendPacket( const ComPacket& packet );
 
     bool WriteBytes( const uint8_t* buffer, size_t& size );
+
+    uint32_t GetNumPosted() const { return m_numPosted; };
+    uint32_t GetNumSent() const { return m_numSent; };
 
 private:
     void SignalPacketPosted();
@@ -76,7 +81,7 @@ private:
 
     std::unordered_map< MapEntry::first_type, MapEntry::second_type > m_txQueues;
 
-    Socket& m_transport;
+    AbstractSocket& m_transport;
     bool m_transportError;
 
     void SendControlMessage( ControlMessage msg );

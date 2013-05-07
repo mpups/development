@@ -3,5 +3,7 @@
 
 void TestComPacket();
 void TestSimpleQueue();
+void TestPacketMuxer();
+void TestPacketDemuxer();
 
 #endif // PACKETCOMMSTESTS_H

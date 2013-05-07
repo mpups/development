@@ -12,9 +12,9 @@
 
     This object is guaranteed to only ever write to the socket.
 */
-PacketMuxer::PacketMuxer( Socket& socket )
+PacketMuxer::PacketMuxer( AbstractSocket& socket )
 :
-    m_sender        ( std::bind(&PacketMuxer::Send, std::ref(*this)) ),
+    m_sender        ( std::bind(&PacketMuxer::SendLoop, std::ref(*this)) ),
     m_txLock        ( GLK::Mutex::Recursive ), // Had to make this recursive so we can emplace control packets to the queue internally while we already hold the tx lock.
     m_numPosted     (0),
     m_numSent       (0),
@@ -50,17 +50,50 @@ bool PacketMuxer::Ok() const
 }
 
 /**
+    Used externally to post a packet to the comms system.
+    The packet will be queued and sent later.
+
+    @param packet An rvalue reference to a packet that will be posted on the queue.
+    If it is not an rvalue reference then after calling this the packet object will become
+    invalid ( i.e. have type ComPacket::Type::invalid and no data).
+*/
+void PacketMuxer::PostPacket( ComPacket&& packet )
+{
+    GLK::MutexLock lock( m_txLock );
+    // Each packet type goes onto a separate queue:
+    ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
+    ComPacket::SharedPacket sptr = std::make_shared<ComPacket>( std::move(packet) );
+    m_txQueues[ packetType ].push( std::move(sptr) );
+    SignalPacketPosted();
+}
+
+/**
+    Optimised version of ComCentre::PostPacket() which uses forwarding to efficiently
+    construct the packet in-place (no std::move required as in PostPacket).
+
+    @param args @todo Variadic argument list to forward to the ComPacket constructor.
+
+    @note There is a g++ bug which doesn't allow perfect forwarding in cases like this:
+    when it is fixed variadic arguments can be forwarded directly to any ComPacket constructor.
+*/
+void PacketMuxer::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
+{
+    GLK::MutexLock lock( m_txLock );
+    m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
+    SignalPacketPosted();
+}
+
+/**
     This function loops sending all the queued packets over the
     transport layer. The loop exits if there is a transport error
     (e.g. if the other end hangs up).
 
-    Runs asnchronously in its own thread (it is
-    passed as a RunnableFunction to m_sendThread in the PacketMuxer
-    constructor).
+    Runs asnchronously in its own thread :- it is passed
+    using std::bind to an SimpleAsyncFunction object.
 */
-void PacketMuxer::Send()
+void PacketMuxer::SendLoop()
 {
-    std::cerr << "PacketMuxer::Send() entered." << std::endl;
+    std::cerr << "PacketMuxer::SendLoop() entered." << std::endl;
 
     SendControlMessage( ControlMessage::Hello );
 
@@ -101,40 +134,6 @@ void PacketMuxer::Send()
 }
 
 /**
-    Used externally to post a packet to the comms system.
-    The packet will be queued and sent later.
-
-    @param packet An rvalue reference to a packet that will be posted on the queue.
-    If it is not an rvalue reference then after calling this the packet object will become
-    invalid ( i.e. have type ComPacket::Type::invalid and no data).
-*/
-void PacketMuxer::PostPacket( ComPacket&& packet )
-{
-    GLK::MutexLock lock( m_txLock );
-    // Each packet type goes onto a separate queue:
-    ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
-    ComPacket::SharedPacket sptr = std::make_shared<ComPacket>( std::move(packet) );
-    m_txQueues[ packetType ].push( std::move(sptr) );
-    SignalPacketPosted();
-}
-
-/**
-    Optimised version of ComCentre::PostPacket() which uses forwarding to efficiently
-    construct the packet in-place (no std::move required as in PostPacket).
-
-    @param args @todo Variadic argument list to forward to the ComPacket constructor.
-
-    @note There is a g++ bug which doesn't allow perfect forwarding in cases like this:
-    when it is fixed variadic arguments can be forwarded directly to any ComPacket constructor.
-*/
-void PacketMuxer::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
-{
-    GLK::MutexLock lock( m_txLock );
-    m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
-    SignalPacketPosted();
-}
-
-/**
     Send all the packets from the FIFO container. The container will
     be empty after calling this function, regardless of whether there
     were any errors from the transport layer.
@@ -158,6 +157,12 @@ void PacketMuxer::SendAll( ComPacket::PacketContainer& packets )
 
 /**
     Used internally to send a packet over the transport layer.
+
+    Header is:
+    type (4-bytes)
+    data-size (4-bytes)
+
+    followed by the data payload.
 */
 void PacketMuxer::SendPacket( const ComPacket& packet )
 {
