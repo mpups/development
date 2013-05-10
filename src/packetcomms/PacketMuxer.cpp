@@ -89,7 +89,7 @@ void PacketMuxer::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size
     (e.g. if the other end hangs up).
 
     Runs asnchronously in its own thread :- it is passed
-    using std::bind to an SimpleAsyncFunction object.
+    using std::bind to a SimpleAsyncFunction object.
 */
 void PacketMuxer::SendLoop()
 {

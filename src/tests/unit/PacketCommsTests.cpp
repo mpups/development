@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "../../packetcomms/PacketComms.h"
+#include "MockSockets.h"
 
-#include "../../network/AbstractSocket.h"
-#include <arpa/inet.h>
+#include <memory>
 
 void TestComPacket()
 {
@@ -91,92 +91,7 @@ void TestSimpleQueue()
 void TestPacketMuxer()
 {
     constexpr int testPayloadSize = 11;
-
-    /// @todo - move this class:
-    class MockSocket : public AbstractSocket
-    {
-    public:
-        enum State
-        {
-            Type = 0,
-            Size,
-            Payload
-        };
-
-        MockSocket() : m_totalBytes(0), m_expected(Type) {}
-
-        void SetBlocking( bool ) {}
-
-        void CheckType( const char* data, std::size_t size )
-        {
-            EXPECT_EQ( sizeof(uint32_t), size );
-            uint32_t type = ntohl( *reinterpret_cast<const uint32_t*>(data) );
-            m_type = static_cast<ComPacket::Type>(type);
-        }
-
-        void CheckSize( const char* data, std::size_t size )
-        {
-            EXPECT_EQ( sizeof(uint32_t), size );
-            uint32_t payloadSize = ntohl( *reinterpret_cast<const uint32_t*>(data) );
-            if ( m_type == ComPacket::Type::Odometry )
-            {
-                EXPECT_EQ( testPayloadSize, payloadSize );
-            }
-        }
-
-        /// @todo - this test is very tied to implementation (i.e. knows how the writes are broken down). Not good.
-        void CheckPayload( const char* data, std::size_t size )
-        {
-            if ( m_type == ComPacket::Type::Odometry )
-            {
-                EXPECT_EQ( testPayloadSize, size );
-            }
-        }
-
-        int Write( const char* data, std::size_t size )
-        {
-            switch ( m_expected )
-            {
-            case Type:
-                CheckType( data, size );
-                m_expected = Size;
-                break;
-            case Size:
-                CheckSize( data, size );
-                m_expected = Payload;
-                break;
-            case Payload:
-                CheckPayload( data, size );
-                m_expected = Type;
-                break;
-            default:
-                ADD_FAILURE();
-                break;
-            }
-
-            m_totalBytes += size;
-
-            return size; // pretend we sent it all
-        }
-
-        // Check read functions are unused by muxer:
-        int Read( char*, std::size_t )
-        {
-            ADD_FAILURE();
-            return -1;
-        }
-        bool ReadyForReading( int milliseconds ) const
-        {
-            ADD_FAILURE();
-            return false;
-        }
-
-        int m_totalBytes;
-        State m_expected;
-        ComPacket::Type m_type;
-    };
-
-    MockSocket socket;
+    MuxerTestSocket socket( testPayloadSize );
     PacketMuxer muxer( socket );
 
     // Transport should be ok here:
@@ -197,4 +112,21 @@ void TestPacketMuxer()
 
     // Did it send all posted packets before exiting?
     EXPECT_EQ( muxer.GetNumPosted(), muxer.GetNumSent() );
+}
+
+
+void TestDemuxerExitsCleanly()
+{
+    AlwaysWriteFailReadSocket socket;
+    PacketDemuxer demuxer( socket );
+
+    while ( demuxer.Ok() )
+    {
+    }
+}
+
+void TestPacketDemuxer()
+{
+    AlwaysWriteFailReadSocket socket;
+    PacketDemuxer demuxer( socket );
 }

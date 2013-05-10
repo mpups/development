@@ -11,9 +11,9 @@
 
     This object is guaranteed to only ever read from the socket.
 */
-PacketDemuxer::PacketDemuxer( Socket& socket )
+PacketDemuxer::PacketDemuxer( AbstractSocket &socket )
 :
-    m_receiver      ( std::bind(&PacketDemuxer::Receive, std::ref(*this)) ),
+    m_receiver      ( std::bind(&PacketDemuxer::ReceiveLoop, std::ref(*this)) ),
     m_nextSubscriberId (0),
     m_transport     ( socket ),
     m_transportError( false )
@@ -87,18 +87,20 @@ bool PacketDemuxer::IsSubscribed( const PacketSubscriber* pSubscriber ) const
     it into packets. The loop exits if there is a transport error
     (e.g. if the other end hangs up).
 
-    Runs asnchronously in its own thread (it is passed as a RunnableFunction
-    to m_receiveThread in the PacketDemuxer constructor).
+    Runs asnchronously in its own thread :- it is passed
+    using std::bind to a SimpleAsyncFunction object.
 */
-void PacketDemuxer::Receive()
+void PacketDemuxer::ReceiveLoop()
 {
     std::cerr << "PacketDemuxer::Receive() entered." << std::endl;
     ComPacket packet;
-    ReceiveHelloMessage( packet );
+    constexpr int helloTimeoutInMilliseconds = 2000;
+    ReceiveHelloMessage( packet, helloTimeoutInMilliseconds );
 
     while ( m_transportError == false )
     {
-        if ( ReceivePacket( packet ) )
+        constexpr int timeoutInMilliseconds = 1000;
+        if ( ReceivePacket( packet, timeoutInMilliseconds ) )
         {
             const ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
             auto sptr = std::make_shared<ComPacket>( std::move(packet) );
@@ -128,9 +130,8 @@ void PacketDemuxer::Receive()
     @param packet If return value is true then packet will contain the new data, if false packet remains unchanged.
     @return false on comms error, true if successful.
 */
-bool PacketDemuxer::ReceivePacket( ComPacket& packet )
+bool PacketDemuxer::ReceivePacket( ComPacket& packet, const int timeoutInMilliseconds )
 {
-    const int timeoutInMilliseconds = 1000;
     if ( m_transport.ReadyForReading( timeoutInMilliseconds ) == false )
     {
         return false;
@@ -183,19 +184,19 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size, bool transportErro
     {
         int n = m_transport.Read( reinterpret_cast<char*>( buffer ), size );
 
-        if ( n == 0 && transportErrorOnZeroBytes )
+        if ( n < 0 || (n == 0 && transportErrorOnZeroBytes) )
         {
             SignalTransportError();
             return false;
         }
 
-        if ( n < 0 )
-        {
-            return false;
-        }
-
         size -= n;
         buffer += n;
+    }
+
+    if ( m_transportError )
+    {
+        return false;
     }
 
     return true;
@@ -218,9 +219,9 @@ void PacketDemuxer::SignalTransportError()
     its own secure handshaking procedure at a higher level (external to the
     Muxer/Demuxer system).
 */
-void PacketDemuxer::ReceiveHelloMessage( ComPacket& packet )
+void PacketDemuxer::ReceiveHelloMessage( ComPacket& packet, const int timeoutInMillisecs )
 {
-    if ( ReceivePacket( packet ) )
+    if ( ReceivePacket( packet, timeoutInMillisecs ) )
     {
         bool failHard = true;
 

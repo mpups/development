@@ -35,7 +35,17 @@ TEST( robolib, packetcomms )
 {
     TestComPacket();
     TestSimpleQueue();
+}
+
+TEST( robolib, PacketMuxer )
+{
     TestPacketMuxer();
+}
+
+TEST( robolib, PacketDemuxer )
+{
+    TestDemuxerExitsCleanly();
+    TestPacketDemuxer();
 }
 
 /**

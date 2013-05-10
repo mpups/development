@@ -5,5 +5,6 @@ void TestComPacket();
 void TestSimpleQueue();
 void TestPacketMuxer();
 void TestPacketDemuxer();
+void TestDemuxerExitsCleanly();
 
 #endif // PACKETCOMMSTESTS_H

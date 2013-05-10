@@ -34,7 +34,7 @@ class PacketDemuxer
 public:
     typedef std::shared_ptr<PacketSubscriber> SubscriberPtr;
 
-    PacketDemuxer( Socket& socket );
+    PacketDemuxer( AbstractSocket& socket );
     virtual ~PacketDemuxer();
 
     bool Ok() const;
@@ -43,8 +43,8 @@ public:
     void Unsubscribe( const PacketSubscriber *subscriber );
     bool IsSubscribed( const PacketSubscriber* subscriber ) const;
 
-    void Receive();
-    bool ReceivePacket( ComPacket& packet );
+    void ReceiveLoop();
+    bool ReceivePacket( ComPacket& packet, const int timeoutInMilliseconds );
 
 protected:
     typedef std::pair< ComPacket::Type, std::vector<SubscriberPtr> > SubscriptionEntry;
@@ -58,10 +58,10 @@ private:
     int m_nextSubscriberId;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
 
-    Socket& m_transport;
+    AbstractSocket& m_transport;
     bool m_transportError;
 
-    void ReceiveHelloMessage( ComPacket& packet );
+    void ReceiveHelloMessage( ComPacket& packet, int timeoutInMillisecs );
     void HandleControlMessage( const ComPacket::ConstSharedPacket& sptr );
     ControlMessage GetControlMessage( const ComPacket::ConstSharedPacket& sptr );
 };
