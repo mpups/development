@@ -88,6 +88,13 @@ void TestSimpleQueue()
     sptr2.reset();
 }
 
+void TestPacketMuxerExitsCleanly()
+{
+    AlwaysFailSocket mockSocket;
+    PacketMuxer muxer( mockSocket );
+    while ( muxer.Ok() ) {}
+}
+
 void TestPacketMuxer()
 {
     constexpr int testPayloadSize = 11;
@@ -114,10 +121,9 @@ void TestPacketMuxer()
     EXPECT_EQ( muxer.GetNumPosted(), muxer.GetNumSent() );
 }
 
-
 void TestDemuxerExitsCleanly()
 {
-    AlwaysWriteFailReadSocket socket;
+    AlwaysFailSocket socket;
     PacketDemuxer demuxer( socket );
 
     while ( demuxer.Ok() )
@@ -127,6 +133,6 @@ void TestDemuxerExitsCleanly()
 
 void TestPacketDemuxer()
 {
-    AlwaysWriteFailReadSocket socket;
+    AlwaysFailSocket socket;
     PacketDemuxer demuxer( socket );
 }

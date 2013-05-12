@@ -105,22 +105,20 @@ public:
 };
 
 /**
-    This mock socket always pretends to write exactly what is asked.
-    It always reports being ready to read, and always reports an io error
-    (returns -1) if Read() is called.
+    This mock socket always reports being ready to read, and always
+    reports an io error(returns -1) if Read() or Write() are called.
 */
-class AlwaysWriteFailReadSocket : public AbstractSocket
+class AlwaysFailSocket : public AbstractSocket
 {
 public:
-    AlwaysWriteFailReadSocket() {};
-    virtual ~AlwaysWriteFailReadSocket() {};
+    AlwaysFailSocket() {};
+    virtual ~AlwaysFailSocket() {};
 
     virtual void SetBlocking( bool ) {}
-    virtual int Write( const char*, std::size_t size ) { return size; }
+    virtual int Write( const char*, std::size_t size ) { return -1; }
     virtual int Read( char*, std::size_t size )        { return -1; }
     virtual bool ReadyForReading( int milliseconds ) const { return true; };
 };
-
 
 #endif /* __MOCK_SOCKETS_H__ */
 

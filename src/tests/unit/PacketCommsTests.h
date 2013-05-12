@@ -4,6 +4,7 @@
 void TestComPacket();
 void TestSimpleQueue();
 void TestPacketMuxer();
+void TestPacketMuxerExitsCleanly();
 void TestPacketDemuxer();
 void TestDemuxerExitsCleanly();
 

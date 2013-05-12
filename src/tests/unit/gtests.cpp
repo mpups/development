@@ -39,6 +39,7 @@ TEST( robolib, packetcomms )
 
 TEST( robolib, PacketMuxer )
 {
+    TestPacketMuxerExitsCleanly();
     TestPacketMuxer();
 }
 
