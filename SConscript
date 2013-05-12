@@ -48,7 +48,7 @@ defines = [ '__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS', 'ANDROID' ]
 env = Environment( ENV = {'PATH' : os.environ['PATH']} )
 env.Append( CPPPATH=INC_DIRS )
 env.Append( CPPDEFINES=defines )
-env.Append( LINKFLAGS = [ '-Wl,--allow-shlib-undefined,--soname=' + SONAME ] )
+env.Append( LINKFLAGS = [ '-Wl,--soname=' + SONAME ] )
 env.Append( LIBPATH=LIBDIRS )
 env.Append( LIBS=libs )
 builtLibrary = env.SharedLibrary( target=LIB_NAME, source=SRC_FILES, CXX=cxx, CXXFLAGS=cxxflags )
