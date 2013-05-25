@@ -7,6 +7,7 @@
 #include <functional>
 
 #include <pthread.h>
+#include <assert.h>
 
 /**
     Can be used to run a std::function in a separate thread.
@@ -47,6 +48,7 @@ public:
         m_asyncFunction ( std::move(f) ),
         m_createError   ( pthread_create( &m_thread, nullptr, SimpleAsyncFunction::Go, this ) )
     {
+        assert( ThreadWasCreated() );
     };
 
     /**

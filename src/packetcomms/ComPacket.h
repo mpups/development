@@ -19,12 +19,11 @@ public:
 
      enum class Type : std::uint32_t {
         Invalid = 0,
-        Control,
         AvInfo,
         AvData,
         Odometry,
         Joystick,
-        Last,
+        Control = 0xFFFFFFFF
      };
 
     ComPacket( const ComPacket& ) = delete;

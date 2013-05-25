@@ -53,13 +53,13 @@ protected:
     void SignalTransportError();
 
 private:
-    SimpleAsyncFunction m_receiver;
-
     int m_nextSubscriberId;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
-
     AbstractSocket& m_transport;
     bool m_transportError;
+
+    // This must be initialised last to ensure all other members are intialised before the thread starts:
+    SimpleAsyncFunction m_receiver;
 
     void ReceiveHelloMessage( ComPacket& packet, int timeoutInMillisecs );
     void HandleControlMessage( const ComPacket::ConstSharedPacket& sptr );

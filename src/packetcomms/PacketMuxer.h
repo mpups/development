@@ -72,8 +72,6 @@ protected:
 private:
     void SignalPacketPosted();
 
-    SimpleAsyncFunction m_sender;
-
     GLK::ConditionVariable m_txReady;
     GLK::Mutex m_txLock;
     uint32_t m_numPosted;
@@ -83,6 +81,10 @@ private:
 
     AbstractSocket& m_transport;
     bool m_transportError;
+
+    // Async function should be initialised last - it requires everything else to
+    // be setup before it can run:
+    SimpleAsyncFunction m_sender;
 
     void SendControlMessage( ControlMessage msg );
 };

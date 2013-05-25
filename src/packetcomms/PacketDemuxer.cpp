@@ -13,10 +13,10 @@
 */
 PacketDemuxer::PacketDemuxer( AbstractSocket &socket )
 :
-    m_receiver      ( std::bind(&PacketDemuxer::ReceiveLoop, std::ref(*this)) ),
     m_nextSubscriberId (0),
     m_transport     ( socket ),
-    m_transportError( false )
+    m_transportError( false ),
+    m_receiver      ( std::bind(&PacketDemuxer::ReceiveLoop, std::ref(*this)) )
 {
     m_transport.SetBlocking( false );
 }
@@ -250,6 +250,6 @@ void PacketDemuxer::HandleControlMessage( const ComPacket::ConstSharedPacket& sp
 
 ControlMessage PacketDemuxer::GetControlMessage( const ComPacket::ConstSharedPacket& sptr )
 {
-    const uint8_t netMsg = *(sptr.get()->GetDataPtr());
+    const uint8_t netMsg = *(sptr->GetDataPtr());
     return static_cast<ControlMessage>( netMsg );
 }

@@ -14,12 +14,12 @@
 */
 PacketMuxer::PacketMuxer( AbstractSocket& socket )
 :
-    m_sender        ( std::bind(&PacketMuxer::SendLoop, std::ref(*this)) ),
     m_txLock        ( GLK::Mutex::Recursive ), // Had to make this recursive so we can emplace control packets to the queue internally while we already hold the tx lock.
     m_numPosted     (0),
     m_numSent       (0),
     m_transport     ( socket ),
-    m_transportError( false )
+    m_transportError( false ),
+    m_sender        ( std::bind(&PacketMuxer::SendLoop, std::ref(*this)) )
 {
     m_transport.SetBlocking( false );
 }

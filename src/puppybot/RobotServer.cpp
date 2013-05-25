@@ -50,7 +50,7 @@ bool RobotServer::Listen()
     }
     else
     {
-        fprintf( stderr, "Error: Server socket invalid.\n" );
+        std::clog << "Error: Server socket invalid." << std::endl;
         return false;
     }
 }
@@ -82,11 +82,11 @@ void RobotServer::PostConnectionSetup()
     }
 
     // Setup camera:
-    m_camera.reset( new UnicapCamera() );
-
+    m_camera.reset( new UnicapCamera() );   
     if ( m_camera->IsOpen() == false )
     {
         m_camera.reset();
+        std::clog << "Warning: Could not open camera. Joystick control mode only." << std::endl;
     }
 
     assert( m_con.get() != nullptr );

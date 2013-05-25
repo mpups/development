@@ -32,7 +32,7 @@ OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }
 SYSTEM_LINKS = { 'pthread', 'rt' }
 LINKS = { 'lua5.1', 'freetype', 'unicap' }
 FFMPEG_LINKS = { 'avcodec', 'avformat', 'avutil', 'swscale' }
-GLK_LINKS = { 'glk_d', 'glkcore_d' }
+GLK_LINKS = { 'glk', 'glkcore' }
 VIDEO_LINKS = { 'videolib' }
 
 -- need these defines because ffmpeg libs use C99 standard macros which are not in any C++ standards.

@@ -5,8 +5,9 @@
 
 enum class ControlMessage : std::uint8_t
 {
-    Hello     = 0,
-    HeartBeat = 1
+    HeartBeat = 0,
+    Hello     = 254,
+    GoodBye   = 255
 };
 
 #endif // MUXERCONTROLMESSAGES_H

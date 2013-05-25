@@ -43,7 +43,6 @@ bool VideoClient::InitialiseVideoStream()
 
     const int w = m_streamer->GetFrameWidth();
     const int h = m_streamer->GetFrameHeight();
-    std::clog << "Received frame dimensions: " << w << "x" << h << std::endl;
 
     return true;
 }
@@ -95,6 +94,11 @@ int VideoClient::ReadPacket( uint8_t* buffer, int size )
     while ( m_avPackets.Empty() && m_subscription.GetDemuxer().Ok() )
     {
         m_avPackets.WaitNotEmpty( lock, packetTimeout_ms );
+    }
+
+    if ( m_avPackets.Empty() )
+    {
+        std::clog << "VideoClient timed out waiting for an AV packet." << std::endl;
     }
 
     if ( StreamerIoError() )

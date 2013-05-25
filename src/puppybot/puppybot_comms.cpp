@@ -14,7 +14,7 @@ const int IMG_HEIGHT = 240;
 
 static void message( const char* msg )
 {
-    std::cerr  << msg << std::endl;
+    std::cerr << msg << std::endl;
 }
 
 /**
@@ -28,10 +28,12 @@ int runServer( int argc, char** argv )
 
     RobotServer robot( atoi(argv[1]), "/dev/ttyUSB0" );
 
-    while ( robot.Listen() ) // Wait for 1 new connection.
+    while ( robot.Listen() ) // Wait for 1 new connection (blocking).
     {
         robot.RunCommsLoop(); // Runs communications with new conection.
     }
+
+    message( "Server exiting: Listen() returned false." );
 
     return EXIT_SUCCESS;
 }
