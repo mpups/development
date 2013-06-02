@@ -29,6 +29,7 @@ TEST( network, ip )
 TEST( robolib, utililty )
 {
     TestSimpleAsyncFunction();
+    TestAsyncLooper();
 }
 
 TEST( robolib, packetcomms )
@@ -58,4 +59,3 @@ int main( int argc, char** argv )
     int v = RUN_ALL_TESTS();
     return v;
 }
-

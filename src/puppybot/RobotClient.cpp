@@ -3,6 +3,7 @@
 #include "../packetcomms/PacketDemuxer.h"
 #include "../packetcomms/PacketMuxer.h"
 #include "../robotcomms/VideoClient.h"
+#include "../utility/AsyncLooper.h"
 
 #include <arpa/inet.h>
 
@@ -125,17 +126,18 @@ bool RobotClient::RunCommsLoop()
         }
     });
 
+    // Send joystick data at 15Hz:
+    constexpr float joystickSendRateHz = 15;
+    AsyncLooper joyThread( joystickSendRateHz,
+                           std::bind( &RobotClient::SendJoystickData, std::ref(*this))
+                          );
+
 #ifndef ARM_BUILD
     while ( m_display.IsRunning() && gotFrame )
 #else
     while ( gotFrame )
 #endif
     {
-        /// @todo - having SendJoystickData() in same thread as ReceiveVideoFrame()
-        /// means that if  ReceiveVideoFrame() blocks (because the server is not sending video),
-        /// then no joystick data is sent from the client which, in-turn, causes the server to
-        /// shutdown for safety because it is receiving no control.
-        SendJoystickData();
         gotFrame = m_videoClient->ReceiveVideoFrame( [this]( LibAvCapture& stream ){
             stream.ExtractBgrImage( m_imageBuffer, stream.GetFrameWidth()*3 );
         });
@@ -195,3 +197,4 @@ void RobotClient::SetupImagePostData( int w, int h )
     m_postData.isColourBgr = true;
 #endif
 }
+
