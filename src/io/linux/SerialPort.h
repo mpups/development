@@ -21,7 +21,7 @@
 /**
     Very basic serial port interface.
 **/
-class SerialPort : public GLK::StdIO
+class SerialPort
 {
 public:
 

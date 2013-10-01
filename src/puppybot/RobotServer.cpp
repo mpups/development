@@ -63,7 +63,7 @@ bool RobotServer::Listen()
 void RobotServer::PostConnectionSetup()
 {
     // Setup comms to motors:
-    m_motors.reset( new MotionMind( m_serialPort.cStr() ) );
+    m_motors.reset( new MotionMind( m_serialPort.c_str() ) );
     if ( m_motors->Available() )
     {
         m_drive.reset( new DiffDrive( *m_motors ) );

@@ -3,6 +3,8 @@
 #ifndef LUA_BOT_CLASS_H
 #define LUA_BOT_CLASS_H
 
+#include <ostream>
+
 #include <glkcore.h>
 #include "../../include/RoboLibCore.h"
 
@@ -15,7 +17,7 @@
 class Luabot
 {
 public:
-    Luabot( Lua::LuaState& lua, MotionMind& motion, Joystick& joystick, GLK::StdOut& output );
+    Luabot( Lua::State& lua, MotionMind& motion, Joystick& joystick, std::ostream& output );
     ~Luabot();
 
 protected:
@@ -29,10 +31,10 @@ protected:
 private:
     static MotionMind*      ms_motion;
     static Joystick*        ms_joystick;
-    static GLK::StdOut*     ms_output;
+    static std::ostream*    ms_output;
     static GLK::Timer       ms_time;
         
-    Lua::LuaState&  m_lua;    
+    Lua::State&  m_lua;
 };
 
 #endif // LUA_BOT_CLASS_H

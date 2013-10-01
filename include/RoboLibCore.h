@@ -9,6 +9,7 @@
 #include "../src/io/linux/Joystick.h"
 
 #include "../src/lua/Luabot.h"
+#include "../src/utility/AsyncLooper.h"
 
 #include "../src/motor_control/TeleJoystick.h"
 
@@ -29,4 +30,3 @@
 #endif
 
 #endif // ROBO_LIB_CORE_H
-

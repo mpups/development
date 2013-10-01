@@ -13,18 +13,18 @@
 class ComPacket
 {
 public:
-     typedef std::shared_ptr<ComPacket> SharedPacket;
-     typedef std::shared_ptr<const ComPacket> ConstSharedPacket;
-     typedef std::queue< SharedPacket > PacketContainer;
+    typedef std::shared_ptr<ComPacket> SharedPacket;
+    typedef std::shared_ptr<const ComPacket> ConstSharedPacket;
+    typedef std::queue< SharedPacket > PacketContainer;
 
-     enum class Type : std::uint32_t {
+    enum class Type : std::uint32_t {
         Invalid = 0,
         AvInfo,
         AvData,
         Odometry,
         Joystick,
         Control = 0xFFFFFFFF
-     };
+    };
 
     ComPacket( const ComPacket& ) = delete;
     ComPacket& operator=( const ComPacket& ) = delete;

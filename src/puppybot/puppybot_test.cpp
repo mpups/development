@@ -28,13 +28,13 @@ int main( int argc, char** argv )
     if ( camera.IsOpen() && motors.Available() )
     {
         // Got them!
-        GLK::String title( "" );
+        std::string title( "" );
         title += ':';
         title += ' ';
-        title += GLK::String( camera.GetVendor() );
+        title += std::string( camera.GetVendor() );
         title += ' ';
-        title += GLK::String( camera.GetModel() );
-        fprintf( stderr, "Found camera: %s\n", title.cStr() );
+        title += std::string( camera.GetModel() );
+        fprintf( stderr, "Found camera: %s\n", title.c_str() );
     
         // Allocate memory for capturing images:
         uint8_t* m_lum;

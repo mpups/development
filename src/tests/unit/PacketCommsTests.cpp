@@ -5,6 +5,52 @@
 
 #include <memory>
 
+#include <initializer_list>
+#include <map>
+class IdManager
+{
+public:
+    static constexpr char const* Invalid = "Invalid";
+    typedef std::size_t PacketId;
+
+    IdManager( std::initializer_list<std::string> list )
+    {
+        std::size_t id = 0;
+        m_map[Invalid] = id;
+        m_reverse.push_back(Invalid);
+        for ( const std::string& name : list )
+        {
+            id += 1;
+            m_map[name] = id;
+            m_reverse.push_back( name );
+        }
+    }
+
+    virtual ~IdManager() {}
+
+    PacketId ToId( const std::string& name ) const { return m_map.at(name); }
+    const std::string& ToString( PacketId id ) const { return m_reverse[id]; }
+
+private:
+    std::map<std::string,std::size_t> m_map;
+    std::vector<std::string> m_reverse;
+};
+
+TEST( packetcomms, IdManager )
+{
+    IdManager packetIds{ "Type1", "Type2", "Type3" };
+
+    std::string invalid = IdManager::Invalid;
+    EXPECT_EQ( 0, packetIds.ToId( invalid ) );
+    EXPECT_EQ( 1, packetIds.ToId( "Type1" ) );
+    EXPECT_EQ( 2, packetIds.ToId( "Type2" ) );
+    EXPECT_EQ( 3, packetIds.ToId( "Type3" ) );
+    EXPECT_EQ( invalid, packetIds.ToString(0) );
+    EXPECT_EQ( "Type1", packetIds.ToString(1) );
+    EXPECT_EQ( "Type2", packetIds.ToString(2) );
+    EXPECT_EQ( "Type3", packetIds.ToString(3) );
+}
+
 void TestComPacket()
 {
     ComPacket pkt;

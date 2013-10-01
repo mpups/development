@@ -1,8 +1,8 @@
 #include "Luabot.h"
 
-MotionMind*     Luabot::ms_motion   = 0;
-Joystick*       Luabot::ms_joystick = 0;
-GLK::StdOut*    Luabot::ms_output   = 0;
+MotionMind*     Luabot::ms_motion   = nullptr;
+Joystick*       Luabot::ms_joystick = nullptr;
+std::ostream*   Luabot::ms_output   = nullptr;
 GLK::Timer      Luabot::ms_time;
 
 /**
@@ -14,7 +14,7 @@ GLK::Timer      Luabot::ms_time;
     @param lua The Lua state that the client will control the robot through.
     @param motionControl A motion control class for sending commands to a diff-drive robot.
 **/
-Luabot::Luabot( Lua::LuaState& lua, MotionMind& motion, Joystick& joystick, GLK::StdOut& output )
+Luabot::Luabot( Lua::State& lua, MotionMind& motion, Joystick& joystick, std::ostream& output )
 :
     m_lua       ( lua )
 {
@@ -57,14 +57,14 @@ int Luabot::setSpeed( lua_State* L )
 {
     GLK::Timer t;
 
-    Lua::LuaState lua( L );
+    Lua::State lua( L );
 
     if ( ms_motion->Available() )
     {
         if ( lua.IsNumber(1) && lua.IsNumber(2) )
         {
-            int32_t addr  = lua.ToInteger(1);
-            int32_t speed = lua.ToInteger(2);
+            int32_t addr  = lua.GetValue<int32_t>(1);
+            int32_t speed = lua.GetValue<int32_t>(2);
             int32_t pos;
             uint32_t time = ms_time.GetMilliSeconds();
             bool ok = ms_motion->SetSpeed( addr, speed, pos );
@@ -77,16 +77,12 @@ int Luabot::setSpeed( lua_State* L )
         }
         else
         {
-            lua.GetGlobal( "print" );
-            lua.PushString( "usage: time, position = setSpeed( motor-address, counts-per-second )\n" );
-            lua.Call( 1 );
+            lua.Call( "print", std::string("usage: time, position = setSpeed( motor-address, counts-per-second )\n") );
         }
     }
     else
     {
-        lua.GetGlobal( "print" );
-        lua.PushString( "ERROR: communication link to motors is unavailable!\n" );
-        lua.Call( 1 );
+        lua.Call( "print", std::string("ERROR: communication link to motors is unavailable!\n") );
     }
 
     return 0;
@@ -105,14 +101,14 @@ int Luabot::setSpeed( lua_State* L )
 **/
 int Luabot::setMove( lua_State* L )
 {
-    Lua::LuaState lua( L );
+    Lua::State lua( L );
 
     if ( ms_motion->Available() )
     {
         if ( lua.IsNumber(1) && lua.IsNumber(2) )
         {
-            int32_t addr   = lua.ToInteger(1);
-            int32_t counts = lua.ToInteger(2);
+            int32_t addr   = lua.GetValue<int32_t>(1);
+            int32_t counts = lua.GetValue<int32_t>(2);
             int32_t position;
             uint32_t time = ms_time.GetMilliSeconds();
             bool ok = ms_motion->Move( addr, counts, position );
@@ -126,9 +122,7 @@ int Luabot::setMove( lua_State* L )
     }
     else
     {
-        lua.GetGlobal( "print" );
-        lua.PushString( "ERROR: communication link to motors is unavailable!\n" );
-        lua.Call( 1 );
+        lua.Call( "print", std::string( "ERROR: communication link to motors is unavailable!\n") );
     }
 
     return 0;
@@ -147,7 +141,7 @@ int Luabot::setMove( lua_State* L )
 int Luabot::setupMotor( lua_State* L )
 {
     bool ok = false;
-    Lua::LuaState lua( L );
+    Lua::State lua( L );
     
     if ( ms_motion->Available() )
     {
@@ -155,27 +149,27 @@ int Luabot::setupMotor( lua_State* L )
         if ( nargs == 2 && lua.IsNumber(1) && lua.IsTable(2) )
         {
             ok = true;
-            int32_t addr = lua.ToInteger(1);
+            int32_t addr = lua.GetValue<int32_t>(1);
             // Iterate over {key,value} pairs in table
-            lua.PushNil(); // To start iteration set key to nil
+            lua.Push( Lua::Nil ); // To start iteration set key to nil
             while ( lua.Next(2) )
             {                
                 if ( lua.IsString(-2) && lua.IsNumber(-1) )
                 {
                     // Write register value to motion-mind controller:
-                    MotionMind::Register reg = ms_motion->StringToRegister( lua.ToString(-2) );
-                    int32_t value = lua.ToInteger( -1 );
+                    MotionMind::Register reg = ms_motion->StringToRegister( lua.GetValue<std::string>(-2).c_str() );
+                    int32_t value = lua.GetValue<int32_t>( -1 );
 
-                    ms_output->Printf( "Setting motor[%d] %s(%d) = %d", addr, lua.ToString(-2), reg, lua.ToInteger(-1) );
+                    (*ms_output) << "Setting motor[" << addr << "] " << lua.GetValue<std::string>(-2) << "(" << reg << ") = " << lua.GetValue<int>(-1);
                     if ( ms_motion->WriteRegister( addr, reg, value ) )
                     {
                         ok &= true;
-                        ms_output->Printf( " - ok!\n" );
+                        (*ms_output) << " - ok!\n";
                     }
                     else
                     {
                         ok = false;
-                        ms_output->Printf( " - failed!\n" );                    
+                        (*ms_output) << " - failed!\n";
                     }
                 }
                 lua.Pop( 1 );
@@ -184,19 +178,15 @@ int Luabot::setupMotor( lua_State* L )
         }
         else
         {
-            lua.GetGlobal( "print" );
-            lua.PushString( "usage: setupMotor( table ) \n" );
-            lua.Call( 1 );            
+            lua.Call( "print", std::string("usage: setupMotor( table ) \n") );
         }
     }
     else
     {
-        lua.GetGlobal( "print" );
-        lua.PushString( "ERROR: communication link to motors is unavailable!\n" );
-        lua.Call( 1 );
+        lua.Call( "print", std::string("ERROR: communication link to motors is unavailable!\n") );
     }
 
-    lua.PushBoolean( ok );
+    lua.Push( ok );
     return 1;
 }
 
@@ -212,18 +202,19 @@ int Luabot::readReg( lua_State* L )
 {   
     if ( ms_motion->Available() )
     {
-        Lua::LuaState lua( L );
+        Lua::State lua( L );
         int nargs = lua.GetStackSize();
         if ( nargs == 2 && lua.IsNumber(1) && lua.IsString(2) )
         {
-            int32_t value;
-            uint32_t time = ms_time.GetMilliSeconds();
-            if ( ms_motion->ReadRegister( lua.ToInteger(1) , ms_motion->StringToRegister( lua.ToString(2) ), value ) )
+            const uint32_t time = ms_time.GetMilliSeconds();
+            const std::string regString = lua.GetValue<std::string>(2);
+            int32_t registerValue;
+            if ( ms_motion->ReadRegister( lua.GetValue<int32_t>(1) , ms_motion->StringToRegister(regString.c_str()), registerValue ) )
             {
                 lua.PushNumber( time );
-                lua.PushNumber( value );
+                lua.PushNumber( registerValue );
                 return 2;
-            }    
+            }
         }
     }
 
@@ -243,7 +234,7 @@ int Luabot::getJoyAxes( lua_State* L )
 {
     if ( ms_joystick->IsAvailable() )
     {
-        Lua::LuaState lua( L );
+        Lua::State lua( L );
         lua.PushNumber( ms_joystick->GetAxis(2) );
         lua.PushNumber( ms_joystick->GetAxis(1) );
         return 2;
@@ -265,7 +256,7 @@ int Luabot::getJoyButtonEvent( lua_State* L )
 {
     if ( ms_joystick->IsAvailable() )
     {
-        Lua::LuaState lua( L );
+        Lua::State lua( L );
         
         Joystick::ButtonEvent b;
         if ( ms_joystick->GetButtonEvent( b ) )

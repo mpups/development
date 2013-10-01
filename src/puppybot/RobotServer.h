@@ -22,7 +22,7 @@ private:
     void PostCommsCleanup();
     void StreamVideo( TeleJoystick& joy );
 
-    GLK::String m_serialPort;
+    std::string m_serialPort;
 
     std::unique_ptr<MotionMind>     m_motors;
     std::unique_ptr<DiffDrive>      m_drive;
