@@ -40,12 +40,12 @@ int streamVideo( TcpSocket& client )
 
     if ( camera.IsOpen() )
     {
-        PacketMuxer comms( client );
+        PacketMuxer comms( client, {} );
 
         // Create a video writer object that passes a lamba function that posts video packets to
         // the communication sub-system:
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&]( uint8_t* buffer, int size ) {
-            comms.EmplacePacket( ComPacket::Type::AvData, buffer, size );
+            comms.EmplacePacket( "AvData", buffer, size );
             return comms.Ok() ? size : -1;
         });
 
@@ -78,7 +78,7 @@ int streamVideo( TcpSocket& client )
 
             // For every camera frame send fake odometry packet to test the comms system:
             uint8_t odo[5] = {1,2,3,4,5};
-            comms.PostPacket( ComPacket( ComPacket::Type::Odometry, odo, sizeof(odo) ) );
+            comms.EmplacePacket( "Odometry", odo, sizeof(odo) );
         }
 
     }
@@ -136,14 +136,14 @@ int runClient( int argc, char** argv )
 
     if ( client.Connect( argv[1], atoi( argv[2] ) ) )
     {
-        PacketDemuxer comms( client );
+        PacketDemuxer comms( client, {"AvInfo", "AvData","Odometry","Joystick"} );
 
         /// @todo - the following form a message queue which should be encapsulated:
         GLK::Mutex avDataLock;
         GLK::ConditionVariable avDataReady;
         std::queue< ComPacket::ConstSharedPacket > avPackets;
 
-        PacketSubscription sub = comms.Subscribe( ComPacket::Type::AvData, [&]( const ComPacket::ConstSharedPacket& packet )
+        PacketSubscription sub = comms.Subscribe( "AvData", [&]( const ComPacket::ConstSharedPacket& packet )
         {
             // When we get an AV data packet from our subscription we simply queue it and wake anything waiting on the queue:
             GLK::MutexLock lock( avDataLock );
@@ -151,9 +151,9 @@ int runClient( int argc, char** argv )
             avDataReady.WakeOne();
         });
 
-        PacketSubscription odoSub = comms.Subscribe( ComPacket::Type::Odometry, [&]( const ComPacket::ConstSharedPacket& packet )
+        PacketSubscription odoSub = comms.Subscribe( "Odometry", [&]( const ComPacket::ConstSharedPacket& packet )
         {
-            assert( packet->GetType() == ComPacket::Type::Odometry );
+            //assert( packet->GetType() == ComPacket::Type::Odometry );
             std::cerr << "Odometry packet discarded." << std::endl;
         });
 

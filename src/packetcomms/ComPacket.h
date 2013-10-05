@@ -10,6 +10,8 @@
 #include <memory>
 #include <queue>
 
+#include "IdManager.h"
+
 class ComPacket
 {
 public:
@@ -17,31 +19,22 @@ public:
     typedef std::shared_ptr<const ComPacket> ConstSharedPacket;
     typedef std::queue< SharedPacket > PacketContainer;
 
-    enum class Type : std::uint32_t {
-        Invalid = 0,
-        AvInfo,
-        AvData,
-        Odometry,
-        Joystick,
-        Control = 0xFFFFFFFF
-    };
-
     ComPacket( const ComPacket& ) = delete;
     ComPacket& operator=( const ComPacket& ) = delete;
 
     /// Default constructed invalid packet:
-    ComPacket() : m_type( ComPacket::Type::Invalid ) {};
+    ComPacket() : m_type( IdManager::InvalidPacket ) {};
 
     /// Construct a com packet from raw buffer of unsigned 8-bit data:
-    ComPacket( ComPacket::Type type, uint8_t* buffer, int size ) : m_type(type), m_data( buffer, buffer+size ) {};
+    ComPacket( IdManager::PacketType type, uint8_t* buffer, int size ) : m_type(type), m_data( buffer, buffer+size ) {};
 
     /// Construct ComPacket with preallocated data size (but no valid data).
-    ComPacket( ComPacket::Type type, int size ) : m_type(type), m_data( size ) {};
+    ComPacket( IdManager::PacketType type, int size ) : m_type(type), m_data( size ) {};
 
     virtual ~ComPacket() {};
 
     /// @param p The ComPacket to be moved - it will become of invalid type, with an empty data vector.
-    ComPacket( ComPacket&& p ) : m_type( ComPacket::Type::Invalid ) {
+    ComPacket( ComPacket&& p ) : m_type( IdManager::InvalidPacket ) {
         std::swap( p.m_type, m_type );
         std::swap( p.m_data, m_data );
     }; /// @todo use delgating constructor to create  invalid packet when upgraded to gcc-4.7+
@@ -52,7 +45,7 @@ public:
         return *this;
     };
 
-    ComPacket::Type GetType()   const { return m_type; };
+    IdManager::PacketType GetType()   const { return m_type; };
     const uint8_t* GetDataPtr() const { return &(m_data[0]); };
     uint8_t* GetDataPtr() { return &(m_data[0]); };
     std::vector<uint8_t>::size_type GetDataSize() const noexcept { return m_data.size(); };
@@ -62,21 +55,21 @@ public:
 protected:
 
 private:
-    ComPacket::Type m_type;
+    IdManager::PacketType m_type;
     std::vector<uint8_t> m_data;
 };
 
 // Need to define a hash function to use strongly typed enum as a map key:
 namespace std
 {
-    template <>
-    struct hash<ComPacket::Type>
-    {
-        size_t operator()(const ComPacket::Type& type) const
-        {
-            return hash<int>()( static_cast<int>(type) );
-        }
-    };
+//    template <>
+//    struct hash<IdManager::PacketType>
+//    {
+//        size_t operator()(const IdManager::PacketType& type) const
+//        {
+//            return hash<int>()( static_cast<size_t>(type) );
+//        }
+//    };
 }
 
 #endif /* __COM_PACKET_H__ */

@@ -971,3 +971,5 @@ src/tests/unit/PacketCommsTests.h
 src/tests/unit/PacketCommsTests.cpp
 src/network/AbstractSocket.h
 src/tests/unit/MockSockets.h
+src/packetcomms/IdManager.h
+src/packetcomms/IdManager.cpp

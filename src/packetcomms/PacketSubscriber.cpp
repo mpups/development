@@ -5,7 +5,7 @@
     This is the only constructor and is protected: the intent being
     that only a PacketDemuxer object can construct a PacketSubscription.
 */
-PacketSubscriber::PacketSubscriber( ComPacket::Type type, PacketDemuxer& comms, CallBack& callback )
+PacketSubscriber::PacketSubscriber( const IdManager::PacketType type, PacketDemuxer& comms, CallBack& callback )
 :
     m_type      ( type ),
     m_comms     ( comms ),

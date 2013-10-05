@@ -40,8 +40,9 @@ bool RobotClient::Connect( const char* host, int port )
     bool connected = m_client.Connect( host, port );
     if ( connected )
     {
-        m_demuxer.reset( new PacketDemuxer( m_client ) );
-        m_muxer.reset( new PacketMuxer( m_client ) );
+        std::vector<std::string> packetTypes{"AvInfo", "AvData","Odometry","Joystick"};
+        m_demuxer.reset( new PacketDemuxer( m_client, packetTypes ) );
+        m_muxer.reset( new PacketMuxer( m_client, packetTypes ) );
         SendJoystickData();
     }
     return connected;
@@ -92,7 +93,7 @@ bool RobotClient::RunCommsLoop()
     int32_t lastCountLeft  = 0;
     int32_t lastCountRight = 0;
 
-    PacketSubscription odometrySubscriber = m_demuxer->Subscribe( ComPacket::Type::Odometry, [&]( const ComPacket::ConstSharedPacket& packet ) {
+    PacketSubscription odometrySubscriber = m_demuxer->Subscribe( "Odometry", [&]( const ComPacket::ConstSharedPacket& packet ) {
         DiffDrive::MotorData odometry;
         std::copy( packet->GetDataPtr(), packet->GetDataPtr()+packet->GetDataSize(), reinterpret_cast<uint8_t*>(&odometry) );
         if ( odometry.valid )
@@ -182,7 +183,7 @@ void RobotClient::SendJoystickData()
         joyData[2] = htonl( 32767 );
     }
 
-    m_muxer->EmplacePacket( ComPacket::Type::Joystick, reinterpret_cast<uint8_t*>(joyData), dataSize*sizeof(int32_t) );
+    m_muxer->EmplacePacket( "Joystick", reinterpret_cast<uint8_t*>(joyData), dataSize*sizeof(int32_t) );
 }
 
 void RobotClient::SetupImagePostData( int w, int h )

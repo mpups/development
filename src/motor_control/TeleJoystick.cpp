@@ -46,9 +46,9 @@ void TeleJoystick::Run()
 
     // Setup subscription callback to enqueue joystick packets:
     SimpleQueue joyPackets;
-    PacketSubscription joystickSubscription = m_demuxer.Subscribe( ComPacket::Type::Joystick, [&]( const ComPacket::ConstSharedPacket& packet )
+    PacketSubscription joystickSubscription = m_demuxer.Subscribe( "Joystick", [&]( const ComPacket::ConstSharedPacket& packet )
     {
-        assert( packet->GetType() == ComPacket::Type::Joystick );
+        /// @todo - check this now how? assert( packet->GetType() == ComPacket::Type::Joystick );
         joyPackets.Emplace( packet );
     });
 
@@ -87,7 +87,7 @@ void TeleJoystick::Run()
             DiffDrive::MotorData odometry = m_drive->JoyControl( jx, jy, jmax );
             if ( odometry.valid == true )
             {
-                m_muxer.EmplacePacket( ComPacket::Type::Odometry, reinterpret_cast<uint8_t*>(&odometry), sizeof(odometry) );
+                m_muxer.EmplacePacket( "Odometry", reinterpret_cast<uint8_t*>(&odometry), sizeof(odometry) );
             }
         }
         else
@@ -100,7 +100,7 @@ void TeleJoystick::Run()
             odometry.leftPos  = 0;
             odometry.valid = false;
             // Send a fake packet for testing/debugging:
-            m_muxer.EmplacePacket( ComPacket::Type::Odometry, reinterpret_cast<uint8_t*>(&odometry), sizeof(odometry) );
+            m_muxer.EmplacePacket( "Odometry", reinterpret_cast<uint8_t*>(&odometry), sizeof(odometry) );
         }
     }
 

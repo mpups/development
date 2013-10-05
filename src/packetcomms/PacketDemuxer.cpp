@@ -11,8 +11,9 @@
 
     This object is guaranteed to only ever read from the socket.
 */
-PacketDemuxer::PacketDemuxer( AbstractSocket &socket )
+PacketDemuxer::PacketDemuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds )
 :
+    m_packetIds     ( packetIds ),
     m_nextSubscriberId (0),
     m_transport     ( socket ),
     m_transportError( false ),
@@ -37,9 +38,10 @@ bool PacketDemuxer::Ok() const
 /**
     Returns a subscriber object.
 */
-PacketSubscription PacketDemuxer::Subscribe( ComPacket::Type type, PacketSubscriber::CallBack callback )
+PacketSubscription PacketDemuxer::Subscribe( const std::string& typeName, PacketSubscriber::CallBack callback )
 {
-    SubscriptionEntry::second_type& queue = m_subscribers[ type ];
+    const IdManager::PacketType type = m_packetIds.ToId(typeName);
+    SubscriptionEntry::second_type& queue = m_subscribers[type];
     queue.emplace_back( new PacketSubscriber( type, *this , callback ) );
     m_nextSubscriberId += 1;
     return PacketSubscription( queue.back() );
@@ -47,7 +49,7 @@ PacketSubscription PacketDemuxer::Subscribe( ComPacket::Type type, PacketSubscri
 
 void PacketDemuxer::Unsubscribe( const PacketSubscriber* pSubscriber )
 {
-    ComPacket::Type type = pSubscriber->GetType();
+    const IdManager::PacketType type = pSubscriber->GetType();
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
 
     // Search through all subscribers of this type for the specific subscriber:
@@ -64,7 +66,7 @@ void PacketDemuxer::Unsubscribe( const PacketSubscriber* pSubscriber )
 */
 bool PacketDemuxer::IsSubscribed( const PacketSubscriber* pSubscriber ) const
 {
-    ComPacket::Type type = pSubscriber->GetType();
+    const IdManager::PacketType type = pSubscriber->GetType();
     auto queueItr = m_subscribers.find( type );
 
     if ( queueItr == m_subscribers.end() )
@@ -102,10 +104,10 @@ void PacketDemuxer::ReceiveLoop()
         constexpr int timeoutInMilliseconds = 1000;
         if ( ReceivePacket( packet, timeoutInMilliseconds ) )
         {
-            const ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
+            const IdManager::PacketType packetType = packet.GetType(); // Need to cache this before we use std::move
             auto sptr = std::make_shared<ComPacket>( std::move(packet) );
 
-            if ( packetType == ComPacket::Type::Control )
+            if ( packetType == IdManager::ControlPacket )
             {
                 // Control messages are used by the muxer to communicate
                 // with the demuxer (this is a one way protocol).
@@ -153,7 +155,7 @@ bool PacketDemuxer::ReceivePacket( ComPacket& packet, const int timeoutInMillise
     type = ntohl( type );
     size = ntohl( size );
 
-    ComPacket p( static_cast<ComPacket::Type>(type), size );
+    ComPacket p( static_cast<IdManager::PacketType>(type), size );
     byteCount = p.GetDataSize();
     ok = ReadBytes( reinterpret_cast<uint8_t*>(p.GetDataPtr()), byteCount );
     if ( !ok )
@@ -162,7 +164,7 @@ bool PacketDemuxer::ReceivePacket( ComPacket& packet, const int timeoutInMillise
     }
 
     std::swap( p, packet );
-    assert( packet.GetType() != ComPacket::Type::Invalid ); // Catch invalid packets at the lowest level.
+    assert( packet.GetType() != IdManager::InvalidPacket ); // Catch invalid packets at the lowest level.
 
     return true;
 }
@@ -226,7 +228,7 @@ void PacketDemuxer::ReceiveHelloMessage( ComPacket& packet, const int timeoutInM
         bool failHard = true;
 
         // Very first packet should be a 'Hello' control packet:
-        if ( packet.GetType() == ComPacket::Type::Control )
+        if ( packet.GetType() == IdManager::ControlPacket )
         {
             auto sptr = std::make_shared<ComPacket>( std::move(packet) );
             ControlMessage msg = GetControlMessage( sptr );

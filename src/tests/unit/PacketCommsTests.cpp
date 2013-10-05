@@ -1,66 +1,40 @@
 #include <gtest/gtest.h>
 
 #include "../../packetcomms/PacketComms.h"
+#include "../../packetcomms/IdManager.h"
 #include "MockSockets.h"
 
 #include <memory>
 
-#include <initializer_list>
-#include <map>
-class IdManager
-{
-public:
-    static constexpr char const* Invalid = "Invalid";
-    typedef std::size_t PacketId;
-
-    IdManager( std::initializer_list<std::string> list )
-    {
-        std::size_t id = 0;
-        m_map[Invalid] = id;
-        m_reverse.push_back(Invalid);
-        for ( const std::string& name : list )
-        {
-            id += 1;
-            m_map[name] = id;
-            m_reverse.push_back( name );
-        }
-    }
-
-    virtual ~IdManager() {}
-
-    PacketId ToId( const std::string& name ) const { return m_map.at(name); }
-    const std::string& ToString( PacketId id ) const { return m_reverse[id]; }
-
-private:
-    std::map<std::string,std::size_t> m_map;
-    std::vector<std::string> m_reverse;
-};
-
 TEST( packetcomms, IdManager )
 {
-    IdManager packetIds{ "Type1", "Type2", "Type3" };
+    IdManager packetIds({ "Type1", "Type2", "Type3" });
 
-    std::string invalid = IdManager::Invalid;
-    EXPECT_EQ( 0, packetIds.ToId( invalid ) );
-    EXPECT_EQ( 1, packetIds.ToId( "Type1" ) );
-    EXPECT_EQ( 2, packetIds.ToId( "Type2" ) );
-    EXPECT_EQ( 3, packetIds.ToId( "Type3" ) );
+    std::string invalid = "Invalid";
+    std::string control = "Control";
+    const IdManager::PacketType ctrl = packetIds.ToId( control );
+    EXPECT_EQ( 0u, packetIds.ToId( invalid ) );
+    EXPECT_EQ( 1u, ctrl );
+    EXPECT_EQ( ctrl+1, packetIds.ToId( "Type1" ) );
+    EXPECT_EQ( ctrl+2, packetIds.ToId( "Type2" ) );
+    EXPECT_EQ( ctrl+3, packetIds.ToId( "Type3" ) );
     EXPECT_EQ( invalid, packetIds.ToString(0) );
-    EXPECT_EQ( "Type1", packetIds.ToString(1) );
-    EXPECT_EQ( "Type2", packetIds.ToString(2) );
-    EXPECT_EQ( "Type3", packetIds.ToString(3) );
+    EXPECT_EQ( control, packetIds.ToString(ctrl) );
+    EXPECT_EQ( "Type1", packetIds.ToString(ctrl+1) );
+    EXPECT_EQ( "Type2", packetIds.ToString(ctrl+2) );
+    EXPECT_EQ( "Type3", packetIds.ToString(ctrl+3) );
 }
 
 void TestComPacket()
 {
     ComPacket pkt;
-    EXPECT_TRUE( pkt.GetType() == ComPacket::Type::Invalid );
+    EXPECT_TRUE( pkt.GetType() == IdManager::InvalidPacket );
     EXPECT_EQ( 0, pkt.GetDataSize() );
     EXPECT_EQ( nullptr, pkt.GetDataPtr() );
 
     constexpr int size = 6;
     uint8_t bytes[size] = "hello";
-    ComPacket pkt2( ComPacket::Type::Invalid, bytes, size );
+    ComPacket pkt2( IdManager::InvalidPacket, bytes, size );
     EXPECT_EQ( size, pkt2.GetDataSize() );
     EXPECT_NE( nullptr, pkt2.GetDataPtr() );
 
@@ -72,23 +46,23 @@ void TestComPacket()
 
     // Create an Odometry packet with uninitialised data:
     constexpr int size2 = 17;
-    ComPacket pkt3( ComPacket::Type::Control, size2 );
+    ComPacket pkt3( IdManager::ControlPacket, size2 );
     EXPECT_EQ( size2, pkt3.GetDataSize() );
     EXPECT_NE( nullptr, pkt3.GetDataPtr() );
 
     // Test that pkt3 gets moved (and made invalid):
     EXPECT_NE( size, size2 );
-    EXPECT_EQ( ComPacket::Type::Control, pkt3.GetType() );
+    EXPECT_EQ( IdManager::ControlPacket, pkt3.GetType() );
     pkt2 = std::move( pkt3 );
-    EXPECT_EQ( ComPacket::Type::Invalid, pkt3.GetType() );
+    EXPECT_EQ( IdManager::InvalidPacket, pkt3.GetType() );
     EXPECT_EQ( size2, pkt2.GetDataSize() );
 
     // Test move constructor on pkt2 (which was pkt3):
     ComPacket pkt4( std::move(pkt2) );
     EXPECT_EQ( size2, pkt4.GetDataSize() );
-    EXPECT_EQ( ComPacket::Type::Control, pkt4.GetType() );
+    EXPECT_EQ( IdManager::ControlPacket, pkt4.GetType() );
     EXPECT_EQ( 0, pkt2.GetDataSize() );
-    EXPECT_EQ( ComPacket::Type::Invalid, pkt2.GetType() );
+    EXPECT_EQ( IdManager::InvalidPacket, pkt2.GetType() );
 }
 
 void TestSimpleQueue()
@@ -101,7 +75,7 @@ void TestSimpleQueue()
 
     // Add a packet onto queue:
     constexpr int pktSize = 7;
-    auto sptr = std::make_shared<ComPacket>( ComPacket::Type::Control, pktSize );
+    auto sptr = std::make_shared<ComPacket>( IdManager::ControlPacket, pktSize );
     EXPECT_EQ( 1, sptr.use_count() );
     q.Emplace( sptr );
     EXPECT_EQ( 1, q.Size() );
@@ -137,7 +111,7 @@ void TestSimpleQueue()
 void TestPacketMuxerExitsCleanly()
 {
     AlwaysFailSocket mockSocket;
-    PacketMuxer muxer( mockSocket );
+    PacketMuxer muxer( mockSocket, {} );
     while ( muxer.Ok() ) {}
 }
 
@@ -145,7 +119,7 @@ void TestPacketMuxer()
 {
     constexpr int testPayloadSize = 11;
     MuxerTestSocket socket( testPayloadSize );
-    PacketMuxer muxer( socket );
+    PacketMuxer muxer( socket, {"MockPacket"} );
 
     // Transport should be ok here:
     EXPECT_TRUE( muxer.Ok() );
@@ -154,11 +128,10 @@ void TestPacketMuxer()
 
     // Emplace payload:
     uint8_t payload[testPayloadSize];
-    muxer.EmplacePacket( ComPacket::Type::Odometry, payload, testPayloadSize );
+    muxer.EmplacePacket( "MockPacket", payload, testPayloadSize );
 
     // Post identical payload:
-    ComPacket pkt( ComPacket::Type::Odometry, payload, testPayloadSize );
-    muxer.PostPacket( std::move(pkt) );
+    muxer.EmplacePacket( "MockPacket", payload, testPayloadSize );
 
     // Give the muxer time to send:
     usleep( 100000 );
@@ -170,7 +143,7 @@ void TestPacketMuxer()
 void TestDemuxerExitsCleanly()
 {
     AlwaysFailSocket socket;
-    PacketDemuxer demuxer( socket );
+    PacketDemuxer demuxer( socket, {} );
 
     while ( demuxer.Ok() )
     {
@@ -180,5 +153,5 @@ void TestDemuxerExitsCleanly()
 void TestPacketDemuxer()
 {
     AlwaysFailSocket socket;
-    PacketDemuxer demuxer( socket );
+    PacketDemuxer demuxer( socket, {} );
 }

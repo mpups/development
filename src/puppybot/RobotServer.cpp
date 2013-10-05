@@ -90,8 +90,9 @@ void RobotServer::PostConnectionSetup()
     }
 
     assert( m_con.get() != nullptr );
-    m_muxer.reset( new PacketMuxer( *m_con ) );
-    m_demuxer.reset( new PacketDemuxer( *m_con ) );
+    std::vector<std::string> packetTypes{"AvInfo", "AvData","Odometry","Joystick"};
+    m_muxer.reset( new PacketMuxer( *m_con, packetTypes ) );
+    m_demuxer.reset( new PacketDemuxer( *m_con, packetTypes ) );
 }
 
 /**
@@ -171,7 +172,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 
     // Lambda that enqueues video packets via the Muxing system:
     FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [this]( uint8_t* buffer, int size ) {
-        m_muxer->EmplacePacket( ComPacket::Type::AvData, buffer, size );
+        m_muxer->EmplacePacket( "AvData", buffer, size );
         return m_muxer->Ok() ? size : -1;
     });
     LibAvWriter streamer( videoIO );
@@ -200,10 +201,10 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     // This lambda will be called back from a separate frame capture thread.
     // It converts the video frame and then signals the main loop that a new
     // frame is ready to be compressed:
-    double conversionTime = 0.0;
-    double lockTime = 0.0;
     m_camera->SetCaptureCallback( [&]( const uint8_t* buffer, const timespec& time ) {
 #ifdef ENABLE_TIMING
+        double conversionTime = 0.0;
+        double lockTime = 0.0;
         struct timespec conversionStartTime;
         struct timespec conversionEndTime;
         clock_gettime( CLOCK_MONOTONIC, &conversionStartTime );

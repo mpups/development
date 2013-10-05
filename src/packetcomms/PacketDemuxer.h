@@ -5,7 +5,10 @@
 #define __PACKET_DEMUXER_H__
 
 #include <unordered_map>
+#include <string>
+#include <initializer_list>
 
+#include "IdManager.h"
 #include "ComPacket.h"
 #include "PacketSubscription.h"
 #include "PacketSubscriber.h"
@@ -34,12 +37,12 @@ class PacketDemuxer
 public:
     typedef std::shared_ptr<PacketSubscriber> SubscriberPtr;
 
-    PacketDemuxer( AbstractSocket& socket );
+    PacketDemuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds );
     virtual ~PacketDemuxer();
 
     bool Ok() const;
 
-    PacketSubscription Subscribe( ComPacket::Type type, PacketSubscriber::CallBack callback );
+    PacketSubscription Subscribe( const std::string& type, PacketSubscriber::CallBack callback );
     void Unsubscribe( const PacketSubscriber *subscriber );
     bool IsSubscribed( const PacketSubscriber* subscriber ) const;
 
@@ -47,12 +50,13 @@ public:
     bool ReceivePacket( ComPacket& packet, const int timeoutInMilliseconds );
 
 protected:
-    typedef std::pair< ComPacket::Type, std::vector<SubscriberPtr> > SubscriptionEntry;
+    typedef std::pair< IdManager::PacketType, std::vector<SubscriberPtr> > SubscriptionEntry;
 
     bool ReadBytes( uint8_t* buffer, size_t& size, bool transportErrorOnZeroBytes=false );
     void SignalTransportError();
 
 private:
+    IdManager m_packetIds;
     int m_nextSubscriberId;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
     AbstractSocket& m_transport;

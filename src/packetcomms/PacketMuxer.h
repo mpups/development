@@ -13,6 +13,7 @@
 #include <functional>
 #include <memory>
 
+#include "IdManager.h"
 #include "ComPacket.h"
 #include "PacketSubscription.h"
 #include "ControlMessage.h"
@@ -48,17 +49,17 @@ class PacketMuxer
 public:
     typedef std::shared_ptr<PacketSubscriber> Subscription;
 
-    PacketMuxer( AbstractSocket& socket );
+    PacketMuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds );
     virtual ~PacketMuxer();
 
     bool Ok() const;
 
-    void PostPacket( ComPacket&& packet );
-    void EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size );
+    //void PostPacket( ComPacket&& packet );
+    void EmplacePacket( const std::string&, uint8_t* buffer, int size );
 
 protected:
-    typedef std::pair< ComPacket::Type, ComPacket::PacketContainer > MapEntry;
-    typedef std::pair< ComPacket::Type, std::vector<Subscription> > SubscriptionEntry;
+    typedef std::pair< IdManager::PacketType, ComPacket::PacketContainer > MapEntry;
+    typedef std::pair< IdManager::PacketType, std::vector<Subscription> > SubscriptionEntry;
 
     void SendLoop();
     void SendAll( ComPacket::PacketContainer& packets );
@@ -71,6 +72,8 @@ protected:
 
 private:
     void SignalPacketPosted();
+
+    IdManager m_packetIds;
 
     GLK::ConditionVariable m_txReady;
     GLK::Mutex m_txLock;

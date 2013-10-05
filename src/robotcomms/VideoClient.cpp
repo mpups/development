@@ -5,7 +5,7 @@ VideoClient::VideoClient( PacketDemuxer &demuxer )
     m_packetOffset (0),
     m_subscription (
       // Lambda which subscribes to the packets containing video-data:
-      demuxer.Subscribe( ComPacket::Type::AvData, [this]( const ComPacket::ConstSharedPacket& packet )
+      demuxer.Subscribe( "AvData", [this]( const ComPacket::ConstSharedPacket& packet )
       {
           m_avPackets.Emplace( packet ); // The callback simply queues up all the packets.
           m_totalVideoBytes += packet->GetDataSize();

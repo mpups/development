@@ -12,8 +12,9 @@
 
     This object is guaranteed to only ever write to the socket.
 */
-PacketMuxer::PacketMuxer( AbstractSocket& socket )
+PacketMuxer::PacketMuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds )
 :
+    m_packetIds     (packetIds),
     m_txLock        ( GLK::Mutex::Recursive ), // Had to make this recursive so we can emplace control packets to the queue internally while we already hold the tx lock.
     m_numPosted     (0),
     m_numSent       (0),
@@ -57,15 +58,15 @@ bool PacketMuxer::Ok() const
     If it is not an rvalue reference then after calling this the packet object will become
     invalid ( i.e. have type ComPacket::Type::invalid and no data).
 */
-void PacketMuxer::PostPacket( ComPacket&& packet )
-{
-    GLK::MutexLock lock( m_txLock );
-    // Each packet type goes onto a separate queue:
-    ComPacket::Type packetType = packet.GetType(); // Need to cache this before we use std::move
-    ComPacket::SharedPacket sptr = std::make_shared<ComPacket>( std::move(packet) );
-    m_txQueues[ packetType ].push( std::move(sptr) );
-    SignalPacketPosted();
-}
+//void PacketMuxer::PostPacket( ComPacket&& packet )
+//{
+//    GLK::MutexLock lock( m_txLock );
+//    // Each packet type goes onto a separate queue:
+//    IdManager::PacketType packetType = packet.GetType(); // Need to cache this before we use std::move
+//    ComPacket::SharedPacket sptr = std::make_shared<ComPacket>( std::move(packet) );
+//    m_txQueues[ packetType ].push( std::move(sptr) );
+//    SignalPacketPosted();
+//}
 
 /**
     Optimised version of ComCentre::PostPacket() which uses forwarding to efficiently
@@ -76,8 +77,9 @@ void PacketMuxer::PostPacket( ComPacket&& packet )
     @note There is a g++ bug which doesn't allow perfect forwarding in cases like this:
     when it is fixed variadic arguments can be forwarded directly to any ComPacket constructor.
 */
-void PacketMuxer::EmplacePacket( ComPacket::Type type, uint8_t* buffer, int size )
+void PacketMuxer::EmplacePacket( const std::string& name, uint8_t* buffer, int size )
 {
+    IdManager::PacketType type = m_packetIds.ToId(name);
     GLK::MutexLock lock( m_txLock );
     m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
     SignalPacketPosted();
@@ -166,7 +168,7 @@ void PacketMuxer::SendAll( ComPacket::PacketContainer& packets )
 */
 void PacketMuxer::SendPacket( const ComPacket& packet )
 {
-    assert( packet.GetType() != ComPacket::Type::Invalid ); // Catch attempts to send invalid packets
+    assert( packet.GetType() != IdManager::InvalidPacket ); // Catch attempts to send invalid packets
 
     // Write the type as an unsigned 32-bit integer in network byte order:
     size_t writeCount = sizeof(uint32_t);
@@ -218,5 +220,5 @@ void PacketMuxer::SignalPacketPosted()
 void PacketMuxer::SendControlMessage( ControlMessage msg )
 {
     /// @todo should use this once g++ is updated: std::underlying_type(ControlMessage)
-    EmplacePacket( ComPacket::Type::Control, reinterpret_cast<uint8_t*>(&msg), sizeof(uint8_t) );
+    EmplacePacket( "Control", reinterpret_cast<uint8_t*>(&msg), sizeof(uint8_t) );
 }

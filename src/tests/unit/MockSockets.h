@@ -26,14 +26,14 @@ public:
     {
         EXPECT_EQ( sizeof(uint32_t), size );
         uint32_t type = ntohl( *reinterpret_cast<const uint32_t*>(data) );
-        m_type = static_cast<ComPacket::Type>(type);
+        m_type = static_cast<IdManager::PacketType>(type);
     }
 
     void CheckSize( const char* data, std::size_t size )
     {
         EXPECT_EQ( sizeof(uint32_t), size );
         uint32_t payloadSize = ntohl( *reinterpret_cast<const uint32_t*>(data) );
-        if ( m_type == ComPacket::Type::Odometry )
+        if ( m_type > 1 )
         {
             EXPECT_EQ( m_testPayloadSize, payloadSize );
         }
@@ -42,7 +42,7 @@ public:
     /// @todo - this test is very tied to implementation (i.e. knows how the writes are broken down). Not good.
     void CheckPayload( const char* data, std::size_t size )
     {
-        if ( m_type == ComPacket::Type::Odometry )
+        if ( m_type > 1 )
         {
             EXPECT_EQ( m_testPayloadSize, size );
         }
@@ -89,7 +89,7 @@ public:
     int m_testPayloadSize;
     int m_totalBytes;
     State m_expected;
-    ComPacket::Type m_type;
+    IdManager::PacketType m_type;
 };
 
 class DemuxerTestSocket : public AbstractSocket
