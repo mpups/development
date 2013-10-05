@@ -34,7 +34,7 @@ RobotClient::~RobotClient()
     free( m_imageBuffer );
 }
 
-bool RobotClient::Connect( const char* host, int port )
+bool RobotClient::Connect( const char* host, int port, const std::vector<std::string>& packetTypes )
 {
     m_client.SetNagleBufferingOff();
     bool connected = m_client.Connect( host, port );

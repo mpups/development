@@ -23,7 +23,7 @@ public:
     RobotClient();
     virtual ~RobotClient();
 
-    bool Connect( const char* host, int port );
+    bool Connect( const char* host, int port, const std::vector<std::string>& packetTypes );
 
     bool RunCommsLoop();
 

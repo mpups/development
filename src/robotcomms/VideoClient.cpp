@@ -41,9 +41,6 @@ bool VideoClient::InitialiseVideoStream()
         return false;
     }
 
-    const int w = m_streamer->GetFrameWidth();
-    const int h = m_streamer->GetFrameHeight();
-
     return true;
 }
 

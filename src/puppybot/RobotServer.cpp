@@ -36,7 +36,7 @@ RobotServer::~RobotServer()
 /**
     Blocks until robot gets a connection.
 **/
-bool RobotServer::Listen()
+bool RobotServer::Listen(const std::vector<std::string>& packetTypes)
 {
     if ( m_server )
     {
@@ -45,7 +45,7 @@ bool RobotServer::Listen()
         m_con.reset( m_server->Accept() ); // Create connection
         m_con->SetBlocking( false );
 
-        PostConnectionSetup();
+        PostConnectionSetup(packetTypes);
         return true;
     }
     else
@@ -60,7 +60,7 @@ bool RobotServer::Listen()
     
     Attempts to access camera and wheels.
 **/
-void RobotServer::PostConnectionSetup()
+void RobotServer::PostConnectionSetup(const std::vector<std::string>& packetTypes)
 {
     // Setup comms to motors:
     m_motors.reset( new MotionMind( m_serialPort.c_str() ) );
@@ -90,7 +90,6 @@ void RobotServer::PostConnectionSetup()
     }
 
     assert( m_con.get() != nullptr );
-    std::vector<std::string> packetTypes{"AvInfo", "AvData","Odometry","Joystick"};
     m_muxer.reset( new PacketMuxer( *m_con, packetTypes ) );
     m_demuxer.reset( new PacketDemuxer( *m_con, packetTypes ) );
 }

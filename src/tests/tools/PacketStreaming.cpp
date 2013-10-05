@@ -4,6 +4,8 @@
 #include <RoboLib.h>
 #include <time.h>
 
+#include <string>
+#include <vector>
 #include <queue>
 #include <iostream>
 
@@ -11,6 +13,8 @@
 #include "../../../src/packetcomms/PacketDemuxer.h"
 #include "../../../src/network/Ipv4Address.h"
 #include "../../../src/network/TcpSocket.h"
+
+const std::vector<std::string> g_packetIds{"AvInfo", "AvData","Odometry","Joystick"};
 
 double milliseconds( struct timespec& t )
 {
@@ -40,7 +44,7 @@ int streamVideo( TcpSocket& client )
 
     if ( camera.IsOpen() )
     {
-        PacketMuxer comms( client, {} );
+        PacketMuxer comms( client, g_packetIds );
 
         // Create a video writer object that passes a lamba function that posts video packets to
         // the communication sub-system:
@@ -136,7 +140,7 @@ int runClient( int argc, char** argv )
 
     if ( client.Connect( argv[1], atoi( argv[2] ) ) )
     {
-        PacketDemuxer comms( client, {"AvInfo", "AvData","Odometry","Joystick"} );
+        PacketDemuxer comms( client, g_packetIds );
 
         /// @todo - the following form a message queue which should be encapsulated:
         GLK::Mutex avDataLock;

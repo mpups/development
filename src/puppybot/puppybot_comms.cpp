@@ -17,6 +17,8 @@ static void message( const char* msg )
     std::cerr << msg << std::endl;
 }
 
+const std::vector<std::string> g_packetTypes{"AvInfo", "AvData","Odometry","Joystick"};
+
 /**
     Server: receives commands from client, controls robot, and sends video stream to client.
 
@@ -28,7 +30,7 @@ int runServer( int argc, char** argv )
 
     RobotServer robot( atoi(argv[1]), "/dev/ttyUSB0" );
 
-    while ( robot.Listen() ) // Wait for 1 new connection (blocking).
+    while ( robot.Listen( g_packetTypes ) ) // Wait for 1 new connection (blocking).
     {
         robot.RunCommsLoop(); // Runs communications with new conection.
     }
@@ -46,7 +48,7 @@ int runClient( int argc, char** argv )
     message( "Client process here..." );
 
     RobotClient robotClient;
-    if ( robotClient.Connect( argv[1], atoi(argv[2]) ) )
+    if ( robotClient.Connect( argv[1], atoi(argv[2]), g_packetTypes ) )
     {
         bool success = robotClient.RunCommsLoop();
         if ( success )

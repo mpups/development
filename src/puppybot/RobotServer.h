@@ -13,12 +13,12 @@ public:
     RobotServer( int tcpPort, const char* motorSerialPort );
     virtual ~RobotServer();
 
-    bool Listen();
+    bool Listen(const std::vector<std::string>& packetTypes);
 
     void RunCommsLoop();
 
 private:
-    void PostConnectionSetup();
+    void PostConnectionSetup(const std::vector<std::string>& packetTypes);
     void PostCommsCleanup();
     void StreamVideo( TeleJoystick& joy );
 
