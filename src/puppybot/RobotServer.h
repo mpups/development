@@ -4,6 +4,8 @@
 #include "../../include/RoboLib.h"
 
 #include <memory>
+#include <string>
+#include <vector>
 
 class TcpSocket;
 

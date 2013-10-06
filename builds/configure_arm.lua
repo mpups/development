@@ -10,7 +10,7 @@ ARM_PACKAGES = '/home/mark/beagle_kernel_2.6.32/packages'
 ARM_DEPLOYMENT = '/home/mark/beagle_kernel_2.6.32/deploy'
 
 INCLUDE_DIRS = {
-    '../../glk/include',
+    '../../glk-1.0/include',
     '../../videolib/include',
     ARM_PACKAGES .. '/gtest-1.6.0/include',
     ARM_DEPLOYMENT .. '/include',
