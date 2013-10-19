@@ -183,7 +183,7 @@ void RobotClient::SendJoystickData()
         joyData[2] = htonl( 32767 );
     }
 
-    m_muxer->EmplacePacket( "Joystick", reinterpret_cast<uint8_t*>(joyData), dataSize*sizeof(int32_t) );
+    m_muxer->EmplacePacket( "Joystick", reinterpret_cast<VectorStream::CharType*>(joyData), dataSize*sizeof(int32_t) );
 }
 
 void RobotClient::SetupImagePostData( int w, int h )

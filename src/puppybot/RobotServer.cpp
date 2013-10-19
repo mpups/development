@@ -167,11 +167,11 @@ void RobotServer::RunCommsLoop()
 */
 void RobotServer::StreamVideo( TeleJoystick& joy )
 {
-    assert( m_con );
+    assert( m_con != nullptr );
 
     // Lambda that enqueues video packets via the Muxing system:
     FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [this]( uint8_t* buffer, int size ) {
-        m_muxer->EmplacePacket( "AvData", buffer, size );
+        m_muxer->EmplacePacket( "AvData", reinterpret_cast<VectorStream::CharType*>(buffer), size );
         return m_muxer->Ok() ? size : -1;
     });
     LibAvWriter streamer( videoIO );

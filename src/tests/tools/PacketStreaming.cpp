@@ -49,7 +49,7 @@ int streamVideo( TcpSocket& client )
         // Create a video writer object that passes a lamba function that posts video packets to
         // the communication sub-system:
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&]( uint8_t* buffer, int size ) {
-            comms.EmplacePacket( "AvData", buffer, size );
+            comms.EmplacePacket( "AvData", reinterpret_cast<VectorStream::CharType*>(buffer), size );
             return comms.Ok() ? size : -1;
         });
 
@@ -81,7 +81,7 @@ int streamVideo( TcpSocket& client )
             clock_gettime( CLOCK_MONOTONIC, &t1 );
 
             // For every camera frame send fake odometry packet to test the comms system:
-            uint8_t odo[5] = {1,2,3,4,5};
+            VectorStream::CharType odo[5] = {1,2,3,4,5};
             comms.EmplacePacket( "Odometry", odo, sizeof(odo) );
         }
 

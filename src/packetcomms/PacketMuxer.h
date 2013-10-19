@@ -20,6 +20,7 @@
 #include "../network/AbstractSocket.h"
 
 #include "../utility/SimpleAsyncFunction.h"
+#include "../io/VectorStream.h"
 
 /// @todo - sort this out:
 #include "/home/mark/code/glk/src/glkcore/thread/MutexLock.h"
@@ -55,7 +56,8 @@ public:
     bool Ok() const;
 
     //void PostPacket( ComPacket&& packet );
-    void EmplacePacket( const std::string&, uint8_t* buffer, int size );
+    void EmplacePacket(const std::string&, const VectorStream::CharType* buffer, int size );
+    void EmplacePacket( const std::string& name, VectorStream::Buffer&& vector );
 
 protected:
     typedef std::pair< IdManager::PacketType, ComPacket::PacketContainer > MapEntry;

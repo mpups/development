@@ -87,7 +87,7 @@ void TeleJoystick::Run()
             DiffDrive::MotorData odometry = m_drive->JoyControl( jx, jy, jmax );
             if ( odometry.valid == true )
             {
-                m_muxer.EmplacePacket( "Odometry", reinterpret_cast<uint8_t*>(&odometry), sizeof(odometry) );
+                m_muxer.EmplacePacket( "Odometry", reinterpret_cast<VectorStream::CharType*>(&odometry), sizeof(odometry) );
             }
         }
         else
@@ -100,7 +100,7 @@ void TeleJoystick::Run()
             odometry.leftPos  = 0;
             odometry.valid = false;
             // Send a fake packet for testing/debugging:
-            m_muxer.EmplacePacket( "Odometry", reinterpret_cast<uint8_t*>(&odometry), sizeof(odometry) );
+            m_muxer.EmplacePacket( "Odometry", reinterpret_cast<VectorStream::CharType*>(&odometry), sizeof(odometry) );
         }
     }
 

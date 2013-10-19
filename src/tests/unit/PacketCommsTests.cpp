@@ -33,7 +33,7 @@ void TestComPacket()
     EXPECT_EQ( nullptr, pkt.GetDataPtr() );
 
     constexpr int size = 6;
-    uint8_t bytes[size] = "hello";
+    VectorStream::CharType bytes[size] = "hello";
     ComPacket pkt2( IdManager::InvalidPacket, bytes, size );
     EXPECT_EQ( size, pkt2.GetDataSize() );
     EXPECT_NE( nullptr, pkt2.GetDataPtr() );
@@ -127,7 +127,7 @@ void TestPacketMuxer()
     usleep( 100000 );
 
     // Emplace payload:
-    uint8_t payload[testPayloadSize];
+    VectorStream::CharType payload[testPayloadSize];
     muxer.EmplacePacket( "MockPacket", payload, testPayloadSize );
 
     // Post identical payload:

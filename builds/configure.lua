@@ -14,6 +14,7 @@ INCLUDE_DIRS = {
     '/usr/include/gtest',
     '/usr/include/',
     '/usr/include/unicap',
+    '/home/mark/code/cereal-0.9.1/include'
 }
 
 LIB_DIRS = {

@@ -11,6 +11,7 @@
 #include <queue>
 
 #include "IdManager.h"
+#include "../io/VectorStream.h"
 
 class ComPacket
 {
@@ -23,15 +24,20 @@ public:
     ComPacket& operator=( const ComPacket& ) = delete;
 
     /// Default constructed invalid packet:
-    ComPacket() : m_type( IdManager::InvalidPacket ) {};
+    ComPacket() : m_type( IdManager::InvalidPacket ) {}
 
     /// Construct a com packet from raw buffer of unsigned 8-bit data:
-    ComPacket( IdManager::PacketType type, uint8_t* buffer, int size ) : m_type(type), m_data( buffer, buffer+size ) {};
+    ComPacket( IdManager::PacketType type, const VectorStream::CharType* buffer, int size ) : m_type(type), m_data( buffer, buffer+size ) {}
+
+    ComPacket( IdManager::PacketType type, VectorStream::Buffer&& buffer ) : m_type(type)
+    {
+        std::swap(m_data,buffer);
+    }
 
     /// Construct ComPacket with preallocated data size (but no valid data).
-    ComPacket( IdManager::PacketType type, int size ) : m_type(type), m_data( size ) {};
+    ComPacket( IdManager::PacketType type, int size ) : m_type(type), m_data( size ) {}
 
-    virtual ~ComPacket() {};
+    virtual ~ComPacket() {}
 
     /// @param p The ComPacket to be moved - it will become of invalid type, with an empty data vector.
     ComPacket( ComPacket&& p ) : m_type( IdManager::InvalidPacket ) {
@@ -46,31 +52,18 @@ public:
     };
 
     IdManager::PacketType GetType()   const { return m_type; };
-    const uint8_t* GetDataPtr() const { return &(m_data[0]); };
-    uint8_t* GetDataPtr() { return &(m_data[0]); };
-    std::vector<uint8_t>::size_type GetDataSize() const noexcept { return m_data.size(); };
-    const std::vector<uint8_t>& GetData() const { return m_data; };
-    std::vector<uint8_t>& GetData() { return m_data; };
+    const VectorStream::CharType* GetDataPtr() const { return &(m_data[0]); };
+    VectorStream::CharType* GetDataPtr() { return &(m_data[0]); };
+    std::vector<VectorStream::CharType>::size_type GetDataSize() const noexcept { return m_data.size(); };
+    const std::vector<VectorStream::CharType>& GetData() const { return m_data; };
+    std::vector<VectorStream::CharType>& GetData() { return m_data; };
 
 protected:
 
 private:
     IdManager::PacketType m_type;
-    std::vector<uint8_t> m_data;
+    VectorStream::Buffer m_data;
 };
-
-// Need to define a hash function to use strongly typed enum as a map key:
-namespace std
-{
-//    template <>
-//    struct hash<IdManager::PacketType>
-//    {
-//        size_t operator()(const IdManager::PacketType& type) const
-//        {
-//            return hash<int>()( static_cast<size_t>(type) );
-//        }
-//    };
-}
 
 #endif /* __COM_PACKET_H__ */
 

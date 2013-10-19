@@ -32,7 +32,7 @@ solution 'robolib'
 
     buildoptions ( BUILD_OPTIONS )
     linkoptions ( LINK_OPTIONS )
-    flags { 'NoExceptions','NoRTTI','ExtraWarnings','NoPCH' }
+    flags { 'ExtraWarnings','NoPCH' }
 
     includedirs { INCLUDE_DIRS }
     libdirs { LIB_DIRS }

@@ -77,11 +77,19 @@ bool PacketMuxer::Ok() const
     @note There is a g++ bug which doesn't allow perfect forwarding in cases like this:
     when it is fixed variadic arguments can be forwarded directly to any ComPacket constructor.
 */
-void PacketMuxer::EmplacePacket( const std::string& name, uint8_t* buffer, int size )
+void PacketMuxer::EmplacePacket( const std::string& name, const VectorStream::CharType* buffer, int size )
 {
     IdManager::PacketType type = m_packetIds.ToId(name);
     GLK::MutexLock lock( m_txLock );
     m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
+    SignalPacketPosted();
+}
+
+void PacketMuxer::EmplacePacket(const std::string& name, VectorStream::Buffer&& buffer )
+{
+    IdManager::PacketType type = m_packetIds.ToId(name);
+    GLK::MutexLock lock( m_txLock );
+    m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, std::move(buffer)) );
     SignalPacketPosted();
 }
 
@@ -198,7 +206,7 @@ bool PacketMuxer::WriteBytes( const uint8_t* buffer, size_t& size )
 {
     while ( size > 0 )
     {
-        int n = m_transport.Write( reinterpret_cast<const char*>( buffer ), size );
+        int n = m_transport.Write( reinterpret_cast<const VectorStream::CharType*>( buffer ), size );
         if ( n < 0 || m_transportError )
         {
             return false;
@@ -220,5 +228,5 @@ void PacketMuxer::SignalPacketPosted()
 void PacketMuxer::SendControlMessage( ControlMessage msg )
 {
     /// @todo should use this once g++ is updated: std::underlying_type(ControlMessage)
-    EmplacePacket( "Control", reinterpret_cast<uint8_t*>(&msg), sizeof(uint8_t) );
+    EmplacePacket( "Control", reinterpret_cast<VectorStream::CharType*>(&msg), sizeof(uint8_t) );
 }
