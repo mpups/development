@@ -1,5 +1,4 @@
 #include "VideoClient.h"
-#include "../puppybot/PuppybotData.h"
 #include "../io/Serialisation.h"
 
 VideoClient::VideoClient( PacketDemuxer &demuxer )
@@ -11,13 +10,15 @@ VideoClient::VideoClient( PacketDemuxer &demuxer )
             timespec rxTime;
             clock_gettime(CLOCK_REALTIME,&rxTime);
 
-            AvInfo info;
+            //AvInfo info;
+            timespec sendStamp;
+            int32_t frameNumber;
             VectorInputStream stream(packet->GetData());
-            Deserialise(stream,info);
-            const double sendSecs = info.sendStamp.tv_sec + (info.sendStamp.tv_nsec*0.000000001);
+            Deserialise(stream,sendStamp,frameNumber);
+            const double sendSecs = sendStamp.tv_sec + (sendStamp.tv_nsec*0.000000001);
             const double receiveSecs = rxTime.tv_sec + (rxTime.tv_nsec*0.000000001);
             std::clog.precision(20);
-            std::clog << "AvInfo: " << info.frameNumber << " " << sendSecs << " " << receiveSecs << std::endl;
+            std::clog << "AvInfo: " << frameNumber << " " << sendSecs << " " << receiveSecs << std::endl;
         })
     ),
     m_avDataSubscription (

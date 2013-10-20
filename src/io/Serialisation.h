@@ -19,20 +19,20 @@ void serialize(T& archive, timespec& t)
     archive(t.tv_sec,t.tv_nsec);
 }
 
-template<typename T>
-void Serialise(VectorOutputStream& stream, const T& type)
+template<typename ...Args>
+void Serialise(VectorOutputStream& stream, const Args&... types)
 {
     std::ostream archiveStream(&stream);
     cereal::PortableBinaryOutputArchive archive(archiveStream);
-    archive(type);
+    archive(std::forward<const Args&>(types)...);
 }
 
-template<typename T>
-void Deserialise(VectorInputStream& vis, T& type)
+template<typename ...Args>
+void Deserialise(VectorInputStream& vis, Args&... types)
 {
     std::istream stream(&vis);
     cereal::PortableBinaryInputArchive archive(stream);
-    archive(type);
+    archive(std::forward<Args&>(types)...);
 }
 
 #endif // SERIALISATION_H
