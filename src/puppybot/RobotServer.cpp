@@ -1,16 +1,16 @@
 #include "RobotServer.h"
 #include "../network/Ipv4Address.h"
 #include "../network/TcpSocket.h"
-#include "../io/Serialisation.h"
+#include "../packetcomms/PacketSerialisation.h"
 
 const int IMG_WIDTH  = 320;
 const int IMG_HEIGHT = 240;
 
 #include <time.h>
 
-static double milliseconds( struct timespec& t )
+static double ToSeconds( struct timespec& t )
 {
-    return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
+    return t.tv_sec + (0.000000001*t.tv_nsec );
 }
 
 /**
@@ -170,16 +170,8 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 {
     assert( m_con != nullptr );
 
-    int32_t framesSent = 0;
     // Lambda that enqueues video packets via the Muxing system:
     FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&]( uint8_t* buffer, int size ) {
-        timespec sendStamp;
-        clock_gettime( CLOCK_REALTIME, &sendStamp );
-        VectorOutputStream stream;
-        Serialise(stream,sendStamp,framesSent);
-        framesSent += 1;
-
-        m_muxer->EmplacePacket( "AvInfo", std::move(stream.Get()) );
         m_muxer->EmplacePacket( "AvData", reinterpret_cast<VectorStream::CharType*>(buffer), size );
         return m_muxer->Ok() ? size : -1;
     });
@@ -210,36 +202,28 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     // It converts the video frame and then signals the main loop that a new
     // frame is ready to be compressed:
     m_camera->SetCaptureCallback( [&]( const uint8_t* buffer, const timespec& time ) {
-#ifdef ENABLE_TIMING
         double conversionTime = 0.0;
-        double lockTime = 0.0;
         struct timespec conversionStartTime;
         struct timespec conversionEndTime;
         clock_gettime( CLOCK_MONOTONIC, &conversionStartTime );
-#endif
+
         halfscale_yuyv422_to_yuv420p( 640, 480, buffer, m_buffer[0] );
 
-#ifdef ENABLE_TIMING
         clock_gettime( CLOCK_MONOTONIC, &conversionEndTime );
-        conversionTime = milliseconds(conversionEndTime) - milliseconds(conversionStartTime);
-
-        struct timespec lockStart;
-        struct timespec lockEnd;
-        clock_gettime( CLOCK_MONOTONIC, &lockStart );
-#endif
+        conversionTime = ToSeconds(conversionEndTime) - ToSeconds(conversionStartTime);
 
         { // Start of buffer lock scope.
           // Double buffered so only need to lock mutex while we swap buffers and
           // increment the frame count:
             GLK::MutexLock locker( bufferLock );
-#ifdef ENABLE_TIMING
-            clock_gettime( CLOCK_MONOTONIC, &lockEnd );
-            lockTime = milliseconds(lockEnd) - milliseconds(lockStart);
-#endif
             framesConverted += 1;
             std::swap( m_buffer[0], m_buffer[1] );
             bufferReady.WakeOne();
         }
+
+        // Send the frame info:
+        Serialise( *m_muxer, "AvInfo",
+                   time, framesConverted, conversionTime );
     });
 
     m_camera->StartCapture(); // This must not be called before SetCaptureCallback().

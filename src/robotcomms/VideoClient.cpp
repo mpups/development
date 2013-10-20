@@ -1,5 +1,5 @@
 #include "VideoClient.h"
-#include "../io/Serialisation.h"
+#include "../packetcomms/PacketSerialisation.h"
 
 VideoClient::VideoClient( PacketDemuxer &demuxer )
 :
@@ -7,18 +7,15 @@ VideoClient::VideoClient( PacketDemuxer &demuxer )
     m_avInfoSubscription (
         demuxer.Subscribe( "AvInfo", [this]( const ComPacket::ConstSharedPacket& packet )
         {
-            timespec rxTime;
-            clock_gettime(CLOCK_REALTIME,&rxTime);
-
             //AvInfo info;
-            timespec sendStamp;
-            int32_t frameNumber;
-            VectorInputStream stream(packet->GetData());
-            Deserialise(stream,sendStamp,frameNumber);
-            const double sendSecs = sendStamp.tv_sec + (sendStamp.tv_nsec*0.000000001);
-            const double receiveSecs = rxTime.tv_sec + (rxTime.tv_nsec*0.000000001);
-            std::clog.precision(20);
-            std::clog << "AvInfo: " << frameNumber << " " << sendSecs << " " << receiveSecs << std::endl;
+            timespec stamp;
+            int frameNumber;
+            double conversionTime;
+            Deserialise( packet, stamp, frameNumber, conversionTime );
+
+            const double sendSecs = stamp.tv_sec + (stamp.tv_nsec*0.000000001);
+            std::clog.precision(10);
+            std::clog << "AvInfo: " << frameNumber << " " << sendSecs << " " << conversionTime << std::endl;
         })
     ),
     m_avDataSubscription (
