@@ -10,7 +10,7 @@
     an efficient in memory representation of serialised
     binary streams and to be able to deserialise from
     them. The data can then be transmitted/received
-    with no coupling to the serialisation library.
+    with no coupling to the Cereal library.
 */
 namespace VectorStream
 {
@@ -25,7 +25,13 @@ typedef std::streambuf::char_type CharType;
 class VectorOutputStream : public std::streambuf
 {
 public:
-    explicit VectorOutputStream( VectorStream::Buffer& v ) : m_v(v) {}
+    VectorOutputStream() {}
+    VectorOutputStream(const size_t reserve ) : m_v(reserve) {}
+
+    VectorStream::Buffer& Get() { return m_v; }
+    const VectorStream::Buffer& Get() const { return m_v; }
+
+    void Clear() { m_v.clear(); }
 
 private:
     std::streambuf::int_type overflow( std::streambuf::int_type ch )
@@ -52,7 +58,7 @@ private:
         return n-w;
     }
 
-    VectorStream::Buffer& m_v;
+    VectorStream::Buffer m_v;
 };
 
 /**
@@ -62,10 +68,12 @@ private:
 class VectorInputStream : public std::streambuf
 {
 public:
-    explicit VectorInputStream( VectorStream::Buffer& v )
+    explicit VectorInputStream( const VectorStream::Buffer& v )
     {
-        std::streambuf::char_type* begin = v.data();
-        setg( begin, begin, begin + v.size() );
+        const std::streambuf::char_type* begin = v.data();
+        setg( const_cast<char_type*>(begin),
+              const_cast<char_type*>(begin),
+              const_cast<char_type*>(begin + v.size()) );
     }
 
 private:

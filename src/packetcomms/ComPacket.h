@@ -26,7 +26,7 @@ public:
     /// Default constructed invalid packet:
     ComPacket() : m_type( IdManager::InvalidPacket ) {}
 
-    /// Construct a com packet from raw buffer of unsigned 8-bit data:
+    /// Construct a com packet from raw buffer of stream data:
     ComPacket( IdManager::PacketType type, const VectorStream::CharType* buffer, int size ) : m_type(type), m_data( buffer, buffer+size ) {}
 
     ComPacket( IdManager::PacketType type, VectorStream::Buffer&& buffer ) : m_type(type)

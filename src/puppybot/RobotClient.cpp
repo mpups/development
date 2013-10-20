@@ -40,7 +40,6 @@ bool RobotClient::Connect( const char* host, int port, const std::vector<std::st
     bool connected = m_client.Connect( host, port );
     if ( connected )
     {
-        std::vector<std::string> packetTypes{"AvInfo", "AvData","Odometry","Joystick"};
         m_demuxer.reset( new PacketDemuxer( m_client, packetTypes ) );
         m_muxer.reset( new PacketMuxer( m_client, packetTypes ) );
         SendJoystickData();
@@ -173,7 +172,10 @@ bool RobotClient::RunCommsLoop()
 void RobotClient::SendJoystickData()
 {
     constexpr int dataSize = 3;
-    int32_t joyData[dataSize] = { htonl(0), htonl(0), htonl(1024) };
+    int32_t joyData[dataSize] = {
+        static_cast<int32_t>(htonl(0)),
+        static_cast<int32_t>(htonl(0)),
+        static_cast<int32_t>(htonl(1024)) };
 
     if ( m_joystick.IsAvailable() )
     {
