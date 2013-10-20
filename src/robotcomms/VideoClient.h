@@ -33,11 +33,13 @@ protected:
     int  ReadPacket( uint8_t* buffer, int size );
 
 private:
-    SimpleQueue m_avPackets;
+    SimpleQueue m_avInfoPackets;
+    SimpleQueue m_avDataPackets;
     int         m_packetOffset;
     uint64_t    m_lastTotalVideoBytes;
     uint64_t    m_totalVideoBytes;
-    PacketSubscription m_subscription;
+    PacketSubscription m_avInfoSubscription;
+    PacketSubscription m_avDataSubscription;
 
     std::unique_ptr<FFMpegStdFunctionIO> m_videoIO;
     std::unique_ptr<LibAvCapture> m_streamer;

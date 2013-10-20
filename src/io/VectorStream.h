@@ -33,6 +33,11 @@ public:
 
     void Clear() { m_v.clear(); }
 
+    VectorOutputStream(VectorOutputStream&& toMove)
+    {
+        std::swap(m_v,toMove.m_v);
+    }
+
 private:
     std::streambuf::int_type overflow( std::streambuf::int_type ch )
     {

@@ -1,13 +1,29 @@
 #include "VideoClient.h"
+#include "../puppybot/PuppybotData.h"
+#include "../io/Serialisation.h"
 
 VideoClient::VideoClient( PacketDemuxer &demuxer )
 :
     m_packetOffset (0),
-    m_subscription (
-      // Lambda which subscribes to the packets containing video-data:
+    m_avInfoSubscription (
+        demuxer.Subscribe( "AvInfo", [this]( const ComPacket::ConstSharedPacket& packet )
+        {
+            timespec rxTime;
+            clock_gettime(CLOCK_REALTIME,&rxTime);
+
+            AvInfo info;
+            VectorInputStream stream(packet->GetData());
+            Deserialise(stream,info);
+            const double sendSecs = info.sendStamp.tv_sec + (info.sendStamp.tv_nsec*0.000000001);
+            const double receiveSecs = rxTime.tv_sec + (rxTime.tv_nsec*0.000000001);
+            std::clog.precision(20);
+            std::clog << "AvInfo: " << info.frameNumber << " " << sendSecs << " " << receiveSecs << std::endl;
+        })
+    ),
+    m_avDataSubscription (
       demuxer.Subscribe( "AvData", [this]( const ComPacket::ConstSharedPacket& packet )
       {
-          m_avPackets.Emplace( packet ); // The callback simply queues up all the packets.
+          m_avDataPackets.Emplace( packet );
           m_totalVideoBytes += packet->GetDataSize();
       })
     )
@@ -87,13 +103,13 @@ bool VideoClient::StreamerIoError() const
 int VideoClient::ReadPacket( uint8_t* buffer, int size )
 {
     const int32_t packetTimeout_ms = 1000;
-    SimpleQueue::LockedQueue lock = m_avPackets.Lock();
-    while ( m_avPackets.Empty() && m_subscription.GetDemuxer().Ok() )
+    SimpleQueue::LockedQueue lock = m_avDataPackets.Lock();
+    while ( m_avDataPackets.Empty() && m_avDataSubscription.GetDemuxer().Ok() )
     {
-        m_avPackets.WaitNotEmpty( lock, packetTimeout_ms );
+        m_avDataPackets.WaitNotEmpty( lock, packetTimeout_ms );
     }
 
-    if ( m_avPackets.Empty() )
+    if ( m_avDataPackets.Empty() )
     {
         std::clog << "VideoClient timed out waiting for an AV packet." << std::endl;
     }
@@ -106,9 +122,9 @@ int VideoClient::ReadPacket( uint8_t* buffer, int size )
     // We were asked for more than packet contains so loop through packets until
     // we have returned what we needed or there are no more packets:
     int required = size;
-    while ( required > 0 && m_avPackets.Empty() == false )
+    while ( required > 0 && m_avDataPackets.Empty() == false )
     {
-        const ComPacket::ConstSharedPacket packet = m_avPackets.Front();
+        const ComPacket::ConstSharedPacket packet = m_avDataPackets.Front();
         const int availableSize = packet->GetData().size() - m_packetOffset;
 
         if ( availableSize <= required )
@@ -117,7 +133,7 @@ int VideoClient::ReadPacket( uint8_t* buffer, int size )
             // and continue:
             std::copy( packet->GetData().begin() + m_packetOffset, packet->GetData().end(), buffer );
             m_packetOffset = 0; // Reset the packet offset so the next packet will be read from beginning.
-            m_avPackets.Pop();
+            m_avDataPackets.Pop();
             buffer += availableSize;
             required -= availableSize;
         }

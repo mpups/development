@@ -1,6 +1,8 @@
 #include "RobotServer.h"
 #include "../network/Ipv4Address.h"
 #include "../network/TcpSocket.h"
+#include "../io/Serialisation.h"
+#include "../puppybot/PuppybotData.h"
 
 const int IMG_WIDTH  = 320;
 const int IMG_HEIGHT = 240;
@@ -169,8 +171,15 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 {
     assert( m_con != nullptr );
 
+    int framesSent = 0;
     // Lambda that enqueues video packets via the Muxing system:
-    FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [this]( uint8_t* buffer, int size ) {
+    FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&]( uint8_t* buffer, int size ) {
+        AvInfo info;
+        clock_gettime( CLOCK_REALTIME, &info.sendStamp );
+        info.frameNumber = framesSent++;
+        VectorOutputStream stream;
+        Serialise(stream,info);
+        m_muxer->EmplacePacket( "AvInfo", std::move(stream.Get()) );
         m_muxer->EmplacePacket( "AvData", reinterpret_cast<VectorStream::CharType*>(buffer), size );
         return m_muxer->Ok() ? size : -1;
     });
