@@ -144,3 +144,4 @@ src/io/VectorStream.h
 src/tests/unit/TestIo.cpp
 src/io/Serialisation.h
 src/puppybot/PuppybotData.h
+src/utility/Timer.h

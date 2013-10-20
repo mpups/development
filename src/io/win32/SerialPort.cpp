@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-namespace GLK
+namespace robolib
 {
 
 SerialPort::SerialPort( LPCSTR portName )
@@ -151,5 +151,5 @@ void SerialPort::Flush()
     while ( n != 0 );
 }
 
-} // end namepsace GLK
+} // end namepsace robolib
 

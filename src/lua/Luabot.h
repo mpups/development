@@ -5,7 +5,7 @@
 
 #include <ostream>
 
-#include <glkcore.h>
+#include "../../src/utility/Timer.h"
 #include "../../include/RoboLibCore.h"
 
 /**
@@ -32,7 +32,7 @@ private:
     static MotionMind*      ms_motion;
     static Joystick*        ms_joystick;
     static std::ostream*    ms_output;
-    static GLK::Timer       ms_time;
+    static Timer            ms_time;
         
     Lua::State&  m_lua;
 };

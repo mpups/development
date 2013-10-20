@@ -3,7 +3,7 @@
 MotionMind*     Luabot::ms_motion   = nullptr;
 Joystick*       Luabot::ms_joystick = nullptr;
 std::ostream*   Luabot::ms_output   = nullptr;
-GLK::Timer      Luabot::ms_time;
+Timer           Luabot::ms_time(CLOCK_REALTIME);
 
 /**
     Construct a Luabot providing the Lua state and motion controller to use.
@@ -55,8 +55,6 @@ Luabot::~Luabot( )
 **/
 int Luabot::setSpeed( lua_State* L )
 {
-    GLK::Timer t;
-
     Lua::State lua( L );
 
     if ( ms_motion->Available() )

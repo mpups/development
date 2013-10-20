@@ -1,12 +1,12 @@
-#ifndef GLK_SERIAL_PORT_H
-#define GLK_SERIAL_PORT_H
+#ifndef robolib_SERIAL_PORT_H
+#define robolib_SERIAL_PORT_H
 
 #include "../StdIO.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-namespace GLK
+namespace robolib
 {
 
 /**
@@ -37,6 +37,6 @@ private:
     HANDLE m_port;
 };
 
-} // end namepsace GLK
+} // end namepsace robolib
 
-#endif // GLK_SERIAL_PORT_H
+#endif // robolib_SERIAL_PORT_H

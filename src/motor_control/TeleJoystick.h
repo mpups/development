@@ -3,7 +3,6 @@
 
 #include <queue>
 
-#include <glkcore.h>
 #include "DiffDrive.h"
 #include "../packetcomms/ComPacket.h"
 #include "../packetcomms/SimpleQueue.h"

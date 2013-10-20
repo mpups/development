@@ -178,6 +178,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
         VectorOutputStream stream;
         Serialise(stream,sendStamp,framesSent);
         framesSent += 1;
+
         m_muxer->EmplacePacket( "AvInfo", std::move(stream.Get()) );
         m_muxer->EmplacePacket( "AvData", reinterpret_cast<VectorStream::CharType*>(buffer), size );
         return m_muxer->Ok() ? size : -1;

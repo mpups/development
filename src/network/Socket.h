@@ -1,5 +1,5 @@
-#ifndef GLK_SOCKET_H
-#define GLK_SOCKET_H
+#ifndef ROBOLIB_SOCKET_H
+#define ROBOLIB_SOCKET_H
 
 #ifdef __linux
 
@@ -50,5 +50,5 @@ protected:
 private:
 };
 
-#endif // GLK_SOCKET_H
+#endif // ROBOLIB_SOCKET_H
 

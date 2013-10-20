@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <glkcore.h>
-
+#include "../../utility/Timer.h"
 #include "../SimdKernels.h"
 
 #define ITRS 100000
@@ -37,7 +36,7 @@ int main(int argc, char** argv)
 
   fprintf(stderr,"Array lengths: %d\n",SIZE);
 
-  GLK::Timer t;
+  Timer t(CLOCK_MONOTONIC);
   float time,time_sse;
   float r,r_sse;
 

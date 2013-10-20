@@ -1,5 +1,5 @@
-#ifndef GLK_UDP_SOCKET_H
-#define GLK_UDP_SOCKET_H
+#ifndef ROBOLIB_UDP_SOCKET_H
+#define ROBOLIB_UDP_SOCKET_H
 
 #include "Socket.h"
 
@@ -23,5 +23,5 @@ public:
     int ReceiveFrom( char* message, size_t size, Ipv4Address* addr = 0 );
 };
 
-#endif /* GLK_UDP_SOCKET_H */
+#endif /* ROBOLIB_UDP_SOCKET_H */
 

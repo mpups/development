@@ -6,6 +6,7 @@
 #include <VideoLib.h>
 #include "../packetcomms/PacketMuxer.h"
 #include "../packetcomms/PacketDemuxer.h"
+#include "../utility/Timer.h"
 
 TeleJoystick::TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers )
 :
@@ -35,7 +36,7 @@ TeleJoystick::~TeleJoystick()
 
 void TeleJoystick::Run()
 {
-    GLK::Timer timer;
+    Timer timer(CLOCK_MONOTONIC);
     float timeSinceLastCommand_secs = 0.f;
     const float motionTimeout_secs  = 1.f; // Motion will be stopped for safety if no command in this time.
     const float taskTimeout_secs    = 5.f; // Task will terminate if no command in this time.
