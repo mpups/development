@@ -38,7 +38,6 @@ private:
     int         m_packetOffset;
     uint64_t    m_lastTotalVideoBytes;
     uint64_t    m_totalVideoBytes;
-    PacketSubscription m_avInfoSubscription;
     PacketSubscription m_avDataSubscription;
 
     std::unique_ptr<FFMpegStdFunctionIO> m_videoIO;

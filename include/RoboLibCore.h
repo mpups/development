@@ -18,6 +18,7 @@
 #include "../src/packetcomms/PacketDemuxer.h"
 #include "../src/packetcomms/PacketMuxer.h"
 #include "../src/packetcomms/SimpleQueue.h"
+#include "../src/packetcomms/PacketSerialisation.h"
 
 #include "../src/robotcomms/VideoClient.h"
 

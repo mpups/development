@@ -4,20 +4,6 @@
 VideoClient::VideoClient( PacketDemuxer &demuxer )
 :
     m_packetOffset (0),
-    m_avInfoSubscription (
-        demuxer.Subscribe( "AvInfo", [this]( const ComPacket::ConstSharedPacket& packet )
-        {
-            //AvInfo info;
-            timespec stamp;
-            int frameNumber;
-            double conversionTime;
-            Deserialise( packet, stamp, frameNumber, conversionTime );
-
-            const double sendSecs = stamp.tv_sec + (stamp.tv_nsec*0.000000001);
-            std::clog.precision(10);
-            std::clog << "AvInfo: " << frameNumber << " " << sendSecs << " " << conversionTime << std::endl;
-        })
-    ),
     m_avDataSubscription (
       demuxer.Subscribe( "AvData", [this]( const ComPacket::ConstSharedPacket& packet )
       {
