@@ -4,6 +4,8 @@
 #ifndef __CAPTURE_H__
 #define __CAPTURE_H__
 
+#include <time.h>
+
 /**
     Abstract base for all types of capture (live or from files).
 */
@@ -19,7 +21,7 @@ public:
     virtual void DoneFrame() = 0;
     virtual int32_t GetFrameWidth() const = 0;
     virtual int32_t GetFrameHeight() const = 0;
-    virtual int64_t GetFrameTimestamp_us() const = 0;
+    virtual timespec GetFrameTimestamp() const = 0;
 
     virtual void ExtractLuminanceImage( uint8_t*, int stride ) = 0;
     virtual void ExtractRgbImage( uint8_t*, int stride ) = 0;

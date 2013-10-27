@@ -9,7 +9,7 @@ UnicapCapture::UnicapCapture()
     m_buffer        ( nullptr ),
     m_frameCount    ( 0 ),
     m_retrievedCount( 0 ),
-    m_time          (-1 )
+    m_time          ({0,0})
 {
     if ( m_camera.IsOpen() )
     {
@@ -40,8 +40,7 @@ void UnicapCapture::OnCapture( uint8_t* buffer, const timespec& time )
 
     memcpy( m_buffer, buffer, m_camera.GetFormatBufferSize() );
 
-    m_time = time.tv_sec * 1000000;
-    m_time += time.tv_nsec / 1000;
+    m_time = time;
     m_frameCount += 1;
 
     pthread_cond_signal( &m_cond );
@@ -107,7 +106,7 @@ int32_t UnicapCapture::GetFrameHeight() const
     return m_camera.GetFrameHeight();
 }
 
-int64_t UnicapCapture::GetFrameTimestamp_us() const
+timespec UnicapCapture::GetFrameTimestamp() const
 {
     return m_time;
 }

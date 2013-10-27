@@ -196,9 +196,12 @@ int32_t Dc1394Camera::GetFrameHeight() const
     Return time at which frame was captured.
     @return Image height.
 **/
-uint64_t Dc1394Camera::GetFrameTimestamp() const
+timespec Dc1394Camera::GetFrameTimestamp() const
 {
-    return m_frame->timestamp;
+    timespec t;
+    t.tv_sec = m_frame->timestamp / 1000000;
+    t.tv_nsec = 1000*(m_frame->timestamp % 1000000);
+    return t;
 }
 
 /**

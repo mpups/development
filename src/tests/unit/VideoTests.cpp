@@ -62,8 +62,8 @@ void RunReader( FFMpegCustomIO& videoIn )
     {
         reader.ExtractLuminanceImage( buffer, 640 );
         EXPECT_EQ( buffer[0], decodedCount );
-        int64_t timestamp = reader.GetFrameTimestamp_us();
-        //std::cout << "Timestamp := " << timestamp << std::endl; /** @todo Implement user settable timestamp and test it here. */
+        timespec stamp = reader.GetFrameTimestamp();
+        /// @todo Implement user settable timestamp and test it here.
         reader.DoneFrame();
         decodedCount += 1;
     }

@@ -79,17 +79,17 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
 */
 void UnicapCamera::StartCapture()
 {
-    int status;
-    status = unicap_register_callback( m_handle, UNICAP_EVENT_NEW_FRAME, (unicap_callback_t)NewFrame, (void*)this );
-    assert( SUCCESS(status) );
+    assert( m_captureCallback );
+    const int registered = unicap_register_callback( m_handle, UNICAP_EVENT_NEW_FRAME, (unicap_callback_t)NewFrame, (void*)this );
+    assert( SUCCESS(registered) );
 
-    if ( SUCCESS(status) )
+    if ( SUCCESS(registered) )
     {
-        status = unicap_start_capture( m_handle );
-        assert( SUCCESS(status) );
-        if ( SUCCESS(status) )
+        const int started = unicap_start_capture( m_handle );
+        assert( SUCCESS(started) );
+        if ( SUCCESS(started) )
         {
-            fprintf( stderr, "UnicapCamera: Capture started.\n" );
+            std::clog << "UnicapCamera: Capture started." << std::endl;
         }
     }
 }

@@ -37,7 +37,7 @@ public:
     void DoneFrame();
     int32_t GetFrameWidth() const;
     int32_t GetFrameHeight() const;
-    int64_t GetFrameTimestamp_us() const;
+    timespec GetFrameTimestamp() const;
 
     void ExtractLuminanceImage( uint8_t* data, int stride );
     void ExtractRgbImage( uint8_t* data, int stride );

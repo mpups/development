@@ -261,16 +261,16 @@ int32_t LibAvCapture::GetFrameHeight() const
 /**
     @return the frame's timestamp in micro seconds. For video formats where no time stamp is available return -1.
 */
-int64_t LibAvCapture::GetFrameTimestamp_us() const
+timespec LibAvCapture::GetFrameTimestamp() const
 {
     if ( m_avFrame->pts == AV_NOPTS_VALUE )
     {
-        return -1; // no presentation timestamp provided by decoder
+        return {0,0}; // no presentation timestamp provided by decoder
     }
 
     // Convert from the codec's timebase to microseconds:
     int64_t pts = av_rescale_q( m_avFrame->pts, m_codecContext->time_base, (AVRational){1,1000000} );
-    return pts;
+    return {pts/1000000,(pts%1000000)*1000};
 }
 
 void LibAvCapture::ExtractLuminanceImage( uint8_t* data, int stride )

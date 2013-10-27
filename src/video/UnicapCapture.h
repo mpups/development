@@ -26,7 +26,7 @@ public:
     void DoneFrame();
     int32_t GetFrameWidth() const;
     int32_t GetFrameHeight() const;
-    int64_t GetFrameTimestamp_us() const;
+    timespec GetFrameTimestamp() const;
 
     uint64_t GetGuid() const;
     const char*   GetVendor() const;
@@ -51,7 +51,7 @@ private:
     pthread_mutex_t m_mutex;
     uint32_t m_frameCount;
     uint32_t m_retrievedCount;
-    volatile uint64_t m_time;
+    timespec m_time;
 
     FrameConverter m_converter;
 };
