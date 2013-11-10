@@ -18,7 +18,7 @@ extern "C" {
     @param inputFormat the pixel format the data will be supplied in.
     @return a valid format for the specified CodecID
 */
-PixelFormat LibAvVideoStream::ChooseCodecFormat( CodecID id, PixelFormat inputFormat )
+AVPixelFormat LibAvVideoStream::ChooseCodecFormat( AVCodecID id, AVPixelFormat inputFormat )
 {
     PixelFormat pixelFormat = PIX_FMT_YUV420P;
 
@@ -61,7 +61,7 @@ LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, ui
     m_encodingBuffer (0)
 {
     const AVCodecTag *tags[] = { avformat_get_riff_video_tags(), 0 };
-    CodecID codecId = av_codec_get_id( tags, fourcc );
+    AVCodecID codecId = av_codec_get_id( tags, fourcc );
 
     m_codec = avcodec_find_encoder( codecId );
     m_stream = avformat_new_stream( context, m_codec );

@@ -25,7 +25,7 @@ UnicapCamera::UnicapCamera( uint64_t guid )
         bool success = FindFormat( 640, 480, fourcc, format );
         if ( success )
         {
-            //fprintf( stderr, "Format '%s': %dx%dx%d (%x)\n", format.identifier, format.size.width, format.size.height, format.bpp, format.fourcc );
+            fprintf( stderr, "Format '%s': %dx%dx%d (%x)\n", format.identifier, format.size.width, format.size.height, format.bpp, format.fourcc );
 
             format.buffer_type = UNICAP_BUFFER_TYPE_SYSTEM;
 
@@ -37,7 +37,7 @@ UnicapCamera::UnicapCamera( uint64_t guid )
         }
         else
         {
-            fprintf( stderr, "Unicap: Could not get video format\n" );
+            std::clog << "Unicap: Could not get requested video format\n";
         }
     }
 }
@@ -158,12 +158,12 @@ void UnicapCamera::SetCaptureCallback( CaptureFunction&& callback )
 **/
 bool UnicapCamera::OpenDevice()
 {
-    const int MAX_DEVICES = 64;
-    int status = STATUS_SUCCESS;
+    constexpr size_t MAX_DEVICES = 32;
     unicap_device_t devices[MAX_DEVICES];
 
-    fprintf( stderr, "\nEnumerating unicap(%d.%d.%d) cameras:\n", UNICAP_MAJOR_VERSION, UNICAP_MINOR_VERSION, UNICAP_MICRO_VERSION );
-    int dev_count;
+    fprintf( stderr, "\nUnicap (%d.%d.%d) Enumerating cameras:\n", UNICAP_MAJOR_VERSION, UNICAP_MINOR_VERSION, UNICAP_MICRO_VERSION );
+    int status = STATUS_SUCCESS;
+    size_t dev_count = 0;
     for ( dev_count = 0; SUCCESS(status) && (dev_count < MAX_DEVICES); ++dev_count )
     {
         status = unicap_enumerate_devices( 0, &devices[dev_count], dev_count );
@@ -173,6 +173,7 @@ bool UnicapCamera::OpenDevice()
         }
     }
 
+    std::clog << "Opening camera at index: " << 0 << std::endl;
     unicap_open( &m_handle, &devices[0] );
 
     if ( m_handle )

@@ -28,8 +28,10 @@ set( FFMPEG_LIBRARIES "/home/mark/tmp_installs/lib/libavcodec.so" "/home/mark/tm
 set( LIBS ${LIBS} ${FFMPEG_LIBRARIES})
 
 # Unicap and dc1394:
-include_directories( "/usr/include/unicap" )
-set( LIBS ${LIBS} /usr/lib/libunicap.so /usr/lib/x86_64-linux-gnu/libdc1394.so )
+set( UNICAP_INCLUDES /usr/include/unicap )
+set( UNICAP_LIBS /usr/lib/libunicap.so )
+include_directories( ${UNICAP_INCLUDES} )
+set( LIBS ${LIBS} ${UNICAP_LIBS} /usr/lib/x86_64-linux-gnu/libdc1394.so )
 
 include_directories( "include" )
 

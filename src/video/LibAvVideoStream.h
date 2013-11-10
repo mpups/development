@@ -33,7 +33,7 @@ public:
 
     AVRational TimeBase();
 
-    static PixelFormat ChooseCodecFormat( CodecID id, PixelFormat inputFormat );
+    static AVPixelFormat ChooseCodecFormat( AVCodecID id, AVPixelFormat inputFormat );
 
 private:
     AVStream* m_stream;
