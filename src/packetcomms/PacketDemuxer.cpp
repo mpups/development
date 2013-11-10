@@ -146,11 +146,11 @@ bool PacketDemuxer::ReceivePacket( ComPacket& packet, const int timeoutInMillise
     // (because ReadyForReading() said there were bytes available):
     size_t byteCount = sizeof(uint32_t);
     bool ok = ReadBytes( reinterpret_cast<uint8_t*>(&type), byteCount, true );
-    if ( !ok ) return false;
+    if ( !ok ) { return false; }
 
     byteCount = sizeof(uint32_t);
     ok = ReadBytes( reinterpret_cast<uint8_t*>(&size), byteCount );
-    if ( !ok ) return false;
+    if ( !ok ) { return false; }
 
     type = ntohl( type );
     size = ntohl( size );

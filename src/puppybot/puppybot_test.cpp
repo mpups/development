@@ -55,12 +55,12 @@ int main( int argc, char** argv )
         for ( int i = 0; i<40; ++i )
         {    
             camera.GetFrame();
-            double timeStamp = camera.GetFrameTimestamp_us() / 1000000.0;
+            timespec stamp = camera.GetFrameTimestamp();
             camera.ExtractLuminanceImage( m_lum, camera.GetFrameWidth() );
             camera.DoneFrame();
             
             // Save the captured images to a file:
-            fprintf( stderr, "Captured frame. Timestamp = %f secs\n", timeStamp );
+            fprintf( stderr, "Captured frame. Timestamp: secs %ld nsecs %ld\n", stamp.tv_sec, stamp.tv_nsec );
             char name [] = "capture_####.pgm";
             sprintf( name, "capture_%.4d.pgm", i+1 );
             WritePgm( name, m_lum, camera.GetFrameWidth(), camera.GetFrameHeight() );

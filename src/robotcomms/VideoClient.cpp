@@ -95,7 +95,14 @@ int VideoClient::ReadPacket( uint8_t* buffer, int size )
 
     if ( m_avDataPackets.Empty() )
     {
-        std::clog << "VideoClient timed out waiting for an AV packet." << std::endl;
+        if (m_avDataSubscription.GetDemuxer().Ok())
+        {
+            std::clog << "VideoClient timed out waiting for an AV packet." << std::endl;
+        }
+        else
+        {
+            std::clog << "Demuxer transport error." << std::endl;
+        }
     }
 
     if ( StreamerIoError() )

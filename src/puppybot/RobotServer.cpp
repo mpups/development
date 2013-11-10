@@ -3,6 +3,8 @@
 #include "../network/TcpSocket.h"
 #include "../packetcomms/PacketSerialisation.h"
 
+#include <mutex>
+
 const int IMG_WIDTH  = 320;
 const int IMG_HEIGHT = 240;
 
@@ -215,15 +217,14 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
         { // Start of buffer lock scope.
           // Double buffered so only need to lock mutex while we swap buffers and
           // increment the frame count:
-            GLK::MutexLock locker( bufferLock );
+            std::lock_guard<std::mutex> guard(bufferLock);
             framesConverted += 1;
             std::swap( m_buffer[0], m_buffer[1] );
             bufferReady.WakeOne();
         }
 
         // Send the frame info:
-        Serialise( *m_muxer, "AvInfo",
-                   time, framesConverted, conversionTime );
+        //Serialise( *m_muxer, "AvInfo", time, framesConverted, conversionTime );
     });
 
     m_camera->StartCapture(); // This must not be called before SetCaptureCallback().
