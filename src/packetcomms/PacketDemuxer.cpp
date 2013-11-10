@@ -41,6 +41,8 @@ bool PacketDemuxer::Ok() const
 PacketSubscription PacketDemuxer::Subscribe( const std::string& typeName, PacketSubscriber::CallBack callback )
 {
     const IdManager::PacketType type = m_packetIds.ToId(typeName);
+
+    std::lock_guard<std::mutex> guard(m_subscriberLock);
     SubscriptionEntry::second_type& queue = m_subscribers[type];
     queue.emplace_back( new PacketSubscriber( type, *this , callback ) );
     m_nextSubscriberId += 1;
@@ -50,6 +52,8 @@ PacketSubscription PacketDemuxer::Subscribe( const std::string& typeName, Packet
 void PacketDemuxer::Unsubscribe( const PacketSubscriber* pSubscriber )
 {
     const IdManager::PacketType type = pSubscriber->GetType();
+
+    std::lock_guard<std::mutex> guard(m_subscriberLock);
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
 
     // Search through all subscribers of this type for the specific subscriber:
@@ -116,6 +120,7 @@ void PacketDemuxer::ReceiveLoop()
             else
             {
                 // Post the new packet to the message queues of all the subscribers for this packet type:
+                std::lock_guard<std::mutex> guard(m_subscriberLock);
                 SubscriptionEntry::second_type& queue = m_subscribers[ packetType ];
                 for ( auto& subscriber : queue )
                 {

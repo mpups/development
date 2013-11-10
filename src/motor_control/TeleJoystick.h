@@ -2,10 +2,12 @@
 #define TELE_JOYSTICK_H
 
 #include <queue>
+#include <thread>
 
 #include "DiffDrive.h"
 #include "../packetcomms/ComPacket.h"
 #include "../packetcomms/SimpleQueue.h"
+#include "../utility/RunnableFunction.h"
 
 class PacketMuxer;
 class PacketDemuxer;
@@ -28,7 +30,7 @@ class PacketDemuxer;
     work with a blocking socket but this is not tested fully. (The socket's
     blocking state is not modified by this class).
 **/
-class TeleJoystick : public GLK::Runnable
+class TeleJoystick
 {
 public:
     TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers );
@@ -40,14 +42,12 @@ public:
     void Go();
     bool IsRunning() const;
 
-protected:
-
 private:
-    GLK::Thread m_thread;
     PacketMuxer&   m_muxer;
     PacketDemuxer& m_demuxer;
-    DiffDrive*  m_drive;
-    volatile bool m_terminate;
+    DiffDrive*     m_drive;
+    volatile bool  m_terminate;
+    std::thread    m_thread;
 };
 
 #endif // TELE_JOYSTICK_H

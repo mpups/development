@@ -5,11 +5,9 @@
 #define __SIMPLE_QUEUE_H__
 
 #include <queue>
-
-/// @todo - sort this out:
-#include "/home/mark/code/glk/src/glkcore/thread/MutexLock.h"
-#include "/home/mark/code/glk/src/glkcore/thread/posix/Mutex.h"
-#include "/home/mark/code/glk/src/glkcore/thread/posix/ConditionVariable.h"
+#include <mutex>
+#include <chrono>
+#include <condition_variable>
 
 #include <assert.h>
 #include "../packetcomms/ComPacket.h"
@@ -33,11 +31,29 @@ public:
 
     public:
         LockedQueue( const LockedQueue& ) = delete;
-        LockedQueue( LockedQueue&& other ) : m_secureLock(other.m_secureLock) { other.m_secureLock = nullptr; };
-        virtual ~LockedQueue() { if ( m_secureLock != nullptr ) { m_secureLock->Unlock(); } };
+        LockedQueue( LockedQueue&& other ) : m_q(other.m_q) { std::swap(m_secureLock,other.m_secureLock); };
+        virtual ~LockedQueue() {};
+
+        void WaitNotEmpty(int timeoutInMilliseconds)
+        {
+            if ( m_q.m_items.empty() )
+            {
+                m_q.m_notEmpty.wait_for( m_secureLock, std::chrono::milliseconds(timeoutInMilliseconds) );
+            }
+        }
+
+        void WaitNotEmpty()
+        {
+            while ( m_q.m_items.empty() )
+            {
+                m_q.m_notEmpty.wait(m_secureLock);
+            }
+        }
+
     private:
-        LockedQueue( const SimpleQueue& q ) : m_secureLock( &q.m_lock ) { m_secureLock->Lock(); };
-        GLK::Mutex* m_secureLock;
+        LockedQueue( const SimpleQueue& q ) : m_q(q), m_secureLock(q.m_lock) {};
+        const SimpleQueue& m_q;
+        std::unique_lock<std::mutex> m_secureLock;
     };
 
     SimpleQueue() {};
@@ -49,9 +65,9 @@ public:
     */
     void Emplace( const ComPacket::ConstSharedPacket& item )
     {
-        GLK::MutexLock locker( m_lock );
+        std::lock_guard<std::mutex> guard( m_lock );
         m_items.emplace( item );
-        m_notEmpty.WakeAll();
+        m_notEmpty.notify_all();
     };
 
     /**
@@ -61,38 +77,6 @@ public:
         This call will block forever if you already hold a LockedQueue from this queue.
     */
     LockedQueue Lock() { return LockedQueue( *this ); };
-
-    void WaitNotEmpty( LockedQueue& lock )
-    {
-        // Check the caller holds the lock on this queue:
-        if ( lock.m_secureLock == &m_lock )
-        {
-            while ( m_items.empty() )
-            {
-                m_notEmpty.Wait( m_lock );
-            }
-        }
-        else
-        {
-            assert(false);
-        }
-    };
-
-    void WaitNotEmpty( LockedQueue& lock, int timeoutInMilliseconds )
-    {
-        // Check the caller holds the lock on this queue:
-        if ( lock.m_secureLock == &m_lock )
-        {
-            if ( m_items.empty() )
-            {
-                m_notEmpty.TimedWait( m_lock, timeoutInMilliseconds );
-            }
-        }
-        else
-        {
-            assert(false);
-        }
-    };
 
     // You may or may not get away with calling these without holding a
     // LockedQueue object, but technically you should hold one before calling them:
@@ -104,8 +88,8 @@ public:
 protected:
 
 private:
-    mutable GLK::Mutex     m_lock;
-    GLK::ConditionVariable m_notEmpty;
+    mutable std::mutex      m_lock;
+    mutable std::condition_variable m_notEmpty;
     std::queue< ComPacket::ConstSharedPacket > m_items;
 };
 

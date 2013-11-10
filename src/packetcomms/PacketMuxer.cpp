@@ -15,7 +15,6 @@
 PacketMuxer::PacketMuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds )
 :
     m_packetIds     (packetIds),
-    m_txLock        ( GLK::Mutex::Recursive ), // Had to make this recursive so we can emplace control packets to the queue internally while we already hold the tx lock.
     m_numPosted     (0),
     m_numSent       (0),
     m_transport     ( socket ),
@@ -28,9 +27,9 @@ PacketMuxer::PacketMuxer( AbstractSocket& socket, const std::vector<std::string>
 PacketMuxer::~PacketMuxer()
 {
     {
-        GLK::MutexLock lock( m_txLock );
+        std::lock_guard<std::recursive_mutex> guard( m_txLock );
         m_transportError = true; /// Causes threads to exit (@todo use better method)
-        m_txReady.WakeAll();
+        m_txReady.notify_all();
     }
 
     {
@@ -51,24 +50,6 @@ bool PacketMuxer::Ok() const
 }
 
 /**
-    Used externally to post a packet to the comms system.
-    The packet will be queued and sent later.
-
-    @param packet An rvalue reference to a packet that will be posted on the queue.
-    If it is not an rvalue reference then after calling this the packet object will become
-    invalid ( i.e. have type ComPacket::Type::invalid and no data).
-*/
-//void PacketMuxer::PostPacket( ComPacket&& packet )
-//{
-//    GLK::MutexLock lock( m_txLock );
-//    // Each packet type goes onto a separate queue:
-//    IdManager::PacketType packetType = packet.GetType(); // Need to cache this before we use std::move
-//    ComPacket::SharedPacket sptr = std::make_shared<ComPacket>( std::move(packet) );
-//    m_txQueues[ packetType ].push( std::move(sptr) );
-//    SignalPacketPosted();
-//}
-
-/**
     Optimised version of ComCentre::PostPacket() which uses forwarding to efficiently
     construct the packet in-place (no std::move required as in PostPacket).
 
@@ -80,7 +61,7 @@ bool PacketMuxer::Ok() const
 void PacketMuxer::EmplacePacket( const std::string& name, const VectorStream::CharType* buffer, int size )
 {
     IdManager::PacketType type = m_packetIds.ToId(name);
-    GLK::MutexLock lock( m_txLock );
+    std::lock_guard<std::recursive_mutex> guard( m_txLock );
     m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
     SignalPacketPosted();
 }
@@ -88,7 +69,7 @@ void PacketMuxer::EmplacePacket( const std::string& name, const VectorStream::Ch
 void PacketMuxer::EmplacePacket(const std::string& name, VectorStream::Buffer&& buffer )
 {
     IdManager::PacketType type = m_packetIds.ToId(name);
-    GLK::MutexLock lock( m_txLock );
+    std::lock_guard<std::recursive_mutex> guard( m_txLock );
     m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, std::move(buffer)) );
     SignalPacketPosted();
 }
@@ -108,7 +89,7 @@ void PacketMuxer::SendLoop()
     SendControlMessage( ControlMessage::Hello );
 
     // Grab the lock for the transmit/send queues:
-    GLK::MutexLock lock( m_txLock );
+    std::unique_lock<std::recursive_mutex> guard( m_txLock );
 
     while ( m_transportError == false )
     {
@@ -117,8 +98,8 @@ void PacketMuxer::SendLoop()
             // Atomically relinquish lock for send queues and wait
             // until new data is posted (don't care to which queue it
             // is posted, hence one condition variable for all queues):
-            bool ready = m_txReady.TimedWait( m_txLock, 1000 );
-            if ( ready == false )
+            std::cv_status status = m_txReady.wait_for(guard, std::chrono::seconds(1));
+            if ( status == std::cv_status::timeout )
             {
                 // If there are no packets to send after waiting for 1 second then
                 // send a 'HeartBeat' message - this serves two purposes:
@@ -222,7 +203,7 @@ bool PacketMuxer::WriteBytes( const uint8_t* buffer, size_t& size )
 void PacketMuxer::SignalPacketPosted()
 {
     m_numPosted += 1;
-    m_txReady.WakeOne();
+    m_txReady.notify_one();
 }
 
 void PacketMuxer::SendControlMessage( ControlMessage msg )

@@ -87,14 +87,14 @@ void TestSimpleQueue()
     EXPECT_TRUE( sptr == sptr2 );
 
     // Check queue locking:
-    SimpleQueue::LockedQueue lock = q.Lock();
+    SimpleQueue::LockedQueue lockedQueue = q.Lock();
 
     // Whilts queue is not empty, and we have a lock
     // check WaitNotEmpty() returns without blocking:
     bool blocked = true;
     SimpleAsyncFunction( [&]() {
         // Wait asynchronously so failing test does not block forever:
-        q.WaitNotEmpty( lock );
+        lockedQueue.WaitNotEmpty();
         blocked = false;
     });
     usleep( 1000 ); // sleep so async func has time to finish

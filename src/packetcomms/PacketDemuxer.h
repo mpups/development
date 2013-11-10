@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <string>
 #include <initializer_list>
+#include <mutex>
 
 #include "IdManager.h"
 #include "ComPacket.h"
@@ -58,6 +59,7 @@ protected:
 private:
     IdManager m_packetIds;
     int m_nextSubscriberId;
+    std::mutex m_subscriberLock;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
     AbstractSocket& m_transport;
     bool m_transportError;

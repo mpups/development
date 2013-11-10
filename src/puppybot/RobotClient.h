@@ -7,9 +7,8 @@
 #include "../../include/RoboLib.h"
 #include "../network/TcpSocket.h"
 
-#include <glkcore.h>
-
 #ifndef ARM_BUILD
+#include <glkcore.h>
 #include <glk.h>
 #endif
 

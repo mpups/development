@@ -51,11 +51,6 @@ bool RobotClient::RunCommsLoop()
 {
     assert( m_demuxer != nullptr );
 
-    if ( m_joystick.IsAvailable() )
-    {
-        m_joystick.Start();
-    }
-
     m_videoClient.reset( new VideoClient( *m_demuxer ) );
 
     SendJoystickData();

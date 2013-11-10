@@ -22,10 +22,9 @@
 #include "../utility/SimpleAsyncFunction.h"
 #include "../io/VectorStream.h"
 
-/// @todo - sort this out:
-#include "/home/mark/code/glk/src/glkcore/thread/MutexLock.h"
-#include "/home/mark/code/glk/src/glkcore/thread/posix/Mutex.h"
-#include "/home/mark/code/glk/src/glkcore/thread/posix/ConditionVariable.h"
+#include <mutex>
+#include <chrono>
+#include <condition_variable>
 
 /**
     Class which manages communications to and from the robot.
@@ -77,8 +76,10 @@ private:
 
     IdManager m_packetIds;
 
-    GLK::ConditionVariable m_txReady;
-    GLK::Mutex m_txLock;
+    // Need a recursive mutex so that we can emplace control packets
+    // to the queue internally while we already hold the tx lock:
+    std::recursive_mutex m_txLock;
+    std::condition_variable_any m_txReady;
     uint32_t m_numPosted;
     uint32_t m_numSent;
 

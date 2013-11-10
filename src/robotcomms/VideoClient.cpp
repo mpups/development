@@ -87,10 +87,10 @@ bool VideoClient::StreamerIoError() const
 int VideoClient::ReadPacket( uint8_t* buffer, int size )
 {
     const int32_t packetTimeout_ms = 1000;
-    SimpleQueue::LockedQueue lock = m_avDataPackets.Lock();
+    SimpleQueue::LockedQueue lockedQueue = m_avDataPackets.Lock();
     while ( m_avDataPackets.Empty() && m_avDataSubscription.GetDemuxer().Ok() )
     {
-        m_avDataPackets.WaitNotEmpty( lock, packetTimeout_ms );
+        lockedQueue.WaitNotEmpty( packetTimeout_ms );
     }
 
     if ( m_avDataPackets.Empty() )

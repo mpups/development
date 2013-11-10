@@ -1,7 +1,7 @@
 #ifndef ROBO_SERIAL_PORT_H
 #define ROBO_SERIAL_PORT_H
 
-#include <glkcore.h>
+#include <cstddef>
 
 #ifdef __linux
 

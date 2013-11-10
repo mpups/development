@@ -1,7 +1,6 @@
 #ifndef MOTION_MIND_H
 #define MOTION_MIND_H
 
-#include <glkcore.h>
 #include "../io/SerialPort.h"
 #include "stdint.h"
 

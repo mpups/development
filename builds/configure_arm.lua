@@ -25,7 +25,7 @@ LIB_DIRS = {
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
 BUILD_OPTIONS = { '-std=c++11 -static -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp --sysroot=' .. ARM_DEPLOYMENT }
-LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/lib:/usr/local/lib' }
+LINK_OPTIONS = { '-Wl,-allow-shlib-undefined,-rpath=/lib:/usr/local/lib' }
 
 OPENCV_LINKS = { 'opencv_core', 'opencv_contrib' }
 OPENGL_LINKS = {}
@@ -33,7 +33,7 @@ SYSTEM_LINKS = { 'pthread', 'rt', 'dl' }
 FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
 LINKS = {}
 
-GLK_LINKS = { 'glkcore', 'lua5.2', 'freetype' }
+GLK_LINKS = { 'lua5.2', 'freetype' }
 VIDEO_LINKS = { 'videolib','unicap' }
 
 CONFIGURING_ARM = true

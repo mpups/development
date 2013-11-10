@@ -142,17 +142,12 @@ int runClient( int argc, char** argv )
     {
         PacketDemuxer comms( client, g_packetIds );
 
-        /// @todo - the following form a message queue which should be encapsulated:
-        GLK::Mutex avDataLock;
-        GLK::ConditionVariable avDataReady;
-        std::queue< ComPacket::ConstSharedPacket > avPackets;
+        SimpleQueue avPacketQueue;
 
         PacketSubscription sub = comms.Subscribe( "AvData", [&]( const ComPacket::ConstSharedPacket& packet )
         {
             // When we get an AV data packet from our subscription we simply queue it and wake anything waiting on the queue:
-            GLK::MutexLock lock( avDataLock );
-            avPackets.emplace( packet );
-            avDataReady.WakeOne();
+            avPacketQueue.Emplace( packet );
         });
 
         PacketSubscription odoSub = comms.Subscribe( "Odometry", [&]( const ComPacket::ConstSharedPacket& packet )
@@ -164,18 +159,18 @@ int runClient( int argc, char** argv )
         // Create a video writer object that passes a lamba function that reads from socket:
         int packetOffset = 0; // This is the offset into partially read packets.
         FFMpegStdFunctionIO videoIO( FFMpegCustomIO::ReadBuffer, [&]( uint8_t* buffer, int size ) {
-            GLK::MutexLock lock( avDataLock );
-            while ( comms.Ok() && avPackets.empty() )
+            SimpleQueue::LockedQueue lq = avPacketQueue.Lock();
+            while ( comms.Ok() && avPacketQueue.Empty() )
             {
-                avDataReady.Wait( avDataLock ); // sleep until a packet is received
+                lq.WaitNotEmpty(); // sleep until a packet is received
             }
 
             // We were asked for more than packet contains so loop through packets until
             // we have returned what we needed or there are no more packets:
             int required = size;
-            while ( required > 0 && !avPackets.empty() )
+            while ( required > 0 && !avPacketQueue.Empty() )
             {
-                const ComPacket::ConstSharedPacket packet = avPackets.front();
+                const ComPacket::ConstSharedPacket packet = avPacketQueue.Front();
                 const int availableSize = packet->GetData().size() - packetOffset;
 
                 if ( availableSize <= required )
@@ -184,7 +179,7 @@ int runClient( int argc, char** argv )
                     // and continue:
                     std::copy( packet->GetData().begin() + packetOffset, packet->GetData().end(), buffer );
                     packetOffset = 0; // Reset the packet offset so the next packet will be read from beginning.
-                    avPackets.pop();
+                    avPacketQueue.Pop();
                     buffer += availableSize;
                     required -= availableSize;
                 }

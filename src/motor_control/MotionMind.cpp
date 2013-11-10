@@ -1,8 +1,11 @@
 #include "MotionMind.h"
 
 #include <assert.h>
-
 #include <time.h>
+#include <string.h>
+
+#include <chrono>
+#include <thread>
 
 double GetMicroSeconds()
 {
@@ -287,7 +290,7 @@ bool MotionMind::GetAck( int32_t& position )
             }
             if ( left )
             {
-                GLK::Thread::Sleep(2);
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
             }
             tries++;
         }
@@ -339,7 +342,7 @@ bool MotionMind::GetReadAck( int32_t addr, Register reg, int32_t& value )
         }
         if ( left )
         {
-            GLK::Thread::Sleep(2);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
         }
         tries++;
     }

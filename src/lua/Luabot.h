@@ -8,6 +8,8 @@
 #include "../../src/utility/Timer.h"
 #include "../../include/RoboLibCore.h"
 
+#include <glkcore.h>
+
 /**
     CLass which encapsulates lua control of a differential drive robot.
 

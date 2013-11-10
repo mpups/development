@@ -4,6 +4,8 @@
 #include "../packetcomms/PacketSerialisation.h"
 
 #include <mutex>
+#include <chrono>
+#include <condition_variable>
 
 const int IMG_WIDTH  = 320;
 const int IMG_HEIGHT = 240;
@@ -131,13 +133,7 @@ void RobotServer::RunCommsLoop()
         // Setup a TeleJoystick object:
         auto muxerPair = std::make_pair( std::ref(*m_muxer), std::ref(*m_demuxer) );
         TeleJoystick teljoy( muxerPair, m_drive.get() ); // Will start receiving and processing remote joystick cammands immediately.
-        teljoy.Go();
-
-        /// @bug - race condition: following can loop forever if teljoy thread runs and then stops before we get to this test
-        //while ( teljoy.IsRunning() == false )
-        {
-            GLK::Thread::Sleep( 20 );
-        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
         // Start capturing and transmitting images:
         if ( m_camera )
@@ -188,6 +184,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 
     // Allocate double buffers for video conversion:
     uint8_t* m_buffer[2];
+    timespec m_timeBuffer[2];
     const std::size_t bufferSize = m_camera->GetFormatBufferSize();
     int err = posix_memalign( (void**)&(m_buffer[0]), 16, bufferSize );
     assert( err == 0 );
@@ -195,8 +192,8 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     assert( err == 0 );
 
     // Capture control variables:
-    GLK::Mutex bufferLock;
-    GLK::ConditionVariable bufferReady;
+    std::mutex bufferLock;
+    std::condition_variable bufferReady;
     int framesConverted = 0;
     int framesCompressed = 0;
 
@@ -204,15 +201,9 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     // It converts the video frame and then signals the main loop that a new
     // frame is ready to be compressed:
     m_camera->SetCaptureCallback( [&]( const uint8_t* buffer, const timespec& time ) {
-        double conversionTime = 0.0;
-        struct timespec conversionStartTime;
-        struct timespec conversionEndTime;
-        clock_gettime( CLOCK_MONOTONIC, &conversionStartTime );
 
         halfscale_yuyv422_to_yuv420p( 640, 480, buffer, m_buffer[0] );
-
-        clock_gettime( CLOCK_MONOTONIC, &conversionEndTime );
-        conversionTime = ToSeconds(conversionEndTime) - ToSeconds(conversionStartTime);
+        m_timeBuffer[0] = time;
 
         { // Start of buffer lock scope.
           // Double buffered so only need to lock mutex while we swap buffers and
@@ -220,47 +211,33 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
             std::lock_guard<std::mutex> guard(bufferLock);
             framesConverted += 1;
             std::swap( m_buffer[0], m_buffer[1] );
-            bufferReady.WakeOne();
+            std::swap( m_timeBuffer[0], m_timeBuffer[1] );
+            bufferReady.notify_one();
         }
-
-        // Send the frame info:
-        //Serialise( *m_muxer, "AvInfo", time, framesConverted, conversionTime );
     });
 
     m_camera->StartCapture(); // This must not be called before SetCaptureCallback().
 
     {
         bool sentOk = true;
-#ifdef ENABLE_TIMING
-        struct timespec waitStart;
-        struct timespec waitEnd;
-#endif
-        GLK::MutexLock locker( bufferLock );
+        std::unique_lock<std::mutex> locker(bufferLock);
         while ( sentOk && joy.IsRunning() )
         {
             // Wait for a new frame to be captured:
-#ifdef ENABLE_TIMING
-            clock_gettime( CLOCK_MONOTONIC, &waitStart );
-#endif
-            bufferReady.TimedWait( bufferLock, 500 );
+            bufferReady.wait_for(locker, std::chrono::milliseconds(500));
             const bool frameReady = framesCompressed != framesConverted;
 
             if ( frameReady )
             {
-#ifdef ENABLE_TIMING
-                clock_gettime( CLOCK_MONOTONIC, &waitEnd );
-#endif
                 framesCompressed += 1;
+
+                // Send the frame info:
+                Serialise( *m_muxer, "AvInfo", m_timeBuffer[1], framesCompressed );
 
                 // Wrap the conversion buffer in a video frame object (YUV420P is native for mpg4):
                 VideoFrame frame( m_buffer[1], PIX_FMT_YUV420P, streamWidth, streamHeight, streamWidth );
                 sentOk = streamer.PutVideoFrame( frame );
                 sentOk &= !streamer.IoError();
-
-#ifdef ENABLE_TIMING
-                double waitTime = milliseconds(waitEnd) - milliseconds(waitStart);
-                fprintf( stderr, "%f %f %f %f %f\n", lockTime, waitTime, conversionTime, streamer.lastEncodeTime_ms, streamer.lastPacketWriteTime_ms );
-#endif
             }
         }
     } // extra scope for lock guard

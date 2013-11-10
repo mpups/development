@@ -1,5 +1,4 @@
 #include "../../include/RoboLib.h"
-#include <glkcore.h>
 
 #include <math.h>
 #include <time.h>

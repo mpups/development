@@ -1,9 +1,10 @@
 #ifndef ROBO_JOYSTICK_H
 #define ROBO_JOYSTICK_H
 
-#include <glkcore.h>
-
-#include <stdint.h>
+#include <cstdint>
+#include <thread>
+#include <mutex>
+#include <queue>
 
 typedef const char* JoystickDevice_t;
 typedef int JoystickHandle_t;
@@ -19,7 +20,7 @@ typedef int JoystickHandle_t;
 
     Currently Linux only.
 **/
-class Joystick : public GLK::Thread
+class Joystick
 {
 public:
     struct ButtonEvent
@@ -44,8 +45,12 @@ private:
     JoystickHandle_t m_joy;
     int16_t* m_button;
     int16_t* m_axis;
-    GLK::MessageQueue<ButtonEvent> m_buttonEvents;
+
+    std::mutex m_queueLock;
+    std::queue<ButtonEvent> m_buttonEvents;
+
     volatile bool m_terminate;
+    std::thread   m_thread;
 };
 
 #endif // ROBO_JOYSTICK_H

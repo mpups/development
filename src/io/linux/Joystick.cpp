@@ -5,17 +5,17 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
-//#include <sys/time.h>
 #include <poll.h>
 #include <linux/joystick.h>
 #include <assert.h>
+#include <memory.h>
 
 Joystick::Joystick( JoystickDevice_t device )
 :
     m_button        (0),
     m_axis          (0),
-    m_buttonEvents  (32),
-    m_terminate     (false)
+    m_terminate     (false),
+    m_thread        (std::bind(&Joystick::Run,std::ref(*this)))
 {
     m_joy = open( device, O_RDONLY );
     fprintf( stderr,"Opened %s: %d\n", device, m_joy );
@@ -40,7 +40,10 @@ Joystick::~Joystick()
 
     if ( m_joy > 0 )
     {
-        Thread::Join();
+        if (m_thread.joinable())
+        {
+            m_thread.join();
+        }
 
         close( m_joy );
         delete m_button;
@@ -66,7 +69,6 @@ void Joystick::Run()
     if ( !IsAvailable() )
     {
         fprintf( stderr, "WARNING: Started Joystick thread but there is no joystick available\n" );
-        assert(0);
         return;
     }
 
@@ -104,7 +106,9 @@ void Joystick::Run()
                         {
                             button.id = e.number;
                             button.pressed = e.value;
-                            m_buttonEvents.TryWrite( &button );
+
+                            std::lock_guard<std::mutex> guard(m_queueLock);
+                            m_buttonEvents.push(button);
                         }
                     break;
 
@@ -125,6 +129,13 @@ void Joystick::Run()
 */
 bool Joystick::GetButtonEvent( ButtonEvent& e )
 {
-    return m_buttonEvents.TryRead( &e );
+    if (m_buttonEvents.empty())
+    {
+        return false;
+    }
+
+    e = m_buttonEvents.front();
+    m_buttonEvents.pop();
+    return true;
 }
 

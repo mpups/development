@@ -10,28 +10,28 @@
 
 TeleJoystick::TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers )
 :
-    m_thread    ( *this ),
     m_muxer     ( muxers.first ),
     m_demuxer   ( muxers.second ),
     m_drive     ( 0 ),
-    m_terminate (false)
+    m_terminate ( false ),
+    m_thread    ( std::bind( &TeleJoystick::Run, std::ref(*this) ) )
 {
 }
 
 TeleJoystick::TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers, DiffDrive* drive )
 :
-    m_thread    ( *this ),
     m_muxer     ( muxers.first ),
     m_demuxer   ( muxers.second ),
     m_drive     ( drive ),
-    m_terminate (false)
+    m_terminate ( false ),
+    m_thread    ( std::bind( &TeleJoystick::Run, std::ref(*this) ) )
 {
 }
 
 TeleJoystick::~TeleJoystick()
 {
     m_terminate = true;
-    m_thread.Join();
+    m_thread.join();
 }
 
 void TeleJoystick::Run()
@@ -58,9 +58,8 @@ void TeleJoystick::Run()
         timeSinceLastCommand_secs = timer.GetSeconds();
         {
             // Sleep with timeout until a packet is received:
-            SimpleQueue::LockedQueue lock = joyPackets.Lock();
             constexpr int wait_ms = 200;
-            joyPackets.WaitNotEmpty( lock, wait_ms );
+            joyPackets.Lock().WaitNotEmpty( wait_ms );
 
             if ( joyPackets.Empty() == false )
             {
@@ -130,14 +129,7 @@ void TeleJoystick::ProcessPacket( SimpleQueue& joyPackets, int32_t& jx, int32_t&
     joyPackets.Pop();
 }
 
-void TeleJoystick::Go()
-{
-    m_thread.Start();
-}
-
 bool TeleJoystick::IsRunning() const
 {
-    return m_thread.IsRunning();
+    return (!m_terminate) && m_thread.joinable();
 }
-
-

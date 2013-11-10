@@ -1,5 +1,4 @@
 #include "../../include/RoboLib.h"
-#include <glkcore.h>
 
 /**
     Saves an image as a simple raw pgm.
@@ -64,7 +63,7 @@ int main( int argc, char** argv )
             char name [] = "capture_####.pgm";
             sprintf( name, "capture_%.4d.pgm", i+1 );
             WritePgm( name, m_lum, camera.GetFrameWidth(), camera.GetFrameHeight() );
-            GLK::Thread::Sleep( 50 );
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     
         motors.SetSpeed( 1, 0, position );
