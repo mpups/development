@@ -109,6 +109,7 @@ void TeleJoystick::Run()
         m_drive->SetMotion( 0.f, 0.f );
     }
 
+    m_terminate = true; /// @note - need this to indicate thread has stopped running
     fprintf( stderr, "Telejoy: thread finished\n" );
 }
 

@@ -28,7 +28,6 @@ TEST( network, ip )
 
 TEST( robolib, utililty )
 {
-    TestSimpleAsyncFunction();
     TestAsyncLooper();
 }
 

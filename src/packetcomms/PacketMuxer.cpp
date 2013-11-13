@@ -17,9 +17,9 @@ PacketMuxer::PacketMuxer( AbstractSocket& socket, const std::vector<std::string>
     m_packetIds     (packetIds),
     m_numPosted     (0),
     m_numSent       (0),
-    m_transport     ( socket ),
-    m_transportError( false ),
-    m_sender        ( std::bind(&PacketMuxer::SendLoop, std::ref(*this)) )
+    m_transport     (socket),
+    m_transportError(false),
+    m_sendThread    (std::bind(&PacketMuxer::SendLoop, std::ref(*this)))
 {
     m_transport.SetBlocking( false );
 }
@@ -32,12 +32,12 @@ PacketMuxer::~PacketMuxer()
         m_txReady.notify_all();
     }
 
+    try
     {
-        int c = 0;
-        SimpleAsyncFunction( [&](){
-            // do stuff
-            c += 10;
-        });
+        m_sendThread.join();
+    } catch ( const std::system_error& e )
+    {
+        std::clog << "Error: " << e.what() << std::endl;
     }
 }
 

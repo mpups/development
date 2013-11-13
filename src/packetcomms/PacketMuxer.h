@@ -19,12 +19,12 @@
 #include "ControlMessage.h"
 #include "../network/AbstractSocket.h"
 
-#include "../utility/SimpleAsyncFunction.h"
 #include "../io/VectorStream.h"
 
 #include <mutex>
 #include <chrono>
 #include <condition_variable>
+#include <thread>
 
 /**
     Class which manages communications to and from the robot.
@@ -90,7 +90,7 @@ private:
 
     // Async function should be initialised last - it requires everything else to
     // be setup before it can run:
-    SimpleAsyncFunction m_sender;
+    std::thread m_sendThread;
 
     void SendControlMessage( ControlMessage msg );
 };

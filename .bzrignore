@@ -6,3 +6,4 @@ builds/arm_build_gcc4.6
 builds/beagle_build_g++4.6
 android_build
 .sconsign.dblite
+builds/beagle_build_g++4.8

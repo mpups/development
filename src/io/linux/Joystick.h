@@ -50,7 +50,7 @@ private:
     std::queue<ButtonEvent> m_buttonEvents;
 
     volatile bool m_terminate;
-    std::thread   m_thread;
+    std::thread*  m_thread;
 };
 
 #endif // ROBO_JOYSTICK_H

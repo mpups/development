@@ -7,7 +7,6 @@
 #include "DiffDrive.h"
 #include "../packetcomms/ComPacket.h"
 #include "../packetcomms/SimpleQueue.h"
-#include "../utility/RunnableFunction.h"
 
 class PacketMuxer;
 class PacketDemuxer;

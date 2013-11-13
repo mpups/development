@@ -9,7 +9,7 @@ INCLUDE_DIRS = {
     '/home/mark/tmp_installs/include',
     '/usr/local/glk/include',
     '/usr/local/videolib/include',
-    '/usr/include/lua5.1',
+    '/usr/include/lua5.2',
     '/usr/include/freetype2',
     '/usr/include/gtest',
     '/usr/include/',
@@ -31,7 +31,7 @@ LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/usr/local/videolib/lib:/home/ma
 OPENCV_LINKS = { 'opencv_imgproc','opencv_calib3d','opencv_highgui', 'opencv_core' }
 OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }
 SYSTEM_LINKS = { 'pthread', 'rt' }
-LINKS = { 'lua5.1', 'freetype', 'unicap' }
+LINKS = { 'lua5.2', 'freetype', 'unicap' }
 FFMPEG_LINKS = { 'avcodec', 'avformat', 'avutil', 'swscale' }
 GLK_LINKS = { 'glk', 'glkcore' }
 VIDEO_LINKS = { 'videolib' }

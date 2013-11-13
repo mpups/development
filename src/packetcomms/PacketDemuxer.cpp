@@ -17,7 +17,7 @@ PacketDemuxer::PacketDemuxer( AbstractSocket& socket, const std::vector<std::str
     m_nextSubscriberId (0),
     m_transport     ( socket ),
     m_transportError( false ),
-    m_receiver      ( std::bind(&PacketDemuxer::ReceiveLoop, std::ref(*this)) )
+    m_receiverThread      ( std::bind(&PacketDemuxer::ReceiveLoop, std::ref(*this)) )
 {
     m_transport.SetBlocking( false );
 }
@@ -25,6 +25,14 @@ PacketDemuxer::PacketDemuxer( AbstractSocket& socket, const std::vector<std::str
 PacketDemuxer::~PacketDemuxer()
 {
     SignalTransportError(); /// Causes receive-thread to exit (@todo use better method)
+
+    try
+    {
+        m_receiverThread.join();
+    } catch ( const std::system_error& e )
+    {
+        std::clog << "Error: " << e.what() << std::endl;
+    }
 }
 
 /**
@@ -189,7 +197,7 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size, bool transportErro
 {
     while ( size > 0 && m_transportError == false )
     {
-        int n = m_transport.Read( reinterpret_cast<char*>( buffer ), size );
+        const int n = m_transport.Read( reinterpret_cast<char*>( buffer ), size );
 
         if ( n < 0 || (n == 0 && transportErrorOnZeroBytes) )
         {

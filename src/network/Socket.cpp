@@ -5,13 +5,14 @@
 #include <unistd.h>
 #include <errno.h>
 #include <memory.h>
-#include <stdio.h>
 
 #include <netinet/tcp.h>
 #include <fcntl.h>
 #include <poll.h>
 
 #include "Ipv4Address.h"
+
+#include <iostream>
 
 /**
     Initialises the internal socket to an invalid value.
@@ -52,7 +53,7 @@ bool Socket::Bind( int portNumber )
     int err = bind( m_socket, (struct sockaddr*)&addr, sizeof(addr) );
     if ( err == -1 )
     {
-        fprintf( stderr, "%s\n", strerror(errno) );
+        std::clog <<  __FILE__ << ": Error " << strerror(errno) << std::endl;
     }
     
     return err != -1;
@@ -66,7 +67,7 @@ void Socket::Shutdown()
     int err = shutdown( m_socket, SHUT_RDWR );
     if ( err == -1 )
     {
-        fprintf( stderr, "Error on socket shutdown: %s\n", strerror(errno) );
+        std::clog <<  __FILE__ << ": Error in Shutdown() " << strerror(errno) << std::endl;
     }
 }
 
@@ -98,7 +99,7 @@ bool Socket::Connect( const Ipv4Address& addr )
     int err = connect( m_socket, (struct sockaddr*)addr.Get_sockaddr_in_Ptr(), sizeof(struct sockaddr_in) );
     if ( err == -1 )
     {
-        fprintf( stderr, "%s\n", strerror(errno) );
+        std::clog <<  __FILE__ << ": Error " << strerror(errno) << std::endl;
     }
     
     return err != -1;
@@ -233,7 +234,11 @@ bool Socket::WaitForSingleEvent( const short pollEvent, int timeoutInMillisecond
     pfds.events = pollEvent;
     pfds.revents = 0;
     int val = poll( &pfds, 1, timeoutInMilliseconds );
-    assert( val >= 0 ); // Will only be -ve on error - on timeout return should be 0
+
+    if (val == -1)
+    {
+        std::clog << __FILE__ << ": Error from poll()" << strerror(errno) << std::endl;
+    }
 
     // If successful then val should be one because
     // we were only waiting onone file descriptor.

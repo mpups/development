@@ -8,6 +8,7 @@
 #include <string>
 #include <initializer_list>
 #include <mutex>
+#include <thread>
 
 #include "IdManager.h"
 #include "ComPacket.h"
@@ -15,7 +16,6 @@
 #include "PacketSubscriber.h"
 #include "ControlMessage.h"
 #include "../network/Socket.h"
-#include "../utility/SimpleAsyncFunction.h"
 
 /**
     Class which manages communications to and from the robot.
@@ -65,7 +65,7 @@ private:
     bool m_transportError;
 
     // This must be initialised last to ensure all other members are intialised before the thread starts:
-    SimpleAsyncFunction m_receiver;
+    std::thread m_receiverThread;
 
     void ReceiveHelloMessage( ComPacket& packet, int timeoutInMillisecs );
     void HandleControlMessage( const ComPacket::ConstSharedPacket& sptr );

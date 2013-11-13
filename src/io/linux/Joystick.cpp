@@ -10,17 +10,19 @@
 #include <assert.h>
 #include <memory.h>
 
+#include <iostream>
+
 Joystick::Joystick( JoystickDevice_t device )
 :
     m_button        (0),
     m_axis          (0),
     m_terminate     (false),
-    m_thread        (std::bind(&Joystick::Run,std::ref(*this)))
+    m_thread        (nullptr)
 {
     m_joy = open( device, O_RDONLY );
     fprintf( stderr,"Opened %s: %d\n", device, m_joy );
 
-    if ( m_joy )
+    if ( m_joy > 0 )
     {
         m_button = new int16_t[256];
         m_axis   = new int16_t[256];
@@ -28,6 +30,8 @@ Joystick::Joystick( JoystickDevice_t device )
         // Zero all buttons and axes:
         memset( m_button, 0, 256*sizeof(int16_t) );
         memset( m_axis, 0, 256*sizeof(int16_t) );
+
+        m_thread = new std::thread(std::bind(&Joystick::Run,std::ref(*this)));
     }
 }
 
@@ -36,15 +40,22 @@ Joystick::Joystick( JoystickDevice_t device )
 */
 Joystick::~Joystick()
 {
-    m_terminate = true;
+    if (m_thread != nullptr)
+    {
+        try
+        {
+            m_terminate = true;
+            m_thread->join();
+            delete m_thread;
+        }
+        catch ( const std::system_error& e )
+        {
+            std::clog << "Error: " << e.what() << std::endl;
+        }
+    }
 
     if ( m_joy > 0 )
     {
-        if (m_thread.joinable())
-        {
-            m_thread.join();
-        }
-
         close( m_joy );
         delete m_button;
         delete m_axis;
@@ -73,7 +84,7 @@ void Joystick::Run()
     }
 
     assert( m_joy > 0 );
-    
+
     // Switch to non-blocking I/O before we enter the event loop:
     fcntl( m_joy, F_SETFL, O_NONBLOCK );
 
@@ -86,7 +97,11 @@ void Joystick::Run()
     while ( m_terminate == false )
     {
         int val = poll( &pfds, 1, m_POLL_TIMEOUT_MS );
-        assert( val >= 0 );
+        if (val == -1)
+        {
+            std::clog << __FILE__ << ": Error from poll()" << strerror(errno) << std::endl;
+        }
+
         if ( val == 1 && pfds.revents & POLLIN )
         {   
             val = read ( m_joy, &e, sizeof(struct js_event) );

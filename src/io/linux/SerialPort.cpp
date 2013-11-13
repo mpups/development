@@ -22,10 +22,9 @@ bool SerialPort::WaitForBytes( int timeout_ms ) const
     pfds.revents = 0;
     
     int err = poll( &pfds, 1, timeout_ms );
-    assert( err >= 0 ); // -1 on error, 0 on timeout, 1 on ready
     
     bool rval;
-    if ( pfds.revents & POLLIN )
+    if ( err != -1 && (pfds.revents & POLLIN) )
     {
         rval = true;
     }

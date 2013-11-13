@@ -92,7 +92,7 @@ void TestSimpleQueue()
     // Whilts queue is not empty, and we have a lock
     // check WaitNotEmpty() returns without blocking:
     bool blocked = true;
-    SimpleAsyncFunction( [&]() {
+    std::thread( [&]() {
         // Wait asynchronously so failing test does not block forever:
         lockedQueue.WaitNotEmpty();
         blocked = false;

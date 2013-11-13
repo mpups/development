@@ -144,7 +144,7 @@ void RobotServer::RunCommsLoop()
         {
             // No video so this thread can just sleep while joystick control runs:
             while ( teljoy.IsRunning() ) {
-                sleep( 100 );
+                sleep( 5 );
             }
         }
 
