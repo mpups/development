@@ -157,8 +157,10 @@ bool PacketDemuxer::ReceivePacket( ComPacket& packet, const int timeoutInMillise
 
     // For the first read we generate a transport error on zero bytes
     // (because ReadyForReading() said there were bytes available):
+    ///@note - the above is incorrect as ReadyForReading uses POLLIN which
+    /// also returns true if there is out of band data ready for reading.
     size_t byteCount = sizeof(uint32_t);
-    bool ok = ReadBytes( reinterpret_cast<uint8_t*>(&type), byteCount, true );
+    bool ok = ReadBytes( reinterpret_cast<uint8_t*>(&type), byteCount, false );
     if ( !ok ) { return false; }
 
     byteCount = sizeof(uint32_t);
@@ -201,6 +203,7 @@ bool PacketDemuxer::ReadBytes( uint8_t* buffer, size_t& size, bool transportErro
 
         if ( n < 0 || (n == 0 && transportErrorOnZeroBytes) )
         {
+            std::clog << "Signalling transport error because bytes read := " << n << std::endl;
             SignalTransportError();
             return false;
         }

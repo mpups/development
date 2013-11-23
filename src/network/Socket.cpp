@@ -237,12 +237,28 @@ bool Socket::WaitForSingleEvent( const short pollEvent, int timeoutInMillisecond
 
     if (val == -1)
     {
-        std::clog << __FILE__ << ": Error from poll()" << strerror(errno) << std::endl;
+        std::clog << __FILE__ << ": Error from poll() - " << strerror(errno) << std::endl;
+    }
+
+    if( (pfds.revents & POLLERR) )
+    {
+        std::clog << __FILE__ << ": POLLERR!\n";
+    }
+
+    if( (pfds.revents & POLLHUP) )
+    {
+        std::clog << __FILE__ << ": POLLHUP!\n";
+        /// @todo - need return to indicate hang-up for robust shutdown.
+    }
+
+    if( (pfds.revents & POLLNVAL) )
+    {
+        std::clog << __FILE__ << ": POLLNVAL!\n";
     }
 
     // If successful then val should be one because
-    // we were only waiting onone file descriptor.
-    if ( val == 1 && pfds.revents & pollEvent )
+    // we were only waiting on one file descriptor.
+    if ( val == 1 && (pfds.revents & pollEvent) )
     {
         return true;
     }
