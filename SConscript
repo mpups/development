@@ -3,14 +3,14 @@ import os
 LIB_NAME = 'robolib'
 SONAME = 'librobolib.so'
 
-NDKDIR = '/home/mark/code/android-ndk-r8e'
+NDKDIR = '/home/mark/code/android-ndk-r9b'
 SYSROOT = NDKDIR + '/platforms/android-3/arch-arm'
 
-STLPATH = '/home/mark/code/android-ndk-r8e/sources/cxx-stl/gnu-libstdc++/4.6'
+STLPATH = NDKDIR + '/sources/cxx-stl/gnu-libstdc++/4.8'
 STLINC = STLPATH + '/include'
 STLBITS = STLPATH + '/libs/armeabi/include'
 
-PLATFORMDIR = '/home/mark/code/android-ndk-r8e/platforms/android-8/arch-arm'
+PLATFORMDIR = NDKDIR +'/platforms/android-8/arch-arm'
 PLATFORMINC = PLATFORMDIR + '/usr/include/'
 
 SRC_FILES  = Glob('src/packetcomms/*.cpp')
@@ -28,9 +28,10 @@ INC_DIRS  = [
               '/usr/include/freetype2',
               '/usr/local/videolib/include',
               '/usr/include/unicap',
+              '/home/mark/code/cereal-0.9.1/include',
               STLINC,
               STLBITS,
-              '/home/mark/beagle_kernel_2.6.32/deploy/include', # Simply needed for freetype include - freetype not actually used
+              '/home/mark/beagle_kernel_2.6.32_gcc4.8/deploy/include', # Simply needed for freetype include - freetype not actually used
               PLATFORMINC
             ]
 
