@@ -14,8 +14,6 @@ PacketSubscription::PacketSubscription( PacketSubscription&& toMove )
 
 PacketSubscription& PacketSubscription::operator=( PacketSubscription&& toMove )
 {
-    m_subscriber->Unsubscribe();
-    m_subscriber.reset();
     std::swap( m_subscriber, toMove.m_subscriber );
     return *this;
 }
@@ -26,7 +24,10 @@ PacketSubscription& PacketSubscription::operator=( PacketSubscription&& toMove )
 */
 PacketSubscription::~PacketSubscription()
 {
-    m_subscriber->Unsubscribe();
+    if (m_subscriber != nullptr && m_subscriber.use_count() > 1)
+    {
+        m_subscriber->Unsubscribe();
+    }
 }
 
 /**

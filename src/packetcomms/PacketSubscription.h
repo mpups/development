@@ -19,6 +19,7 @@ class PacketDemuxer;
 class PacketSubscription
 {
 public:
+    PacketSubscription() {}
     PacketSubscription( const PacketSubscription& )    = delete;
     PacketSubscription& operator=(PacketSubscription&) = delete;
 

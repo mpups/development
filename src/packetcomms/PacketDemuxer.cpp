@@ -26,6 +26,9 @@ PacketDemuxer::~PacketDemuxer()
 {
     SignalTransportError(); /// Causes receive-thread to exit (@todo use better method)
 
+    // Check if there any remaining subscribers:
+    WarnAboutSubscribers();
+
     try
     {
         m_receiverThread.join();
@@ -36,7 +39,7 @@ PacketDemuxer::~PacketDemuxer()
 }
 
 /**
-    Return false if ther ehave been any communication errors, true otherwise.
+    Return false if there have been any communication errors, true otherwise.
 */
 bool PacketDemuxer::Ok() const
 {
@@ -54,12 +57,16 @@ PacketSubscription PacketDemuxer::Subscribe( const std::string& typeName, Packet
     SubscriptionEntry::second_type& queue = m_subscribers[type];
     queue.emplace_back( new PacketSubscriber( type, *this , callback ) );
     m_nextSubscriberId += 1;
+
+    std::clog << "New subscriber for '" << typeName << "'" << std::endl;
+
     return PacketSubscription( queue.back() );
 }
 
 void PacketDemuxer::Unsubscribe( const PacketSubscriber* pSubscriber )
 {
     const IdManager::PacketType type = pSubscriber->GetType();
+    std::clog << "Removing subscriber for '" << m_packetIds.ToString(type) << "'" << std::endl;
 
     std::lock_guard<std::mutex> guard(m_subscriberLock);
     SubscriptionEntry::second_type& queue = m_subscribers[ type ];
@@ -130,6 +137,7 @@ void PacketDemuxer::ReceiveLoop()
                 // Post the new packet to the message queues of all the subscribers for this packet type:
                 std::lock_guard<std::mutex> guard(m_subscriberLock);
                 SubscriptionEntry::second_type& queue = m_subscribers[ packetType ];
+                //std::clog << "Posting '" << m_packetIds.ToString(packetType) << "' to " << queue.size() << " subscribers" << std::endl;
                 for ( auto& subscriber : queue )
                 {
                     subscriber->m_callback( sptr );
@@ -270,4 +278,19 @@ ControlMessage PacketDemuxer::GetControlMessage( const ComPacket::ConstSharedPac
 {
     const uint8_t netMsg = *(sptr->GetDataPtr());
     return static_cast<ControlMessage>( netMsg );
+}
+
+void PacketDemuxer::WarnAboutSubscribers()
+{
+    {
+        std::lock_guard<std::mutex> guard(m_subscriberLock);
+        for ( const SubscriptionEntry& entry : m_subscribers )
+        {
+            const size_t n = entry.second.size();
+            if( n > 0 )
+            {
+                std::clog << "Warning: there are " << n << " live subscribers for '" << m_packetIds.ToString(entry.first) << "'" << std::endl;
+            }
+        }
+    }
 }

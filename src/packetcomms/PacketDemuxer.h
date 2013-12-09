@@ -70,6 +70,7 @@ private:
     void ReceiveHelloMessage( ComPacket& packet, int timeoutInMillisecs );
     void HandleControlMessage( const ComPacket::ConstSharedPacket& sptr );
     ControlMessage GetControlMessage( const ComPacket::ConstSharedPacket& sptr );
+    void WarnAboutSubscribers();
 };
 
 #endif /* __PACKET_DEMUXER_H__ */
