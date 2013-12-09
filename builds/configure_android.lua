@@ -3,7 +3,7 @@
 
 TARGET_DIR   = 'android_build'
 
-NDK_DIR = '/home/mark/code/android-ndk-r8e'
+NDK_DIR = '/home/mark/code/android-ndk-r9b'
 SYS_ROOT = NDK_DIR .. '/platforms/android-3/arch-arm'
 
 TOOLCHAIN = 'arm-linux-androideabi-'
@@ -11,11 +11,11 @@ LIB_TYPE = 'SharedLib'
 
 SONAME = 'libvideolib.so'
 
-ANDROID_STL_PATH = '/home/mark/code/android-ndk-r8e/sources/cxx-stl/gnu-libstdc++/4.6'
+ANDROID_STL_PATH = NDK_DIR .. '/sources/cxx-stl/gnu-libstdc++/4.8'
 ANDROID_STL_INC = ANDROID_STL_PATH .. '/include'
 ANDROID_STL_BITS_INC = ANDROID_STL_PATH .. '/libs/armeabi/include'
 ANDROID_STL_LIBDIR = ANDROID_STL_PATH .. '/libs/armeabi/'
-ANDROID_PLATFORM = '/home/mark/code/android-ndk-r8e/platforms/android-8/arch-arm'
+ANDROID_PLATFORM = NDK_DIR .. '/platforms/android-8/arch-arm'
 ANDROID_PLATFORM_LIBS = ANDROID_PLATFORM .. '/usr/lib'
 
 ANDROID_FFMPEG = '/home/mark/code/android-ffmpeg-build/armeabi'
@@ -33,7 +33,7 @@ LIB_DIRS = {
 }
 
 DEFINES = { 'ANDROID', 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
-BUILD_OPTIONS = { '--sysroot=' .. SYS_ROOT .. ' -std=c++0x -mfloat-abi=softfp' }
+BUILD_OPTIONS = { '--sysroot=' .. SYS_ROOT .. ' -std=c++11 -mfloat-abi=softfp' }
 LINK_OPTIONS = { '-Wl,-soname=' .. SONAME .. ',-rpath-link=' .. ANDROID_PLATFORM_LIBS .. ' -L' .. ANDROID_PLATFORM_LIBS .. ' -L' .. ANDROID_STL_LIBDIR }
 
 FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
