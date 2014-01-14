@@ -5,6 +5,10 @@
 #define __ASYNC_LOOPER_H__
 
 #include <functional>
+#include <chrono>
+#include <thread>
+#include <iostream>
+#include <iomanip>
 
 #include <pthread.h>
 #include <assert.h>
@@ -81,12 +85,15 @@ protected:
         AsyncLooper& async = *reinterpret_cast<AsyncLooper*>( arg );
         async.Call();
 
-        int sleepTime = 1000000.f / async.m_Hz;
+        const int sleepTime = 1000000.f / async.m_Hz;
+        const std::chrono::microseconds duration( sleepTime );
 
+        using namespace std::chrono;
         while ( async.m_go )
         {
+            const high_resolution_clock::time_point nextTime = high_resolution_clock::now() + duration;
             async.Call();
-            usleep( sleepTime ); // Replace with nanosleep
+            std::this_thread::sleep_until( nextTime );
         }
 
         return nullptr;

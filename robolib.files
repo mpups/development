@@ -122,7 +122,6 @@ src/packetcomms/PacketSubscriber.cpp
 src/packetcomms/ControlMessage.h
 src/packetcomms/PacketComms.h
 src/utility/SimpleAsyncFunction.h
-src/utility/RunnableFunction.h
 src/tests/unit/UtilityTests.h
 src/network/UdpSocket.h
 src/network/TcpSocket.h
@@ -146,3 +145,4 @@ src/io/Serialisation.h
 src/puppybot/PuppybotData.h
 src/utility/Timer.h
 src/packetcomms/PacketSerialisation.h
+src/utility/AsyncLooper.h
