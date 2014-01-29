@@ -1,12 +1,12 @@
 -- You can change these variables so that
 -- they are appropriate for your system:
 
-TARGET_DIR   = 'beagle_build_g++4.8'
+TARGET_DIR   = 'beagleboardxm_gcc-4.8.2'
 
-TOOLCHAIN = 'arm-linux-gnueabi-'
+TOOLCHAIN = 'arm-linux-gnueabihf-'
 LIB_TYPE = 'SharedLib'
 
-ARM_DEPLOYMENT = '/home/mark/beagle_kernel_2.6.32_gcc4.8/deploy'
+ARM_DEPLOYMENT = '/home/mark/beagleboardxm/deploy_gcc-4.8.2'
 
 INCLUDE_DIRS = {
     '../../glk-1.0/include',
@@ -17,23 +17,25 @@ INCLUDE_DIRS = {
     '/home/mark/code/cereal-0.9.1/include'
 }
 
+VIDEOLIB_DIR='/home/mark/code/videolib/builds/beagleboardxm_gcc-4.8.2'
+
 LIB_DIRS = {
     './',
     ARM_DEPLOYMENT .. '/lib',
-    ARM_DEPLOYMENT .. '/usr/local/lib', -- THIS IS STUPID, KEEP PICKING UP OLD VERSION OF THE LIBRARY I AM BUILDING
+    VIDEOLIB_DIR
 }
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
-BUILD_OPTIONS = { '-std=c++11 -static -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp --sysroot=' .. ARM_DEPLOYMENT }
+BUILD_OPTIONS = { '-std=c++11 -static -mtune=cortex-a8 -mfpu=neon' }
 LINK_OPTIONS = { '-Wl,-rpath=/lib:/usr/local/lib' }
 
-OPENCV_LINKS = { 'opencv_core', 'opencv_contrib' }
+OPENCV_LINKS = {} --{ 'opencv_core', 'opencv_contrib' }
 OPENGL_LINKS = {}
 SYSTEM_LINKS = { 'pthread', 'rt', 'dl' }
 FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
 LINKS = {}
 
-GLK_LINKS = { 'glkcore','lua5.2', 'freetype' }
+GLK_LINKS = {} --{ 'glkcore','lua5.2', 'freetype' }
 VIDEO_LINKS = { 'videolib','unicap' }
 
 CONFIGURING_ARM = true

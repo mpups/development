@@ -65,6 +65,8 @@ solution 'robolib'
         if ( CONFIGURING_ARM ) then
             excludes { SRC .. 'visualisation/*' }
             excludes { SRC .. 'opencv/*' }
+            excludes { SRC .. 'vision/*' }
+            excludes { SRC .. 'lua/*' }
         end
 
         -- Exclude files which are platform specific:

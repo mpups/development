@@ -8,7 +8,6 @@
 #include "../src/io/SerialPort.h"
 #include "../src/io/linux/Joystick.h"
 
-#include "../src/lua/Luabot.h"
 #include "../src/utility/AsyncLooper.h"
 
 #include "../src/motor_control/TeleJoystick.h"
@@ -23,6 +22,7 @@
 #include "../src/robotcomms/VideoClient.h"
 
 #ifndef ARM_BUILD
+#include "../src/lua/Luabot.h"
 #include "../src/sse/VectorVector.h"
 #include "../src/sse/BatchOperations.h"
 #include "../src/sse/SimdKernels.h"

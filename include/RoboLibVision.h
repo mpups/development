@@ -3,13 +3,13 @@
 
 #include "RoboLibCore.h"
 
+// These are not intended to be used on embedded ARM systems yet:
+#ifndef ARM_BUILD
+
 #include "../src/vision/Image.h"
 #include "../src/vision/FastCornerThread.h"
 #include "../src/vision/LoadBalancingCornerDetector.h"
 #include "../src/vision/FastCornerSearch.h"
-
-// These are not intended to be used on embedded ARM systems yet:
-#ifndef ARM_BUILD
 
 #include "../src/sse/ImageProcSse.h"
 #include "../src/sse/ImageProc.h"

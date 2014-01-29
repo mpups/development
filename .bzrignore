@@ -7,3 +7,4 @@ builds/beagle_build_g++4.6
 android_build
 .sconsign.dblite
 builds/beagle_build_g++4.8
+builds/beagleboardxm_gcc-4.8.2
