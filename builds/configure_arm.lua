@@ -1,11 +1,11 @@
 -- You can change these variables so that
 -- they are appropriate for your system:
 
-TARGET_DIR   = 'beagle_build_g++4.8'
+TARGET_DIR   = 'beagleboardxm_gcc-4.8.2'
 
-ARM_PACKAGES = '/home/mark/beagle_kernel_3.7/packages'
-ARM_DEPLOYMENT = '/home/mark/beagle_kernel_3.7/deploy'
-TOOLCHAIN = 'arm-linux-gnueabi-'
+ARM_PACKAGES = '/home/mark/beagleboardxm/build_packages_gcc-4.8.2'
+ARM_DEPLOYMENT = '/home/mark/beagleboardxm/deploy_gcc-4.8.2'
+TOOLCHAIN = 'arm-linux-gnueabihf-'
 LIB_TYPE = 'SharedLib'
 
 INCLUDE_DIRS = {
@@ -18,7 +18,7 @@ LIB_DIRS = {
 }
 
 DEFINES = { 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS' }
-BUILD_OPTIONS = { '--sysroot=/usr/arm-linux-gnueabi -std=c++0x -static -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp' }
+BUILD_OPTIONS = { '-std=c++0x -static -mtune=cortex-a8 -mfpu=neon' }
 LINK_OPTIONS = { '-Wl,--allow-shlib-undefined,-rpath=/lib:/usr/local/lib' }
 
 FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
