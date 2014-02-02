@@ -208,6 +208,5 @@ void PacketMuxer::SignalPacketPosted()
 
 void PacketMuxer::SendControlMessage( ControlMessage msg )
 {
-    /// @todo should use this once g++ is updated: std::underlying_type(ControlMessage)
     EmplacePacket( "Control", reinterpret_cast<VectorStream::CharType*>(&msg), sizeof(uint8_t) );
 }

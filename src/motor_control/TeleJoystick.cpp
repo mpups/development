@@ -49,7 +49,7 @@ void TeleJoystick::Run()
     SimpleQueue joyPackets;
     PacketSubscription joystickSubscription = m_demuxer.Subscribe( "Joystick", [&]( const ComPacket::ConstSharedPacket& packet )
     {
-        /// @todo - check this now how? assert( packet->GetType() == ComPacket::Type::Joystick );
+        assert( packet->GetType() == m_demuxer.GetIdManager().ToId("Joystick") );
         joyPackets.Emplace( packet );
     });
 

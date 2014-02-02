@@ -61,13 +61,10 @@ bool RobotServer::Listen(const std::vector<std::string>& packetTypes)
 }
 
 /**
-    Perform post conection processing.
-    
-    Attempts to access camera and wheels.
-**/
-void RobotServer::PostConnectionSetup(const std::vector<std::string>& packetTypes)
+    Creates motor controller object and sets motor hardware settings.
+*/
+void RobotServer::SetupMotors()
 {
-    // Setup comms to motors:
     m_motors.reset( new MotionMind( m_serialPort.c_str() ) );
     if ( m_motors->Available() )
     {
@@ -75,7 +72,7 @@ void RobotServer::PostConnectionSetup(const std::vector<std::string>& packetType
         float amps = 1.5f;
         int32_t currentLimit = roundf( amps/0.02f );
         int32_t pwmLimit = (72*1024)/120; // motor voltage / battery voltage
-        
+
         m_motors->WriteRegister( 1, MotionMind::AMPSLIMIT, currentLimit );
         m_motors->WriteRegister( 2, MotionMind::AMPSLIMIT, currentLimit );
         m_motors->WriteRegister( 1, MotionMind::PWMLIMIT, pwmLimit );
@@ -85,14 +82,27 @@ void RobotServer::PostConnectionSetup(const std::vector<std::string>& packetType
     {
         m_motors.reset();
     }
+}
 
-    // Setup camera:
-    m_camera.reset( new UnicapCamera() );   
+void RobotServer::SetupCamera()
+{
+    m_camera.reset( new UnicapCamera() );
     if ( m_camera->IsOpen() == false )
     {
         m_camera.reset();
         std::clog << "Warning: Could not open camera. Joystick control mode only." << std::endl;
     }
+}
+
+/**
+    Perform post conection processing.
+
+    Attempts to access camera and wheels.
+**/
+void RobotServer::PostConnectionSetup(const std::vector<std::string>& packetTypes)
+{
+    SetupMotors();
+    SetupCamera();
 
     assert( m_con.get() != nullptr );
     m_muxer.reset( new PacketMuxer( *m_con, packetTypes ) );
@@ -107,11 +117,7 @@ void RobotServer::PostCommsCleanup()
     // These must be deleted in this order:
     m_drive.reset();
     m_motors.reset();
-    
-    if ( m_camera )
-    {
-        m_camera.reset();
-    }
+    m_camera.reset();
 }
 
 /**
@@ -127,7 +133,7 @@ void RobotServer::RunCommsLoop()
         {
             std::string name;
             clientAddress.GetHostName( name );
-            fprintf( stderr, "Client %s connected to robot.\n", name.c_str() );
+            std::clog << "Client " << name << " connected to robot.\n";
         }
 
         // Setup a TeleJoystick object:
@@ -138,17 +144,20 @@ void RobotServer::RunCommsLoop()
         // Start capturing and transmitting images:
         if ( m_camera )
         {
+            std::clog << "Started streaming video.\n";
             StreamVideo( teljoy );
+            std::clog << "Stopped streaming video.\n";
         }
         else
         {
             // No video so this thread can just sleep while joystick control runs:
+            std::clog << "No video - joystick control only.\n";
             while ( teljoy.IsRunning() ) {
                 sleep( 5 );
             }
         }
 
-        fprintf( stderr, "Control terminated\n" );
+        std::clog << "Control terminated.\n";
     } // end if
 
     m_muxer.reset();
@@ -168,18 +177,19 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 {
     assert( m_con != nullptr );
 
+    // Setup an MPEG4 video stream for half-size video:
+    const int w = m_camera->GetFrameWidth();
+    const int h = m_camera->GetFrameHeight();
+    const int streamWidth = w/2;
+    const int streamHeight = h/2;
+
     // Lambda that enqueues video packets via the Muxing system:
     FFMpegStdFunctionIO videoIO( FFMpegCustomIO::WriteBuffer, [&]( uint8_t* buffer, int size ) {
         m_muxer->EmplacePacket( "AvData", reinterpret_cast<VectorStream::CharType*>(buffer), size );
         return m_muxer->Ok() ? size : -1;
     });
-    LibAvWriter streamer( videoIO );
 
-    // Setup an MPEG4 video stream for half-size video:
-    int w = m_camera->GetFrameWidth();
-    int h = m_camera->GetFrameHeight();
-    int streamWidth = w/2;
-    int streamHeight = h/2;
+    LibAvWriter streamer( videoIO );
     streamer.AddVideoStream( streamWidth, streamHeight, 30, video::FourCc( 'F','M','P','4' ) );
 
     // Allocate double buffers for video conversion:
@@ -194,20 +204,19 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     // Capture control variables:
     std::mutex bufferLock;
     std::condition_variable bufferReady;
-    int framesConverted = 0;
+    int framesConverted  = 0;
     int framesCompressed = 0;
 
     // This lambda will be called back from a separate frame capture thread.
     // It converts the video frame and then signals the main loop that a new
     // frame is ready to be compressed:
     m_camera->SetCaptureCallback( [&]( const uint8_t* buffer, const timespec& time ) {
-
         halfscale_yuyv422_to_yuv420p( 640, 480, buffer, m_buffer[0] );
         m_timeBuffer[0] = time;
 
         { // Start of buffer lock scope.
-          // Double buffered so only need to lock mutex while we swap buffers and
-          // increment the frame count:
+          // Double buffered so only need to lock mutex while
+          // we swap buffers and increment the frame count:
             std::lock_guard<std::mutex> guard(bufferLock);
             framesConverted += 1;
             std::swap( m_buffer[0], m_buffer[1] );
@@ -232,12 +241,18 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
                 framesCompressed += 1;
 
                 // Send the frame info:
-                Serialise( *m_muxer, "AvInfo", m_timeBuffer[1], framesCompressed );
+                const timespec stamp = m_timeBuffer[1];
+                std::clog << "Frame stamp := " << stamp.tv_sec << " " << stamp.tv_nsec << std::endl;
+                Serialise( *m_muxer, "AvInfo", stamp, framesCompressed );
 
                 // Wrap the conversion buffer in a video frame object (YUV420P is native for mpg4):
                 VideoFrame frame( m_buffer[1], PIX_FMT_YUV420P, streamWidth, streamHeight, streamWidth );
                 sentOk = streamer.PutVideoFrame( frame );
                 sentOk &= !streamer.IoError();
+            }
+            else
+            {
+                std::cerr << "Time-out waiting for frame capture, retrying...\n";
             }
         }
     } // extra scope for lock guard

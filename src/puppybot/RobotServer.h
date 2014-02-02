@@ -19,6 +19,8 @@ public:
 
     void RunCommsLoop();
 
+    void SetupMotors();
+    void SetupCamera();
 private:
     void PostConnectionSetup(const std::vector<std::string>& packetTypes);
     void PostCommsCleanup();

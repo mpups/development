@@ -51,31 +51,11 @@ bool RobotClient::RunCommsLoop()
 {
     assert( m_demuxer != nullptr );
 
-    m_videoClient.reset( new VideoClient( *m_demuxer ) );
-
-    SendJoystickData();
-    if ( m_videoClient->InitialiseVideoStream() == false )
-    {
-        message( "Could not initialise video stream." );
-        return false;
-    }
-
-    const int w = m_videoClient->GetFrameWidth();
-    const int h = m_videoClient->GetFrameHeight();
-    std::clog << "Received frame dimensions: " << w << "x" << h << std::endl;
-
-    // Create a buffer for image data:
-    int err = posix_memalign( (void**)&m_imageBuffer, 16, w * h * 3 * sizeof(uint8_t) );
-    assert( err == 0 );
-    SetupImagePostData( w, h );
-
-    int numFrames = 0;
-
-    struct timespec t1;
-    struct timespec t2;
-    clock_gettime( CLOCK_MONOTONIC, &t1 );
-
-    bool gotFrame = true;
+    // Send joystick data at 15Hz:
+    constexpr float joystickSendRateHz = 15;
+    AsyncLooper joyThread( joystickSendRateHz,
+                           std::bind( &RobotClient::SendJoystickData, std::ref(*this))
+                          );
 
     // Testing: integrate odometry into pposition:
     const float wheelBaseInMetres = 0.28f;
@@ -121,11 +101,30 @@ bool RobotClient::RunCommsLoop()
         }
     });
 
-    // Send joystick data at 15Hz:
-    constexpr float joystickSendRateHz = 15;
-    AsyncLooper joyThread( joystickSendRateHz,
-                           std::bind( &RobotClient::SendJoystickData, std::ref(*this))
-                          );
+    m_videoClient.reset( new VideoClient( *m_demuxer ) );
+
+    if ( m_videoClient->InitialiseVideoStream() == false )
+    {
+        message( "Could not initialise video stream." );
+        return false;
+    }
+
+    const int w = m_videoClient->GetFrameWidth();
+    const int h = m_videoClient->GetFrameHeight();
+    std::clog << "Received frame dimensions: " << w << "x" << h << std::endl;
+
+    // Create a buffer for image data:
+    int err = posix_memalign( (void**)&m_imageBuffer, 16, w * h * 3 * sizeof(uint8_t) );
+    assert( err == 0 );
+    SetupImagePostData( w, h );
+
+    int numFrames = 0;
+
+    struct timespec t1;
+    struct timespec t2;
+    clock_gettime( CLOCK_MONOTONIC, &t1 );
+
+    bool gotFrame = true;
 
 #ifndef ARM_BUILD
     while ( m_display.IsRunning() && gotFrame )

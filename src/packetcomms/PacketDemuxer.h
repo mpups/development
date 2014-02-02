@@ -50,6 +50,8 @@ public:
     void ReceiveLoop();
     bool ReceivePacket( ComPacket& packet, const int timeoutInMilliseconds );
 
+    const IdManager& GetIdManager() const { return m_packetIds; }
+
 protected:
     typedef std::pair< IdManager::PacketType, std::vector<SubscriberPtr> > SubscriptionEntry;
 
