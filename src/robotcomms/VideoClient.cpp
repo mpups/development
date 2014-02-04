@@ -20,8 +20,9 @@ VideoClient::~VideoClient()
 
 bool VideoClient::InitialiseVideoStream()
 {
-    // Create a video reader object that uses socket IO:
-    m_videoIO.reset( new FFMpegStdFunctionIO( FFMpegCustomIO::ReadBuffer, std::bind( &VideoClient::ReadPacket, std::ref(*this), std::placeholders::_1, std::placeholders::_2 ) ) );
+    // Create a video reader object that uses function/callback IO:
+    m_videoIO.reset( new FFMpegStdFunctionIO( FFMpegCustomIO::ReadBuffer,
+                                              std::bind( &VideoClient::ReadPacket, std::ref(*this), std::placeholders::_1, std::placeholders::_2 ) ) );
     m_streamer.reset( new LibAvCapture( *m_videoIO ) );
     if ( m_streamer->IsOpen() == false )
     {
@@ -84,30 +85,28 @@ bool VideoClient::StreamerIoError() const
     return m_streamer->IoError();
 }
 
+/**
+    This is called back by the LibAvCapture object when it wants to decode
+    the next AV packet (i.e. in consequence of calling m_streamer->GetFrame()).
+*/
 int VideoClient::ReadPacket( uint8_t* buffer, int size )
 {
     const int32_t packetTimeout_ms = 1000;
     SimpleQueue::LockedQueue lockedQueue = m_avDataPackets.Lock();
+    uint32_t timeoutCount = 0;
     while ( m_avDataPackets.Empty() && m_avDataSubscription.GetDemuxer().Ok() )
     {
         lockedQueue.WaitNotEmpty( packetTimeout_ms );
-    }
 
-    if ( m_avDataPackets.Empty() )
-    {
-        if (m_avDataSubscription.GetDemuxer().Ok())
+        if ( m_avDataPackets.Empty() )
         {
-            std::clog << "VideoClient timed out waiting for an AV packet." << std::endl;
+            std::clog << "VideoClient timed out waiting for an AV packet. Timeout count := " << timeoutCount << std::endl;
+            timeoutCount += 1;
+            if ( timeoutCount > 5 )
+            {
+                return -1;
+            }
         }
-        else
-        {
-            std::clog << "Demuxer transport error." << std::endl;
-        }
-    }
-
-    if ( StreamerIoError() )
-    {
-        return -1;
     }
 
     // We were asked for more than packet contains so loop through packets until

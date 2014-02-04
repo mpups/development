@@ -13,6 +13,14 @@
 
 class PacketDemuxer;
 
+/**
+    Class for managing a video stream received over the muxer comms system.
+
+    In the constructor a subscription is made to AvData packets which are
+    simply enqued as they are received.
+
+
+*/
 class VideoClient
 {
 public:

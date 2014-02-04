@@ -103,12 +103,20 @@ bool RobotClient::RunCommsLoop()
 
     m_videoClient.reset( new VideoClient( *m_demuxer ) );
 
-    if ( m_videoClient->InitialiseVideoStream() == false )
+    if ( m_videoClient->InitialiseVideoStream() )
+    {
+        LoopToReceiveVideo();
+        return true;
+    }
+    else
     {
         message( "Could not initialise video stream." );
         return false;
     }
+}
 
+void RobotClient::LoopToReceiveVideo()
+{
     const int w = m_videoClient->GetFrameWidth();
     const int h = m_videoClient->GetFrameHeight();
     std::clog << "Received frame dimensions: " << w << "x" << h << std::endl;
@@ -159,8 +167,6 @@ bool RobotClient::RunCommsLoop()
             message( "Could not get video frame." );
         }
     }
-
-    return true;
 }
 
 void RobotClient::SendJoystickData()

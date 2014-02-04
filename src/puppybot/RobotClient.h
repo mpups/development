@@ -25,15 +25,14 @@ public:
     bool Connect( const char* host, int port, const std::vector<std::string>& packetTypes );
 
     bool RunCommsLoop();
-
 protected:
+    void LoopToReceiveVideo();
     void SendJoystickData();
     void SetupImagePostData( int w, int h );
 
     bool InitialiseVideoStream();
     bool ReceiveVideoFrame();
     int FfmpegReadPacket( uint8_t* buffer, int size );
-
 private:
     TcpSocket     m_client;
     std::unique_ptr<PacketDemuxer> m_demuxer;
