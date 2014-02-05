@@ -103,7 +103,7 @@ bool RobotClient::RunCommsLoop()
 
     m_videoClient.reset( new VideoClient( *m_demuxer ) );
 
-    if ( m_videoClient->InitialiseVideoStream() )
+    if ( m_videoClient->InitialiseVideoStream( std::chrono::seconds(5) ) )
     {
         LoopToReceiveVideo();
         return true;

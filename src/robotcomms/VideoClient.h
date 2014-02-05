@@ -27,7 +27,7 @@ public:
     VideoClient( PacketDemuxer& demuxer );
     virtual ~VideoClient();
 
-    bool InitialiseVideoStream();
+    bool InitialiseVideoStream( const std::chrono::seconds& videoTimeout );
     int GetFrameWidth() const { return m_streamer->GetFrameWidth(); };
     int GetFrameHeight() const { return m_streamer->GetFrameHeight(); };
 
@@ -50,6 +50,11 @@ private:
 
     std::unique_ptr<FFMpegStdFunctionIO> m_videoIO;
     std::unique_ptr<LibAvCapture> m_streamer;
+
+    void ResetAvTimeout();
+    bool AvHasTimedOut();
+    std::chrono::steady_clock::time_point m_avDataTimeoutPoint;
+    std::chrono::seconds m_avTimeout;
 };
 
 #endif /* __VIDEO_CLIENT_H__ */

@@ -53,13 +53,13 @@ void TeleJoystick::Run()
         joyPackets.Emplace( packet );
     });
 
+    constexpr std::chrono::milliseconds wait(200);
     while ( !m_terminate && m_demuxer.Ok() && timeSinceLastCommand_secs < taskTimeout_secs )
     {
         timeSinceLastCommand_secs = timer.GetSeconds();
         {
             // Sleep with timeout until a packet is received:
-            constexpr int wait_ms = 200;
-            joyPackets.Lock().WaitNotEmpty( wait_ms );
+            joyPackets.Lock().WaitNotEmpty( wait );
 
             if ( joyPackets.Empty() == false )
             {

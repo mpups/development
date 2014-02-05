@@ -34,11 +34,12 @@ public:
         LockedQueue( LockedQueue&& other ) : m_q(other.m_q) { std::swap(m_secureLock,other.m_secureLock); };
         virtual ~LockedQueue() {};
 
-        void WaitNotEmpty(int timeoutInMilliseconds)
+        template< class Rep, class Period >
+        void WaitNotEmpty(const std::chrono::duration<Rep,Period>& timeout)
         {
             if ( m_q.m_items.empty() )
             {
-                m_q.m_notEmpty.wait_for( m_secureLock, std::chrono::milliseconds(timeoutInMilliseconds) );
+                m_q.m_notEmpty.wait_for( m_secureLock, timeout );
             }
         }
 

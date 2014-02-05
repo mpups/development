@@ -1,6 +1,8 @@
 #include "VideoClient.h"
 #include "../packetcomms/PacketSerialisation.h"
 
+#include <chrono>
+
 VideoClient::VideoClient( PacketDemuxer &demuxer )
 :
     m_packetOffset (0),
@@ -10,7 +12,8 @@ VideoClient::VideoClient( PacketDemuxer &demuxer )
           m_avDataPackets.Emplace( packet );
           m_totalVideoBytes += packet->GetDataSize();
       })
-    )
+    ),
+    m_avTimeout (0)
 {
 }
 
@@ -18,8 +21,14 @@ VideoClient::~VideoClient()
 {
 }
 
-bool VideoClient::InitialiseVideoStream()
+/**
+    @param videoTimeout If no video data is received for longer than this duration then streaming will terminate.
+*/
+bool VideoClient::InitialiseVideoStream( const std::chrono::seconds& videoTimeout )
 {
+    m_avTimeout = videoTimeout;
+    ResetAvTimeout();
+
     // Create a video reader object that uses function/callback IO:
     m_videoIO.reset( new FFMpegStdFunctionIO( FFMpegCustomIO::ReadBuffer,
                                               std::bind( &VideoClient::ReadPacket, std::ref(*this), std::placeholders::_1, std::placeholders::_2 ) ) );
@@ -91,23 +100,23 @@ bool VideoClient::StreamerIoError() const
 */
 int VideoClient::ReadPacket( uint8_t* buffer, int size )
 {
-    const int32_t packetTimeout_ms = 1000;
+    constexpr std::chrono::milliseconds packetTimeout(1000);
     SimpleQueue::LockedQueue lockedQueue = m_avDataPackets.Lock();
-    uint32_t timeoutCount = 0;
     while ( m_avDataPackets.Empty() && m_avDataSubscription.GetDemuxer().Ok() )
     {
-        lockedQueue.WaitNotEmpty( packetTimeout_ms );
+        lockedQueue.WaitNotEmpty( packetTimeout );
 
         if ( m_avDataPackets.Empty() )
         {
-            std::clog << "VideoClient timed out waiting for an AV packet. Timeout count := " << timeoutCount << std::endl;
-            timeoutCount += 1;
-            if ( timeoutCount > 5 )
+            if ( AvHasTimedOut() )
             {
+                std::clog << "VideoClient timed out waiting for an AV packet." << std::endl;
                 return -1;
             }
         }
     }
+
+    ResetAvTimeout();
 
     // We were asked for more than packet contains so loop through packets until
     // we have returned what we needed or there are no more packets:
@@ -140,4 +149,14 @@ int VideoClient::ReadPacket( uint8_t* buffer, int size )
     }
 
     return size - required;
+}
+
+void VideoClient::ResetAvTimeout()
+{
+    m_avDataTimeoutPoint = std::chrono::steady_clock::now() + m_avTimeout;
+}
+
+bool VideoClient::AvHasTimedOut()
+{
+    return std::chrono::steady_clock::now() > m_avDataTimeoutPoint;
 }
