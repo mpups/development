@@ -60,7 +60,7 @@ FFMpegFileIO::FFMpegFileIO( const char* filename, bool input )
     assert( m_buffer != 0 );
     m_io = avio_alloc_context( m_buffer, BUFFER_SIZE, writable, this, fd_read_packet, fd_write_packet, 0 );
     m_io->seekable = 0;
-};
+}
 
 /**
     Frees the AVIOContext and io-buffer, and closes the file.
@@ -71,7 +71,7 @@ FFMpegFileIO::~FFMpegFileIO()
     //@todo need to free this but it currently causes a crash (possibly due to ffmpeg bug)
     //av_free( m_buffer );
     fclose( m_fp );
-};
+}
 
 const char* FFMpegFileIO::GetStreamName() const
 {

@@ -18,6 +18,7 @@ UnicapCapture::UnicapCapture()
 
         const std::size_t bufferSize = m_camera.GetFormatBufferSize();
         int err = posix_memalign( (void**)&m_buffer, 16, bufferSize );
+        assert(err == 0);
         m_camera.SetCaptureCallback( std::bind( &UnicapCapture::OnCapture, std::ref(*this), std::placeholders::_1, std::placeholders::_2 ) );
     }
 }
@@ -138,7 +139,7 @@ const char* UnicapCapture::GetModel() const
 
     @todo - conversion assumes camera image is YUYV422 - need to detect and choose format appropriately.
 */
-void UnicapCapture::FrameConversion( PixelFormat format, uint8_t* data, int stride )
+void UnicapCapture::FrameConversion(PixelFormat format, uint8_t* data, int stride )
 {
     const int w = m_camera.GetFrameWidth();
     const int h = m_camera.GetFrameHeight();
@@ -162,7 +163,7 @@ void UnicapCapture::ExtractLuminanceImage( uint8_t* data, int stride )
     unsigned char* pImg = m_buffer;
     uint32_t h = m_camera.GetFrameHeight()+1;
     uint32_t width = m_camera.GetFrameWidth();
-    assert( stride >= width );
+    assert( static_cast<uint32_t>(stride) >= width );
     std::ptrdiff_t skip = stride - width;
     while ( --h )
     {
@@ -182,7 +183,7 @@ void UnicapCapture::ExtractRgbImage( uint8_t* dest, int stride )
     FrameConversion( PIX_FMT_RGB24, dest, stride );
 }
 
-void UnicapCapture::ExtractBgrImage( uint8_t* dest, int stride )
+void UnicapCapture::ExtractBgrImage(uint8_t* dest, int stride )
 {
     FrameConversion( PIX_FMT_BGR24, dest, stride );
 }

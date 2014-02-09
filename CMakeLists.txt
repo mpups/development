@@ -18,7 +18,7 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/glk/share/cmake/Modules/")
 
-add_definitions( -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS )
+add_definitions( -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -std=c++11 -Wall -Wpedantic -Werror)
 
 # My custom ffmpeg installation (Ubuntu install is an old broken version):
 include_directories( "/home/mark/tmp_installs/include" )
@@ -57,5 +57,3 @@ foreach( DIR ${INSTALL_HEADER_DIRS} )
     FILE( GLOB INSTALL_HEADERS ${DIR}/*.h )
     install( FILES ${INSTALL_HEADERS} DESTINATION ${DIR} )
 endforeach()
-
-

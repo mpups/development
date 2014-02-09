@@ -234,6 +234,7 @@ bool LibAvCapture::GetFrame()
             if( bytes >=0 && frameFinished )
             {
                 success = true;
+                /// @todo - why don't we call 'av_free_packet( &packet )' here?
             }
         }
     }
@@ -269,7 +270,7 @@ timespec LibAvCapture::GetFrameTimestamp() const
     }
 
     // Convert from the codec's timebase to microseconds:
-    int64_t pts = av_rescale_q( m_avFrame->pts, m_codecContext->time_base, (AVRational){1,1000000} );
+    int64_t pts = av_rescale_q( m_avFrame->pts, m_codecContext->time_base, AVRational{1,1000000} );
     return {pts/1000000,(pts%1000000)*1000};
 }
 

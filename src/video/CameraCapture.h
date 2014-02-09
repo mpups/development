@@ -15,7 +15,7 @@ class CameraCapture : public Capture
 {
 public:
     CameraCapture() {};
-    virtual ~CameraCapture() {};
+    virtual ~CameraCapture() {}
 
     virtual void StartCapture() = 0;
     virtual void StopCapture() = 0;

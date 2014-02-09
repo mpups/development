@@ -69,7 +69,7 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
     UnicapCamera* camera = reinterpret_cast<UnicapCamera*>( data );
     if ( camera->m_captureCallback == false )
     {
-        std::cout << "Error: no capture callback set - did you call StartCapture() before SetCaptureCallback()?" << std::endl;
+        std::cerr << "Error: no capture callback set - did you call StartCapture() before SetCaptureCallback()?" << std::endl;
     }
     camera->m_captureCallback( buffer->data, fillTime );
 }
@@ -169,7 +169,7 @@ bool UnicapCamera::OpenDevice()
         status = unicap_enumerate_devices( 0, &devices[dev_count], dev_count );
         if ( SUCCESS(status) )
         {
-            fprintf( stderr, "%d: %s, %s, %s, %llu\n", dev_count, devices[dev_count].identifier, devices[dev_count].model_name, devices[dev_count].vendor_name, devices[dev_count].model_id );
+            fprintf( stderr, "%lu: %s, %s, %s, %llu\n", dev_count, devices[dev_count].identifier, devices[dev_count].model_name, devices[dev_count].vendor_name, devices[dev_count].model_id );
         }
     }
 
@@ -265,57 +265,51 @@ void UnicapCamera::EnumerateProperties()
 */
 void UnicapCamera::SetDefaultProperties()
 {
-    unicap_status_t status;
+    //SetPropertyAuto( "Brightness" );
+    SetPropertyAuto( "Exposure" );
+    SetPropertyValue( "Sharpness", 0 );
+    SetPropertyManual( "Auto Gain" );
+    SetPropertyValue( "Auto Gain", 1.0 );
 
-    /*status = unicap_set_property_auto( m_handle, "Brightness" );
+    const double framerate_hz = 30;
+    SetPropertyValue( "frame rate", framerate_hz );
+}
+
+void UnicapCamera::SetPropertyAuto( const std::string& prop )
+{
+    unicap_status_t status = unicap_set_property_auto( m_handle, const_cast<char*>(prop.c_str()) );
     if ( SUCCESS( status ) )
     {
-        fprintf( stderr, "Success: Turned on auto-brightness!\n" );
+        std::clog << "Success: set " << prop << " to AUTO." << std::endl;
     }
     else
     {
-       fprintf( stderr, "Falure: Could not turn on auto-brightness!\n" );
-    }*/
+        std::clog << "Failure: could not set " << prop << " to AUTO." << std::endl;
+    }
+}
 
-    status = unicap_set_property_auto( m_handle, "Exposure" );
+void UnicapCamera::SetPropertyManual( const std::string& prop)
+{
+    unicap_status_t status = unicap_set_property_manual( m_handle, const_cast<char*>(prop.c_str()) );
     if ( SUCCESS( status ) )
     {
-        fprintf( stderr, "Success: Turned on auto-exposure!\n" );
+        std::clog << "Success: set " << prop << " to MANUAL." << std::endl;
     }
     else
     {
-       fprintf( stderr, "Falure: Could not turn on auto-exposure!\n" );
+        std::clog << "Failure: could not set " << prop << " to MANUAL." << std::endl;
     }
+}
 
-    status = unicap_set_property_value( m_handle, "Sharpness", 0.0 );
+void UnicapCamera::SetPropertyValue( const std::string& prop, double value )
+{
+    unicap_status_t status = unicap_set_property_value( m_handle, const_cast<char*>(prop.c_str()), value );
     if ( SUCCESS( status ) )
     {
-        fprintf( stderr, "Success: Set sharpness!\n" );
+        std::clog << "Success: set " << prop << " to " << value << std::endl;
     }
     else
     {
-       fprintf( stderr, "Falure: Could not set sharpness!\n" );
-    }
-
-    status = unicap_set_property_manual( m_handle, "Auto Gain" );
-    status = unicap_set_property_value( m_handle, "Auto Gain", 1.0 );
-    if ( SUCCESS( status ) )
-    {
-        fprintf( stderr, "Success: Turned on auto-gain!\n" );
-    }
-    else
-    {
-       fprintf( stderr, "Failure: Could not turn on auto-gain!\n" );
-    }
-
-    const double framerate_hz = 60;
-    status = unicap_set_property_value( m_handle, "frame rate", framerate_hz );
-    if ( SUCCESS( status ) )
-    {
-        fprintf( stderr, "Success: framerate set to %g Hz!\n", framerate_hz );
-    }
-    else
-    {
-        fprintf( stderr, "Failure: Could not set frame rate!\n" );
+        std::clog << "Failure: could not set " << prop << " to " << value << std::endl;
     }
 }

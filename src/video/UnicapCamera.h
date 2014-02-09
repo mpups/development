@@ -48,6 +48,9 @@ private:
     bool FindFormat( int width, int height, uint32_t fourcc, unicap_format_t& format );
     void EnumerateProperties();
     void SetDefaultProperties();
+    void SetPropertyAuto( const std::string& prop );
+    void SetPropertyManual( const std::string& prop);
+    void SetPropertyValue( const std::string& prop, double value );
 
     static void NewFrame( unicap_event_t event, unicap_handle_t handle, unicap_data_buffer_t* buffer, void *data );
 
