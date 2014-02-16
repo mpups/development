@@ -1,11 +1,10 @@
 -- You can change these variables so that
 -- they are appropriate for your system:
 
-TARGET_DIR   = 'beagleboardxm_gcc-4.8.2'
+TARGET_DIR   = 'beagleboardxm_gcc-4.8.1'
 
-ARM_PACKAGES = '/home/mark/beagleboardxm/build_packages_gcc-4.8.2'
-ARM_DEPLOYMENT = '/home/mark/beagleboardxm/deploy_gcc-4.8.2'
-TOOLCHAIN = 'arm-linux-gnueabihf-'
+ARM_DEPLOYMENT = '/home/mark/beagleboardxm/deploy_final'
+TOOLCHAIN = 'arm-none-linux-gnueabi-'
 LIB_TYPE = 'SharedLib'
 
 INCLUDE_DIRS = {
