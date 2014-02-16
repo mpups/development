@@ -1,12 +1,12 @@
 -- You can change these variables so that
 -- they are appropriate for your system:
 
-TARGET_DIR   = 'beagleboardxm_gcc-4.8.2'
+TARGET_DIR   = 'beagleboardxm_gcc-4.8.1'
 
-TOOLCHAIN = 'arm-linux-gnueabihf-'
+TOOLCHAIN = 'arm-none-linux-gnueabi-'
 LIB_TYPE = 'SharedLib'
 
-ARM_DEPLOYMENT = '/home/mark/beagleboardxm/deploy_gcc-4.8.2'
+ARM_DEPLOYMENT = '/home/mark/beagleboardxm/deploy_final'
 
 INCLUDE_DIRS = {
     '../../glk-1.0/include',
@@ -17,7 +17,7 @@ INCLUDE_DIRS = {
     '/home/mark/code/cereal-0.9.1/include'
 }
 
-VIDEOLIB_DIR='/home/mark/code/videolib/builds/beagleboardxm_gcc-4.8.2'
+VIDEOLIB_DIR='/home/mark/code/videolib/builds/beagleboardxm_gcc-4.8.1'
 
 LIB_DIRS = {
     './',

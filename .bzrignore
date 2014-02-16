@@ -1,10 +1,6 @@
-linux_build
-arm_build
+builds/linux_build
 docs/html
 robolib.creator.user
-builds/arm_build_gcc4.6
-builds/beagle_build_g++4.6
 android_build
 .sconsign.dblite
-builds/beagle_build_g++4.8
-builds/beagleboardxm_gcc-4.8.2
+builds/beagleboardxm_gcc-4.8.1
