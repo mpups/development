@@ -9,13 +9,13 @@
 
 #include <time.h>
 
-#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/binary.hpp>
 
 template<typename ...Args>
 void Serialise(std::streambuf& stream, const Args&... types)
 {
     std::ostream archiveStream(&stream);
-    cereal::PortableBinaryOutputArchive archive(archiveStream);
+    cereal::BinaryOutputArchive archive(archiveStream);
     archive(std::forward<const Args&>(types)...);
 }
 
@@ -23,7 +23,7 @@ template<typename ...Args>
 void Deserialise(std::streambuf& vis, Args&... types)
 {
     std::istream stream(&vis);
-    cereal::PortableBinaryInputArchive archive(stream);
+    cereal::BinaryInputArchive archive(stream);
     archive(std::forward<Args&>(types)...);
 }
 

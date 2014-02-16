@@ -41,9 +41,9 @@ void TeleJoystick::Run()
     const float motionTimeout_secs  = 1.f; // Motion will be stopped for safety if no command in this time.
     const float taskTimeout_secs    = 5.f; // Task will terminate if no command in this time.
 
-    int32_t jx = 0;
-    int32_t jy = 0;
-    int32_t jmax = 1;
+    int16_t jx = 0;
+    int16_t jy = 0;
+    int16_t jmax = 1;
 
     // Setup subscription callback to enqueue joystick packets:
     SimpleQueue joyPackets;
@@ -120,13 +120,13 @@ void TeleJoystick::Run()
     @param jy y-axis reading from the packet
     @param jmax The max value an axis reading can take.
 */
-void TeleJoystick::ProcessPacket( SimpleQueue& joyPackets, int32_t& jx, int32_t& jy, int32_t& jmax )
+void TeleJoystick::ProcessPacket(SimpleQueue& joyPackets, int16_t& jx, int16_t& jy, int16_t& jmax )
 {
     const ComPacket::ConstSharedPacket packet = joyPackets.Front();
-    const int32_t* networkIntData = reinterpret_cast<const int32_t*>(packet->GetDataPtr());
-    jx   = ntohl( networkIntData[0] );
-    jy   = ntohl( networkIntData[1] );
-    jmax = ntohl( networkIntData[2] );
+    const int16_t* networkIntData = reinterpret_cast<const int16_t*>(packet->GetDataPtr());
+    jx   = ntohs( networkIntData[0] );
+    jy   = ntohs( networkIntData[1] );
+    jmax = ntohs( networkIntData[2] );
     joyPackets.Pop();
 }
 

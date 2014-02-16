@@ -37,7 +37,7 @@ public:
     virtual ~TeleJoystick();
 
     virtual void Run();
-    void ProcessPacket( SimpleQueue & joyPackets, int32_t& jx, int32_t& jy, int32_t& jmax );
+    void ProcessPacket( SimpleQueue & joyPackets, int16_t& jx, int16_t& jy, int16_t& jmax );
     void Go();
     bool IsRunning() const;
 

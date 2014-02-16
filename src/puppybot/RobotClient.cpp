@@ -7,11 +7,6 @@
 
 #include <arpa/inet.h>
 
-static double milliseconds( struct timespec& t )
-{
-    return t.tv_sec*1000.0 + (0.000001*t.tv_nsec );
-}
-
 static void message( const char* msg )
 {
     std::clog << msg << std::endl;
@@ -36,7 +31,7 @@ RobotClient::~RobotClient()
 
 bool RobotClient::Connect( const char* host, int port, const std::vector<std::string>& packetTypes )
 {
-    m_client.SetNagleBufferingOff();
+    //m_client.SetNagleBufferingOff();
     bool connected = m_client.Connect( host, port );
     if ( connected )
     {
@@ -57,7 +52,7 @@ bool RobotClient::RunCommsLoop()
                            std::bind( &RobotClient::SendJoystickData, std::ref(*this))
                           );
 
-    // Testing: integrate odometry into pposition:
+    // Testing: integrate odometry into position:
     const float wheelBaseInMetres = 0.28f;
     const float countsPerMetre = 6850.f;
     const float metresPerCount = 1.f / countsPerMetre;
@@ -103,7 +98,8 @@ bool RobotClient::RunCommsLoop()
 
     m_videoClient.reset( new VideoClient( *m_demuxer ) );
 
-    if ( m_videoClient->InitialiseVideoStream( std::chrono::seconds(5) ) )
+    constexpr std::chrono::seconds timeOutForInit = std::chrono::seconds(5);
+    if ( m_videoClient->InitialiseVideoStream( timeOutForInit ) )
     {
         LoopToReceiveVideo();
         return true;
@@ -128,10 +124,7 @@ void RobotClient::LoopToReceiveVideo()
 
     int numFrames = 0;
 
-    struct timespec t1;
-    struct timespec t2;
-    clock_gettime( CLOCK_MONOTONIC, &t1 );
-
+    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     bool gotFrame = true;
 
 #ifndef ARM_BUILD
@@ -150,16 +143,15 @@ void RobotClient::LoopToReceiveVideo()
             m_display.PostImage( m_postData );
 #endif
             numFrames += 1;
-            if ( numFrames == 45 ) // Output rolling averages after certain number of frames
+            if ( numFrames == 45 ) // Output some rolling averages after certain number of frames
             {
-                clock_gettime( CLOCK_MONOTONIC, &t2 );
-
-                double secs = (milliseconds(t2) - milliseconds(t1))/1000.0;
+                const auto t2 = std::chrono::steady_clock::now();
+                double secs = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count()/1000.0;
                 double bits_per_sec = m_videoClient->ComputeVideoBandwidthConsumed( secs );
 
-                std::clog << "Through-put: " << numFrames/secs << " fps @ " << bits_per_sec/(1024.0*1024.0) << "Mbps" << std::endl;
+                std::clog << "Through-put: " << numFrames/secs << " fps @ " << bits_per_sec/(1024.0*1024.0) << " Mbps" << std::endl;
                 numFrames = 0;
-                clock_gettime( CLOCK_MONOTONIC, &t1 );
+                t1 = std::chrono::steady_clock::now();
             }
         }
         else
@@ -171,21 +163,14 @@ void RobotClient::LoopToReceiveVideo()
 
 void RobotClient::SendJoystickData()
 {
-    constexpr int dataSize = 3;
-    int32_t joyData[dataSize] = {
-        static_cast<int32_t>(htonl(0)),
-        static_cast<int32_t>(htonl(0)),
-        static_cast<int32_t>(htonl(1024)) };
-
     if ( m_joystick.IsAvailable() )
     {
-        // Read joystick and send
-        joyData[0] = htonl( m_joystick.GetAxis(1) ); // left hat-stick on ps3 controller
-        joyData[1] = htonl( m_joystick.GetAxis(2) ); // right hat-stick on ps3 controller
-        joyData[2] = htonl( 32767 );
+        robolib::MuxJoystickData(*m_muxer,m_joystick.GetAxis(1),m_joystick.GetAxis(2),32767);
     }
-
-    m_muxer->EmplacePacket( "Joystick", reinterpret_cast<VectorStream::CharType*>(joyData), dataSize*sizeof(int32_t) );
+    else
+    {
+        robolib::MuxJoystickData(*m_muxer,0,0,32767);
+    }
 }
 
 void RobotClient::SetupImagePostData( int w, int h )

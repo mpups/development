@@ -25,6 +25,7 @@ public:
     bool Connect( const char* host, int port, const std::vector<std::string>& packetTypes );
 
     bool RunCommsLoop();
+
 protected:
     void LoopToReceiveVideo();
     void SendJoystickData();

@@ -11,6 +11,7 @@
 #include "../src/utility/AsyncLooper.h"
 
 #include "../src/motor_control/TeleJoystick.h"
+#include "../src/motor_control/JoystickControl.h"
 
 #include "../src/packetcomms/ComPacket.h"
 #include "../src/packetcomms/PacketSubscriber.h"
