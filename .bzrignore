@@ -4,3 +4,4 @@ robolib.creator.user
 android_build
 .sconsign.dblite
 builds/beagleboardxm_gcc-4.8.1
+tools/builds/linux_build

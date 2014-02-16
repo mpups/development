@@ -29,9 +29,9 @@ INC_DIRS  = [
               '/usr/local/videolib/include',
               '/usr/include/unicap',
               '/home/mark/code/cereal-0.9.1/include',
+              ANDROID_FFMPEG + '/include',
               STLINC,
               STLBITS,
-              '/home/mark/beagle_kernel_2.6.32_gcc4.8/deploy/include', # Simply needed for freetype include - freetype not actually used
               PLATFORMINC
             ]
 
