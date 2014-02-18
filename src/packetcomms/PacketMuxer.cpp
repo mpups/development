@@ -117,6 +117,7 @@ void PacketMuxer::SendLoop()
         /// (But in that case the system is overloaded anyway so what would we like to do when overloaded?)
         for ( auto& pair : m_txQueues )
         {
+            //std::clog << "Sending packets of type: " << m_packetIds.ToString( pair.first ) << std::endl;
             SendAll( pair.second );
         }
     }

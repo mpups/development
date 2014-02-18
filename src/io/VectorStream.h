@@ -19,14 +19,14 @@ typedef std::streambuf::char_type CharType;
 }
 
 /**
-    An output stream buffer that writes directly to
-    a wrapped ref to a std::vector.
+    An output stream buffer that writes directly
+    to an internal vector.
 */
 class VectorOutputStream : public std::streambuf
 {
 public:
     VectorOutputStream() {}
-    VectorOutputStream(const size_t reserve ) : m_v(reserve) {}
+    VectorOutputStream( const size_t reserve ) : m_v( reserve ) {}
 
     VectorStream::Buffer& Get() { return m_v; }
     const VectorStream::Buffer& Get() const { return m_v; }
@@ -35,7 +35,7 @@ public:
 
     VectorOutputStream(VectorOutputStream&& toMove)
     {
-        std::swap(m_v,toMove.m_v);
+        m_v = std::move(toMove.m_v);
     }
 
 private:
@@ -51,16 +51,10 @@ private:
 
     std::streamsize xsputn( const std::streambuf::char_type* s, std::streamsize n )
     {
-        // Make sure vector has enough capacity then push back all the bytes:
+        // Make sure vector has enough capacity then insert all the bytes:
         m_v.reserve(m_v.size()+n);
-        size_t w = n+1;
-        while ( --w != 0 )
-        {
-            m_v.push_back(*s);
-            s += 1;
-        }
-
-        return n-w;
+        m_v.insert(m_v.end(),s,s+n);
+        return n;
     }
 
     VectorStream::Buffer m_v;
@@ -68,11 +62,16 @@ private:
 
 /**
     An input stream buffer that reads directly
-    from a wrapped ref to a std::vector.
+    from a std::vector that is passed into the
+    constructor.
 */
 class VectorInputStream : public std::streambuf
 {
 public:
+    /**
+        @param v Vector to input from - this vector must not
+        be modified for the lifetime of the VectorInputStream object.
+    */
     explicit VectorInputStream( const VectorStream::Buffer& v )
     {
         const std::streambuf::char_type* begin = v.data();

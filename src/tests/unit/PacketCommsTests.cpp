@@ -92,11 +92,18 @@ void TestSimpleQueue()
     // Whilts queue is not empty, and we have a lock
     // check WaitNotEmpty() returns without blocking:
     bool blocked = true;
-    std::thread( [&]() {
+    auto asyncWaiter = std::thread( [&]() {
         // Wait asynchronously so failing test does not block forever:
         lockedQueue.WaitNotEmpty();
         blocked = false;
     });
+    try
+    {
+        asyncWaiter.join();
+    } catch (const std::system_error& e)
+    {
+        std::clog << "Error: " << e.what() << std::endl;
+    }
     usleep( 1000 ); // sleep so async func has time to finish
     EXPECT_FALSE( blocked );
 

@@ -12,11 +12,6 @@ const int IMG_HEIGHT = 240;
 
 #include <time.h>
 
-static double ToSeconds( struct timespec& t )
-{
-    return t.tv_sec + (0.000000001*t.tv_nsec );
-}
-
 /**
     Setup a robot server with specified TCP and serial ports.
     
