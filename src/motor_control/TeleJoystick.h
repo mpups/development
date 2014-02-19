@@ -4,12 +4,12 @@
 #include <queue>
 #include <thread>
 
-#include "DiffDrive.h"
 #include "../packetcomms/ComPacket.h"
 #include "../packetcomms/SimpleQueue.h"
 
 class PacketMuxer;
 class PacketDemuxer;
+class DiffDrive;
 
 /**
     Class which receives tele-operation joystick commands and passes

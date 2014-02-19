@@ -3,16 +3,17 @@
 #include <arpa/inet.h>
 #include <iostream>
 
-#include <VideoLib.h>
 #include "../packetcomms/PacketMuxer.h"
+#include "../packetcomms/PacketSerialisation.h"
 #include "../packetcomms/PacketDemuxer.h"
+#include "DiffDrive.h"
 #include "../utility/Timer.h"
 
 TeleJoystick::TeleJoystick( std::pair<PacketMuxer&,PacketDemuxer&> muxers )
 :
     m_muxer     ( muxers.first ),
     m_demuxer   ( muxers.second ),
-    m_drive     ( 0 ),
+    m_drive     ( nullptr ),
     m_terminate ( false ),
     m_thread    ( std::bind( &TeleJoystick::Run, std::ref(*this) ) )
 {
@@ -87,20 +88,15 @@ void TeleJoystick::Run()
             DiffDrive::MotorData odometry = m_drive->JoyControl( jx, jy, jmax );
             if ( odometry.valid == true )
             {
-                m_muxer.EmplacePacket( "Odometry", reinterpret_cast<VectorStream::CharType*>(&odometry), sizeof(odometry) );
+                Serialise( m_muxer, "Odometry", odometry );
             }
         }
         else
         {
-            //fprintf( stderr, "Drive control (interval %f secs) := %d,%d (%d)\n", timeSinceLastCommand_secs, jx, jy, jmax );
-            DiffDrive::MotorData odometry;
-            odometry.leftTime = 0;
-            odometry.rightPos = 0;
-            odometry.rightTime= 0;
-            odometry.leftPos  = 0;
-            odometry.valid = false;
-            // Send a fake packet for testing/debugging:
-            m_muxer.EmplacePacket( "Odometry", reinterpret_cast<VectorStream::CharType*>(&odometry), sizeof(odometry) );
+            fprintf( stderr, "Drive control (interval %f secs) := %d,%d (%d)\n", timeSinceLastCommand_secs, jx, jy, jmax );
+
+            // Send a faked (and invalid) odometry packet for testing/debugging:
+            Serialise( m_muxer, "Odometry", DiffDrive::MotorData{0,0,0,0,false});
         }
     }
 
@@ -123,10 +119,7 @@ void TeleJoystick::Run()
 void TeleJoystick::ProcessPacket(SimpleQueue& joyPackets, int16_t& jx, int16_t& jy, int16_t& jmax )
 {
     const ComPacket::ConstSharedPacket packet = joyPackets.Front();
-    const int16_t* networkIntData = reinterpret_cast<const int16_t*>(packet->GetDataPtr());
-    jx   = ntohs( networkIntData[0] );
-    jy   = ntohs( networkIntData[1] );
-    jmax = ntohs( networkIntData[2] );
+    Deserialise( packet, jx, jy, jmax );
     joyPackets.Pop();
 }
 

@@ -109,14 +109,6 @@ if ( not CONFIGURING_ARM ) then
         links ( LINKS )
 end
 
-    project 'packet-streaming'
-        kind 'ConsoleApp'
-        includedirs { "../include" }
-        files { SRC .. 'tests/tools/PacketStreaming.cpp' }
-        configuration {}
-        links { 'robolib' }
-        links ( LINKS )
-
     project 'gtests' -- unit tests
         kind 'ConsoleApp'
 

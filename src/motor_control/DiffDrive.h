@@ -48,5 +48,17 @@ private:
     const DiffDriveConfig m_config;
 };
 
+template<typename T>
+void save(T& archive, const DiffDrive::MotorData& d)
+{
+    archive(d.leftPos,d.leftTime,d.rightPos,d.rightTime,d.valid);
+}
+
+template<typename T>
+void load(T& archive, DiffDrive::MotorData& d)
+{
+    archive(d.leftPos,d.leftTime,d.rightPos,d.rightTime,d.valid);
+}
+
 #endif // DIFF_DRIVE_H
 

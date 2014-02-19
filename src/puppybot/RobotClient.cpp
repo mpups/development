@@ -64,7 +64,7 @@ bool RobotClient::RunCommsLoop()
 
     PacketSubscription odometrySubscriber = m_demuxer->Subscribe( "Odometry", [&]( const ComPacket::ConstSharedPacket& packet ) {
         DiffDrive::MotorData odometry;
-        std::copy( packet->GetDataPtr(), packet->GetDataPtr()+packet->GetDataSize(), reinterpret_cast<uint8_t*>(&odometry) );
+        Deserialise( packet, odometry );
         if ( odometry.valid )
         {
             const float dLeft  = (odometry.leftPos - lastCountLeft) * metresPerCount;

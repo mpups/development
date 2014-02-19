@@ -57,7 +57,6 @@
 /home/mark/code/robolib/src/sse/VectorVector.h
 /home/mark/code/robolib/src/sse/VectorVectorSse.cpp
 /home/mark/code/robolib/src/sse/VectorVectorSse.h
-/home/mark/code/robolib/src/tests/tools/PacketStreaming.cpp
 /home/mark/code/robolib/src/tests/tools/transcode.cpp
 /home/mark/code/robolib/src/tests/tools/VideoStreaming.cpp
 /home/mark/code/robolib/src/tests/unit/data/temple.pgm
