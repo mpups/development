@@ -22,12 +22,10 @@ HEADER_FILES += Glob('src/network/*.h')
 HEADER_FILES += Glob('src/robotcomms/*.h')
 
 ANDROID_FFMPEG = '/home/mark/code/android-ffmpeg-build/armeabi'
+ANDROID_VIDEOLIB = '/home/mark/code/videolib'
 
 INC_DIRS  = [
-              '/usr/include/lua5.1',
-              '/usr/include/freetype2',
-              '/usr/local/videolib/include',
-              '/usr/include/unicap',
+              ANDROID_VIDEOLIB + '/include',
               '/home/mark/code/cereal-0.9.1/include',
               ANDROID_FFMPEG + '/include',
               STLINC,
@@ -37,7 +35,7 @@ INC_DIRS  = [
 
 LIBDIRS = [ PLATFORMDIR + '/usr/lib',
             STLPATH + '/libs/armeabi',
-            '/home/mark/code/videolib/builds/android_build/',
+            ANDROID_VIDEOLIB + '/builds/android_build/',
             ANDROID_FFMPEG + '/lib'
             ]
 libs = [ 'avformat', 'avcodec', 'avutil', 'swscale', 'videolib', 'gnustl_shared' ]
