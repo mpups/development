@@ -22,11 +22,12 @@ LIB_DIRS = {
     '/usr/lib',
     '/usr/local/glk/lib',
     '/usr/local/videolib/lib',
-    '/usr/lib/x86_64-linux-gnu'
+    '/usr/lib/x86_64-linux-gnu',
+    '/home/mark/code/free_type_cpp/build'
 }
 
 BUILD_OPTIONS = { '-std=c++0x -msse -msse2' }
-LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/usr/local/videolib/lib:/home/mark/tmp_installs/lib' }
+LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/usr/local/videolib/lib:/home/mark/tmp_installs/lib:/home/mark/code/free_type_cpp/build' }
 
 OPENCV_LINKS = { 'opencv_imgproc','opencv_calib3d','opencv_highgui', 'opencv_core' }
 OPENGL_LINKS = { 'Xrender', 'X11', 'GL' }

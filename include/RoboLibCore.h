@@ -23,7 +23,9 @@
 #include "../src/robotcomms/VideoClient.h"
 
 #ifndef ARM_BUILD
-#include "../src/lua/Luabot.h"
+
+//#include "../src/lua/Luabot.h"
+
 #include "../src/sse/VectorVector.h"
 #include "../src/sse/BatchOperations.h"
 #include "../src/sse/SimdKernels.h"

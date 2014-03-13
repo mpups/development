@@ -7,9 +7,9 @@
 #ifndef ARM_BUILD
 
 #include "../src/vision/Image.h"
-#include "../src/vision/FastCornerThread.h"
-#include "../src/vision/LoadBalancingCornerDetector.h"
-#include "../src/vision/FastCornerSearch.h"
+//#include "../src/vision/FastCornerThread.h"
+//#include "../src/vision/LoadBalancingCornerDetector.h"
+//#include "../src/vision/FastCornerSearch.h"
 
 #include "../src/sse/ImageProcSse.h"
 #include "../src/sse/ImageProc.h"

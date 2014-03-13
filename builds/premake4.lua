@@ -62,11 +62,12 @@ solution 'robolib'
         excludes { SRC .. 'tests/**' }
         excludes { SRC .. 'sse/*' }
         excludes { SRC .. 'puppybot/*' }
+        -- excluded because they use olg GLK funcitonality:
+        excludes { SRC .. 'lua/*' }
+        excludes { SRC .. 'vision/*' }
         if ( CONFIGURING_ARM ) then
             excludes { SRC .. 'visualisation/*' }
             excludes { SRC .. 'opencv/*' }
-            excludes { SRC .. 'vision/*' }
-            excludes { SRC .. 'lua/*' }
         end
 
         -- Exclude files which are platform specific:
