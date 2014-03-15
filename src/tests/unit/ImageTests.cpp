@@ -10,10 +10,18 @@
 #include "../../vision/Pgm.h"
 #include "../../vision/ImageProcessing.h"
 #include "../../vision/ImageTypes.h"
+#include "ImageTests.h"
 
 #include <string>
 
 std::string g_dataPath = "../../src/tests/unit/data/";
+
+TEST( vision, image )
+{
+    robo::TestImage();
+    robo::TestImageFill();
+    robo::SadTest();
+}
 
 namespace robo
 {

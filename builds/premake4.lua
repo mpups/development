@@ -114,6 +114,7 @@ end
         files { SRC .. 'tests/unit/*.cpp' }
         if ( CONFIGURING_ARM ) then
             excludes { SRC .. 'tests/unit/VideoTests*' }
+            excludes { SRC .. 'tests/unit/ImageTests*' }
         end
         configuration {}
         links { 'robolib' }

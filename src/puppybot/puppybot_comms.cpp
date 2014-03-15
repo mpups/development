@@ -11,8 +11,6 @@ const int IMG_HEIGHT = 240;
 #include "RobotServer.h"
 #include "RobotClient.h"
 
-#include <glkcore.h>
-
 static void message( const char* msg )
 {
     std::cerr << msg << std::endl;

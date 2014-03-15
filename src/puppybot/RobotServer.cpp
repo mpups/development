@@ -3,8 +3,6 @@
 #include "../network/TcpSocket.h"
 #include "../packetcomms/PacketSerialisation.h"
 
-#include <glkcore.h>
-
 #include <mutex>
 #include <chrono>
 #include <condition_variable>
@@ -206,12 +204,12 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
     int framesConverted  = 0;
     int framesCompressed = 0;
 
-    // Load a font as a joke:
-    Ft::Library ftLib;
-    Ft::Cache ftCache( ftLib, "/usr/share/fonts/truetype/droid/DroidSans.ttf" );
-    ftCache.SetSizePx(11);
-    const int32_t textX = 1;
-    const int32_t textY = 12;
+//    // Load a font as a joke:
+//    Ft::Library ftLib;
+//    Ft::Cache ftCache( ftLib, "/usr/share/fonts/truetype/droid/DroidSans.ttf" );
+//    ftCache.SetSizePx(11);
+//    const int32_t textX = 1;
+//    const int32_t textY = 12;
 
     // This lambda will be called back from a separate frame capture thread.
     // It converts the video frame and then signals the main loop that a new
@@ -224,10 +222,10 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
         std::stringstream ss;
         ss << std::fixed << std::setprecision(3) << timef;
 
-        const Ft::Measure::BBoxi bbox = Ft::Measure::ComputeBoundingBox( ss.str(), true, ftCache )
-                                      + Ft::Measure::BBoxi{textX,textY,textX,textY};
-        Ft::RenderBoundingBox(m_buffer[0],320,bbox);
-        Ft::RenderString( ftCache, ss.str(), m_buffer[0], 320,240,320,textX,textY);
+//        const Ft::Measure::BBoxi bbox = Ft::Measure::ComputeBoundingBox( ss.str(), true, ftCache )
+//                                      + Ft::Measure::BBoxi{textX,textY,textX,textY};
+//        Ft::RenderBoundingBox(m_buffer[0],320,bbox);
+//        Ft::RenderString( ftCache, ss.str(), m_buffer[0], 320,240,320,textX,textY);
 
         { // Start of buffer lock scope.
           // Double buffered so only need to lock mutex while

@@ -12,13 +12,6 @@
 #include "UtilityTests.h"
 #include "PacketCommsTests.h"
 
-TEST( vision, image )
-{
-    robo::TestImage();
-    robo::TestImageFill();
-    robo::SadTest();
-}
-
 TEST( network, ip )
 {
     TestTcp();

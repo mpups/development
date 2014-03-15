@@ -24,13 +24,12 @@
 
 #ifndef ARM_BUILD
 
-//#include "../src/lua/Luabot.h"
-
 #include "../src/sse/VectorVector.h"
 #include "../src/sse/BatchOperations.h"
 #include "../src/sse/SimdKernels.h"
 #include "../src/sse/BatchOperationsSse.h"
 #include "../src/sse/VectorVectorSse.h"
+
 #endif
 
 #endif // ROBO_LIB_CORE_H
