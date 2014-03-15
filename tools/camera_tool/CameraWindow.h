@@ -24,7 +24,7 @@ class LibAvWriter;
 class CameraWindow : public GLK::GlWindow, public GLK::KeyboardHandler
 {
 public:
-    CameraWindow( GLK::String title );
+    CameraWindow( const std::string& title );
     virtual ~CameraWindow();
 
     virtual bool InitGL();

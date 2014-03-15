@@ -41,7 +41,7 @@ private:
     int                  m_numCorners;
     int                  m_foundAll;
 
-    GLK::List<IplImage*> m_calibrationImages;
+    std::vector<IplImage*> m_calibrationImages;
 
     CvMat* m_cameraMatrix;
     CvMat* m_distCoeff;

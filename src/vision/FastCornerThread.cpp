@@ -8,7 +8,6 @@ namespace robo
 FastCornerThread::FastCornerThread()
 :
     m_fastFunction ( fast9_detect ),
-    m_thread( *this ),
     m_jobQueue ( 2 ),
     m_done ( 0 )
 {
@@ -27,7 +26,7 @@ FastCornerThread::~FastCornerThread()
 void FastCornerThread::StartThread()
 {
     m_terminate = false;
-    m_thread.Start();
+    m_thread = std::thread( std::bind(&FastCornerThread::Run,std::ref(*this)) );
 }
 
 void FastCornerThread::StopThread()
@@ -36,7 +35,15 @@ void FastCornerThread::StopThread()
     Job emptyJob; // need to send this to wake the thread
     emptyJob.w = 0; // setting width to 0 stops the thread from processing the job
     PostJob( emptyJob );
-    m_thread.Join();
+
+    try
+    {
+        m_thread.join();
+    }
+    catch (const std::system_error& e)
+    {
+
+    }
 }
 
 /**

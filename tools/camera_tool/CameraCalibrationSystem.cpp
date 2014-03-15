@@ -30,11 +30,9 @@ CameraCalibrationSystem::CameraCalibrationSystem( int boardWidth, int boardHeigh
 CameraCalibrationSystem::~CameraCalibrationSystem()
 {
     // free all the calibration images that were saved:
-    GLK::ListIterator<IplImage*> itr( m_calibrationImages );
-    while ( itr.HasNext() )
+    for( IplImage*& ptr : m_calibrationImages )
     {
-        cvReleaseImage( &( itr.Next() ) );
-        itr.Remove();
+        cvReleaseImage( &ptr );
     }
     cvReleaseMat( &m_cameraMatrix );
     cvReleaseMat( &m_distCoeff );
@@ -63,7 +61,7 @@ void CameraCalibrationSystem::AddCalibrationImage( uint32_t w, uint32_t h, const
         cvFindCornerSubPix( img, m_corners, m_numCorners, cvSize(3,3), cvSize(-1,-1), cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03 ) );
 
         // Add image to calibration list:
-        m_calibrationImages.AddBack( img );
+        m_calibrationImages.push_back( img );
 
         fprintf( stderr, "Added calibration image (found %d corners).\n", m_numCorners );
     }
@@ -81,27 +79,25 @@ void CameraCalibrationSystem::AddCalibrationImage( uint32_t w, uint32_t h, const
 **/
 void CameraCalibrationSystem::ComputeCalibration()
 {
-    uint32_t imageCount = m_calibrationImages.Length();
+    const size_t imageCount = m_calibrationImages.size();
 
     if ( imageCount < 2 )
     {
         return;
     }
  
-    CvSize imageSize = cvSize( m_calibrationImages.GetFirst()->width, m_calibrationImages.GetFirst()->height );
+    CvSize imageSize = cvSize( m_calibrationImages.front()->width, m_calibrationImages.front()->height );
     uint32_t pointCount = m_hzCorners*m_vtCorners;
   
-    fprintf( stderr, "\nAttempting calibration with %d images of %d points...\n", imageCount, pointCount );
+    fprintf( stderr, "\nAttempting calibration with %lu images of %d points...\n", imageCount, pointCount );
 
     CvMat* imagePoints  = cvCreateMat( 1, imageCount*pointCount, CV_32FC2 );
     CvMat* objectPoints = cvCreateMat( 1, imageCount*pointCount, CV_32FC3 );
 
-    uint32_t i = 0;
-    GLK::ListIterator<IplImage*> itr( m_calibrationImages );
-    while ( itr.HasNext() )
+    size_t i = 0;
+    for ( const IplImage* img : m_calibrationImages )
     {
-        CvPoint2D32f* pImgPoints = reinterpret_cast<CvPoint2D32f*>( imagePoints->data.fl ) + (i * pointCount);
-        IplImage* img = itr.Next();        
+        CvPoint2D32f* pImgPoints = reinterpret_cast<CvPoint2D32f*>( imagePoints->data.fl ) + (i * pointCount);      
         int foundAll = cvFindChessboardCorners( img, cvSize( m_hzCorners, m_vtCorners ), pImgPoints, &m_numCorners, CV_CALIB_CB_ADAPTIVE_THRESH );
         assert( foundAll ); // We checked each image had all corners detected when we saved it!
         cvFindCornerSubPix( img, pImgPoints, m_numCorners, cvSize(3,3), cvSize(-1,-1), cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03 ) );
@@ -116,7 +112,7 @@ void CameraCalibrationSystem::ComputeCalibration()
             }
         }
 
-        ++i;
+        i += 1;
     }
 
     CvMat* pointCounts = cvCreateMat( 1, imageCount, CV_32SC1 );

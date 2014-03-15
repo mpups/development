@@ -26,7 +26,7 @@ LIB_DIRS = {
     '/home/mark/code/free_type_cpp/build'
 }
 
-BUILD_OPTIONS = { '-std=c++0x -msse -msse2' }
+BUILD_OPTIONS = { '-std=c++11 -msse -msse2' }
 LINK_OPTIONS = { '-Wl,-rpath,/usr/local/glk/lib:/usr/local/videolib/lib:/home/mark/tmp_installs/lib:/home/mark/code/free_type_cpp/build' }
 
 OPENCV_LINKS = { 'opencv_imgproc','opencv_calib3d','opencv_highgui', 'opencv_core' }

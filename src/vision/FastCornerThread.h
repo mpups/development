@@ -5,10 +5,10 @@
 #define __FAST_CORNER_THREAD_H__
 
 #include <vector>
+#include <thread>
+#include <cstdint>
 
 #include <glkcore.h>
-
-#include <stdint.h>
 
 #include "../third_party/fast-C-src-2.1/fast.hpp"
 
@@ -23,7 +23,7 @@ class PixelCoord;
     be made. The corner detection then runs
     asynchronously.
 */
-class FastCornerThread : public GLK::Runnable
+class FastCornerThread
 {
 public:
     /**
@@ -64,7 +64,7 @@ private:
     std::vector<Corner> m_corners;
     fast_func_type m_fastFunction;
 
-    GLK::Thread m_thread;
+    std::thread m_thread;
     volatile bool m_terminate;
     GLK::MessageQueue<Job> m_jobQueue;
     GLK::Semaphore m_done;

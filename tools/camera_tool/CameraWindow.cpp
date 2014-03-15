@@ -12,7 +12,7 @@
 
 using namespace GLK;
 
-CameraWindow::CameraWindow( String title )
+CameraWindow::CameraWindow( const std::string& title )
 :
     GlWindow        ( 1, 1 ),
     m_lastTimestamp ( 0 ),
@@ -26,16 +26,17 @@ CameraWindow::CameraWindow( String title )
     m_tracking      (false),
     m_videoWriter   (0)
 {
-    m_camera = new UnicapCamera();
+    m_camera = new UnicapCapture();
   
     if ( m_camera->IsOpen() )
     {
         // set window title:
-        title += ':';
-        title += ' ';
-        title += String( m_camera->GetVendor() );
-        title += ' ';
-        title += String( m_camera->GetModel() );
+        std::string fullTitle = title;
+        fullTitle += ':';
+        fullTitle += ' ';
+        fullTitle += m_camera->GetVendor();
+        fullTitle += ' ';
+        fullTitle += m_camera->GetModel();
 
         int err = posix_memalign( (void**)&m_lum, 16, m_camera->GetFrameWidth() * m_camera->GetFrameHeight() * sizeof(uint8_t) );
         assert( err == 0 );
@@ -47,7 +48,7 @@ CameraWindow::CameraWindow( String title )
         Quit( -1 );
     }
 
-    SetWindowName( title.cStr() );
+    SetWindowName( title.c_str() );
 
     PushKeyboardHandler( this );
 }
@@ -105,7 +106,7 @@ bool CameraWindow::InitGL()
         assert ( m_videoWriter->IsOpen() );
         if ( m_videoWriter->IsOpen() )
         {
-            bool streamOk = m_videoWriter->AddVideoStream( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 30, LibAvWriter::FourCc( 'F','F','V','1' ) );
+            bool streamOk = m_videoWriter->AddVideoStream( m_camera->GetFrameWidth(), m_camera->GetFrameHeight(), 30, video::FourCc( 'F','M','P','4' ) );
             assert( streamOk );
         }
     }
@@ -187,8 +188,8 @@ bool CameraWindow::Update( unsigned int )
             m_klt->Track( m_lum );
         }
 
-        m_interFrameTime_ms = (m_camera->GetFrameTimestamp_us() - m_lastTimestamp) / 1000;
-        m_lastTimestamp = m_camera->GetFrameTimestamp_us();
+        //m_interFrameTime_ms = (m_camera->GetFrameTimestamp_us() - m_lastTimestamp) / 1000;
+        //m_lastTimestamp = m_camera->GetFrameTimestamp_us();
         m_camera->DoneFrame();        
         captured = true;
     }
@@ -324,13 +325,12 @@ glBindTexture( GL_TEXTURE_2D, m_rgbTex );
 
     const int bufferSize = 1024;
     char info[bufferSize];
-    int n = snprintf( info, bufferSize, "Inter-frame time: %ums\nTime waiting for frame: %ums\n", m_interFrameTime_ms, m_waitTime_ms );
-    if ( n < bufferSize )
-    {
-        m_calibration->ToString( info+n, bufferSize-n );
-    }
-
-    m_font->RenderString( info );
+    //int n = snprintf( info, bufferSize, "Inter-frame time: %ums\nTime waiting for frame: %ums\n", m_interFrameTime_ms, m_waitTime_ms );
+    //if ( n < bufferSize )
+    //{
+    //    m_calibration->ToString( info+n, bufferSize-n );
+    //}
+    //m_font->RenderString( info );
 
     SwapBuffers();
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );

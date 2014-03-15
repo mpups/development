@@ -9,7 +9,7 @@ using namespace GLK;
 **/
 int main( int argc, char** argv )
 {
-    CameraWindow win( String("Camera Tool") );
+    CameraWindow win( "Camera Tool" );
     win.Show();
     win.StartEventLoop();
     return EXIT_SUCCESS;
