@@ -50,31 +50,6 @@ bool PacketMuxer::Ok() const
 }
 
 /**
-    Optimised version of ComCentre::PostPacket() which uses forwarding to efficiently
-    construct the packet in-place (no std::move required as in PostPacket).
-
-    @param args @todo Variadic argument list to forward to the ComPacket constructor.
-
-    @note There is a g++ bug which doesn't allow perfect forwarding in cases like this:
-    when it is fixed variadic arguments can be forwarded directly to any ComPacket constructor.
-*/
-void PacketMuxer::EmplacePacket( const std::string& name, const VectorStream::CharType* buffer, int size )
-{
-    IdManager::PacketType type = m_packetIds.ToId(name);
-    std::lock_guard<std::recursive_mutex> guard( m_txLock );
-    m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, buffer, size) );
-    SignalPacketPosted();
-}
-
-void PacketMuxer::EmplacePacket(const std::string& name, VectorStream::Buffer&& buffer )
-{
-    IdManager::PacketType type = m_packetIds.ToId(name);
-    std::lock_guard<std::recursive_mutex> guard( m_txLock );
-    m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, std::move(buffer)) );
-    SignalPacketPosted();
-}
-
-/**
     This function loops sending all the queued packets over the
     transport layer. The loop exits if there is a transport error
     (e.g. if the other end hangs up).
@@ -84,7 +59,7 @@ void PacketMuxer::EmplacePacket(const std::string& name, VectorStream::Buffer&& 
 */
 void PacketMuxer::SendLoop()
 {
-    std::cerr << "PacketMuxer::SendLoop() entered." << std::endl;
+    std::clog << "PacketMuxer::SendLoop() entered." << std::endl;
 
     SendControlMessage( ControlMessage::Hello );
 
@@ -117,12 +92,11 @@ void PacketMuxer::SendLoop()
         /// (But in that case the system is overloaded anyway so what would we like to do when overloaded?)
         for ( auto& pair : m_txQueues )
         {
-            //std::clog << "Sending packets of type: " << m_packetIds.ToString( pair.first ) << std::endl;
             SendAll( pair.second );
         }
     }
 
-    std::cerr << "PacketMuxer::Send() exited." << std::endl;
+    std::clog << "PacketMuxer::SendLoop() exited." << std::endl;
 }
 
 /**
@@ -209,5 +183,5 @@ void PacketMuxer::SignalPacketPosted()
 
 void PacketMuxer::SendControlMessage( ControlMessage msg )
 {
-    EmplacePacket( "Control", reinterpret_cast<VectorStream::CharType*>(&msg), sizeof(uint8_t) );
+    EmplacePacket( IdManager::ControlString, reinterpret_cast<VectorStream::CharType*>(&msg), sizeof(uint8_t) );
 }

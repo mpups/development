@@ -54,9 +54,8 @@ public:
 
     bool Ok() const;
 
-    //void PostPacket( ComPacket&& packet );
-    void EmplacePacket(const std::string&, const VectorStream::CharType* buffer, int size );
-    void EmplacePacket( const std::string& name, VectorStream::Buffer&& vector );
+    template <typename ...Args>
+    void EmplacePacket(const std::string& name, Args&&... args);
 
 protected:
     typedef std::pair< IdManager::PacketType, ComPacket::PacketContainer > MapEntry;
@@ -94,5 +93,17 @@ private:
 
     void SendControlMessage( ControlMessage msg );
 };
+
+/**
+    @note Uses perfect forwarding: g++-4.8 and later only.
+*/
+template <typename ...Args>
+void PacketMuxer::EmplacePacket(const std::string& name, Args&&... args)
+{
+    const IdManager::PacketType type = m_packetIds.ToId(name);
+    std::lock_guard<std::recursive_mutex> guard( m_txLock );
+    m_txQueues[ type ].emplace( std::make_shared<ComPacket>(type, std::forward<Args>(args)...) );
+    SignalPacketPosted();
+}
 
 #endif /* _PACKET_MUXER_H_ */

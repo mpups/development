@@ -2,10 +2,6 @@
 
 #include <math.h>
 #include <time.h>
-
-const int IMG_WIDTH = 320;
-const int IMG_HEIGHT = 240;
-
 #include <arpa/inet.h>
 
 #include "RobotServer.h"

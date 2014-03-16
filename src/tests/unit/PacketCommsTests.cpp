@@ -10,16 +10,14 @@ TEST( packetcomms, IdManager )
 {
     IdManager packetIds({ "Type1", "Type2", "Type3" });
 
-    std::string invalid = "Invalid";
-    std::string control = "Control";
-    const IdManager::PacketType ctrl = packetIds.ToId( control );
-    EXPECT_EQ( 0u, packetIds.ToId( invalid ) );
+    const IdManager::PacketType ctrl = packetIds.ToId( IdManager::ControlString );
+    EXPECT_EQ( 0u, packetIds.ToId( IdManager::InvalidString ) );
     EXPECT_EQ( 1u, ctrl );
     EXPECT_EQ( ctrl+1, packetIds.ToId( "Type1" ) );
     EXPECT_EQ( ctrl+2, packetIds.ToId( "Type2" ) );
     EXPECT_EQ( ctrl+3, packetIds.ToId( "Type3" ) );
-    EXPECT_EQ( invalid, packetIds.ToString(0) );
-    EXPECT_EQ( control, packetIds.ToString(ctrl) );
+    EXPECT_EQ( IdManager::InvalidString, packetIds.ToString(0) );
+    EXPECT_EQ( IdManager::ControlString, packetIds.ToString(ctrl) );
     EXPECT_EQ( "Type1", packetIds.ToString(ctrl+1) );
     EXPECT_EQ( "Type2", packetIds.ToString(ctrl+2) );
     EXPECT_EQ( "Type3", packetIds.ToString(ctrl+3) );

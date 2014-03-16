@@ -14,7 +14,8 @@ INCLUDE_DIRS = {
     ARM_DEPLOYMENT .. '/include',
     ARM_DEPLOYMENT .. '/include/unicap',
     ARM_DEPLOYMENT .. '/include/freetype2',
-    '/home/mark/code/cereal-0.9.1/include'
+    '/home/mark/code/cereal-0.9.1/include',
+    '/home/mark/code/free_type_cpp/include'
 }
 
 VIDEOLIB_DIR='/home/mark/code/videolib/builds/beagleboardxm_gcc-4.8.1'
@@ -22,6 +23,7 @@ VIDEOLIB_DIR='/home/mark/code/videolib/builds/beagleboardxm_gcc-4.8.1'
 LIB_DIRS = {
     './',
     ARM_DEPLOYMENT .. '/lib',
+    '/home/mark/code/free_type_cpp/beagle_build',
     VIDEOLIB_DIR
 }
 
@@ -33,9 +35,9 @@ OPENCV_LINKS = {} --{ 'opencv_core', 'opencv_contrib' }
 OPENGL_LINKS = {}
 SYSTEM_LINKS = { 'pthread', 'rt', 'dl' }
 FFMPEG_LINKS = { 'avformat', 'avcodec', 'avutil', 'swscale' }
-LINKS = {}
+LINKS = { 'freetypecpp', 'freetype' }
 
-GLK_LINKS = {} --{ 'glkcore','lua5.2', 'freetype' }
+GLK_LINKS = {}
 VIDEO_LINKS = { 'videolib','unicap' }
 
 CONFIGURING_ARM = true

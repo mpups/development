@@ -13,13 +13,15 @@ public:
     typedef std::uint32_t PacketType;
     static constexpr PacketType InvalidPacket = 0;
     static constexpr PacketType ControlPacket = 1;
+    static const std::string InvalidString;
+    static const std::string ControlString;
 
     IdManager( const std::vector<std::string>& list )
     {
-        m_map["Invalid"] = InvalidPacket;
-        m_reverse.push_back("Invalid");
-        m_map["Control"] = ControlPacket;
-        m_reverse.push_back("Control");
+        m_map[InvalidString] = InvalidPacket;
+        m_reverse.push_back(InvalidString);
+        m_map[ControlString] = ControlPacket;
+        m_reverse.push_back( ControlString );
 
         std::size_t id = ControlPacket;
         for ( const std::string& name : list )
