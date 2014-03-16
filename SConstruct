@@ -1,8 +1,5 @@
 import os
 
-num_cpu = int(os.environ.get('NUM_CPU', 2))
-SetOption('num_jobs', num_cpu)
-
 AddOption('--build-for',
            dest='build-for',
            type='string',
