@@ -60,7 +60,6 @@ protected:
 
 private:
     IdManager m_packetIds;
-    int m_nextSubscriberId;
     std::mutex m_subscriberLock;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
     AbstractSocket& m_transport;

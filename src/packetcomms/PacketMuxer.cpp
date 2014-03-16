@@ -183,5 +183,5 @@ void PacketMuxer::SignalPacketPosted()
 
 void PacketMuxer::SendControlMessage( ControlMessage msg )
 {
-    EmplacePacket( IdManager::ControlString, reinterpret_cast<VectorStream::CharType*>(&msg), sizeof(uint8_t) );
+    EmplacePacket( IdManager::ControlString, reinterpret_cast<VectorStream::CharType*>(&msg), sizeof(std::underlying_type<ControlMessage>::type) );
 }

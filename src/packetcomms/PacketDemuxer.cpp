@@ -14,10 +14,9 @@
 PacketDemuxer::PacketDemuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds )
 :
     m_packetIds     ( packetIds ),
-    m_nextSubscriberId (0),
     m_transport     ( socket ),
     m_transportError( false ),
-    m_receiverThread      ( std::bind(&PacketDemuxer::ReceiveLoop, std::ref(*this)) )
+    m_receiverThread( std::bind(&PacketDemuxer::ReceiveLoop, std::ref(*this)) )
 {
     m_transport.SetBlocking( false );
 }
@@ -32,7 +31,8 @@ PacketDemuxer::~PacketDemuxer()
     try
     {
         m_receiverThread.join();
-    } catch ( const std::system_error& e )
+    }
+    catch ( const std::system_error& e )
     {
         std::clog << "Error: " << e.what() << std::endl;
     }
@@ -55,8 +55,7 @@ PacketSubscription PacketDemuxer::Subscribe( const std::string& typeName, Packet
 
     std::lock_guard<std::mutex> guard(m_subscriberLock);
     SubscriptionEntry::second_type& queue = m_subscribers[type];
-    queue.emplace_back( new PacketSubscriber( type, *this , callback ) );
-    m_nextSubscriberId += 1;
+    queue.emplace_back( new PacketSubscriber( type, *this , callback ) ); /// @note Can't use make_shared because of protected constructor.
 
     std::clog << "New subscriber for '" << typeName << "'" << std::endl;
 
@@ -113,7 +112,7 @@ bool PacketDemuxer::IsSubscribed( const PacketSubscriber* pSubscriber ) const
 */
 void PacketDemuxer::ReceiveLoop()
 {
-    std::cerr << "PacketDemuxer::Receive() entered." << std::endl;
+    std::clog << "PacketDemuxer::ReceiveLoop() entered." << std::endl;
     ComPacket packet;
     constexpr int helloTimeoutInMilliseconds = 2000;
     ReceiveHelloMessage( packet, helloTimeoutInMilliseconds );
@@ -124,6 +123,7 @@ void PacketDemuxer::ReceiveLoop()
         if ( ReceivePacket( packet, timeoutInMilliseconds ) )
         {
             const IdManager::PacketType packetType = packet.GetType(); // Need to cache this before we use std::move
+            //std::clog << m_packetIds.ToString( packetType ) << " bytes: " << packet.GetDataSize() << std::endl;
             auto sptr = std::make_shared<ComPacket>( std::move(packet) );
 
             if ( packetType == IdManager::ControlPacket )
@@ -146,7 +146,7 @@ void PacketDemuxer::ReceiveLoop()
         }
     }
 
-    std::cerr << "PacketDemuxer::Receive() exited." << std::endl;
+    std::clog << "PacketDemuxer::ReceiveLoop() exited." << std::endl;
 }
 
 /**
@@ -276,21 +276,20 @@ void PacketDemuxer::HandleControlMessage( const ComPacket::ConstSharedPacket& sp
 
 ControlMessage PacketDemuxer::GetControlMessage( const ComPacket::ConstSharedPacket& sptr )
 {
-    const uint8_t netMsg = *(sptr->GetDataPtr());
+    typedef std::underlying_type<ControlMessage>::type UnderlyingType;
+    const UnderlyingType netMsg = *reinterpret_cast<const UnderlyingType*>( (sptr->GetDataPtr()) );
     return static_cast<ControlMessage>( netMsg );
 }
 
 void PacketDemuxer::WarnAboutSubscribers()
 {
+    std::lock_guard<std::mutex> guard(m_subscriberLock);
+    for ( const SubscriptionEntry& entry : m_subscribers )
     {
-        std::lock_guard<std::mutex> guard(m_subscriberLock);
-        for ( const SubscriptionEntry& entry : m_subscribers )
+        const size_t n = entry.second.size();
+        if( n > 0 )
         {
-            const size_t n = entry.second.size();
-            if( n > 0 )
-            {
-                std::clog << "Warning: there are " << n << " live subscribers for '" << m_packetIds.ToString(entry.first) << "'" << std::endl;
-            }
+            std::clog << "Warning: there are " << n << " live subscribers for '" << m_packetIds.ToString(entry.first) << "'" << std::endl;
         }
     }
 }
