@@ -12,8 +12,8 @@ Cache::Cache( Ft::Library& lib, const char* font, FT_Long index )
 :
     m_freeType ( lib ),
     m_fontFace ( m_freeType, font, index ),
-    m_sizePx   ( DEFAULT_FONT_SIZE ),
-    m_cache    ( NUM_GLYPHS )
+    m_cache    ( NUM_GLYPHS ),
+    m_sizePx   ( DEFAULT_FONT_SIZE )
 {
     m_fontFace.SetPixelSizes( m_sizePx, m_sizePx );
 }

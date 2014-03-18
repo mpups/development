@@ -12,7 +12,7 @@ target = GetOption('build-for')
 compiler = compilers.makeCompilerFor(target)
 print "Building for target '" + target + "':"
 
-compiler.AppendFlags( "-O3" )
+compiler.AppendFlags( "-O3 -Wall -pedantic -Werror" )
 
 INC_DIRS = [ '/usr/include','/usr/include/freetype2' ]
 if ( target == "beagle" ):

@@ -150,15 +150,15 @@ Measure::BBoxi Measure::ComputeBoundingBox(const std::string& text, const bool k
     const float textAscent  = (cache.GetFace().GetScaledAscender()/Ft::Cache::METRIC_BASE);
     const float textDescent = (cache.GetFace().GetScaledDescender()/Ft::Cache::METRIC_BASE);
 
-    const float firstLeftBearing = cache.CacheAndGetGlyph(text.front()).GetLeft();
+    const int firstLeftBearing = cache.CacheAndGetGlyph(text.front()).GetLeft();
     const float lastAdvance = cache.CacheAndGetGlyph(text.back()).GetLeft() + cache.CacheAndGetGlyph(text.back()).GetMetrics().width/Ft::Cache::METRIC_BASE;
 
     return BBoxi
     {
         firstLeftBearing,
-        -textAscent,
-        textWidth+lastAdvance,
-        -textDescent
+        static_cast<std::int32_t>(-textAscent),
+        static_cast<std::int32_t>(textWidth+lastAdvance),
+        static_cast<std::int32_t>(-textDescent)
     };
 }
 

@@ -99,8 +99,8 @@ void Glyph::ExtractBitmap( std::uint8_t* pDst, const int width, const int height
 
     const int32_t gw = glyph->bitmap.width;
     const int32_t gh = glyph->bitmap.rows;
-    const int32_t s = glyph->bitmap.pitch - glyph->bitmap.width + (glyph->bitmap.width-width);
-    const int32_t skip = stride-width;
+    //const int32_t s = glyph->bitmap.pitch - glyph->bitmap.width + (glyph->bitmap.width-width);
+    //const int32_t skip = stride-width;
 
     /// @note Here we need to cap the amount of data we access in the glyph bitmap
     /// becuase width and height could be larger than the glyph's width and height.

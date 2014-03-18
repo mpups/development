@@ -71,10 +71,10 @@ void RenderBoundingBox( uint8_t* const image, const uint32_t stride,
                         const Measure::BBoxi bbox )
 {
     uint8_t* pStart = image + (bbox.top*stride) + bbox.left;
-    for ( uint32_t r=bbox.top; r<=bbox.bottom; ++r )
+    for ( int32_t r=bbox.top; r<=bbox.bottom; ++r )
     {
         uint8_t* pRow = pStart;
-        for ( uint32_t c=bbox.left; c<=bbox.right; ++c )
+        for ( int32_t c=bbox.left; c<=bbox.right; ++c )
         {
             *pRow++ = 0;
         }
