@@ -4,7 +4,7 @@ class Compiler:
     cmd   = ""
     path  = "/bin"
     flags = "-std=c++11"
-    sysroot = ""
+    sysroot = "/"
     def AppendFlags( self, newFlags ):
         self.flags += " " + newFlags
 
