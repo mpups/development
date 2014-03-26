@@ -1,0 +1,53 @@
+import os
+import compilers
+import envBuilder
+import utils
+
+AddOption( '--build-for',
+           dest='build-for',
+           type='string',
+           nargs=1,
+           action='store',
+           metavar='ARCHITECTURE',
+           default='native',
+           help='Specify architecture to build for: native,beagle,android')
+
+AddOption( '--type',
+           dest='build-type',
+           type='string',
+           nargs=1,
+           action='store',
+           metavar='BUILD CONFIGURATION',
+           default='release',
+           help='Specify configuration: debug,release')
+
+# Determine build configuration from command line options:
+target = GetOption('build-for')
+buildType = GetOption('build-type')
+
+if not utils.TargetIsValid(target):
+    print 'Invalid target: ' + target
+    Exit(1)
+
+if not utils.BuildTypeIsValid(buildType):
+    print 'Invalid build type: ' + buildType
+    Exit(1)
+
+# Setup the compiler:
+compiler = compilers.makeCompilerFor(target, buildType)
+compiler.AppendFlags( "-Wall -pedantic" )
+
+# Initialise the environment to use this compiler:
+env = envBuilder.makeEnvForCompiler(compiler)
+
+# Make path for build directory:
+buildDir = os.path.join( 'build', target, buildType )
+
+Export('env','target','compiler')
+
+subdirs = utils.FindSconsDirs( './' )
+print subdirs
+for dir in subdirs:
+    sconsFile = os.path.join(dir, 'SConscript')
+    SConscript( sconsFile, variant_dir=os.path.join(dir,buildDir), duplicate=0 )
+
