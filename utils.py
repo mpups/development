@@ -1,4 +1,10 @@
 import os
+from SCons.Script import Dir,Return,Glob
+
+def IgnoreIfTargetNotSupported( target, supported ):
+    if not target in supported:
+        print 'Ignoring project ' + Dir('.').path + ' (does not support target: ' + target + ')'
+        Return()
 
 def TargetIsValid( target ):
     validTargets = [ 'native','beagle','android' ]
@@ -18,38 +24,14 @@ def FindSconsDirs( root ):
 
     return sconsDirs
 
-def findCppFiles( topDir ):
-    cppFiles = []
-
-    # traverse root directory, and list directories as dirs and files as files
-    for path, dirs, files in os.walk(topDir):
-        split = path.split('/')
-        #print (len(split) - 1) *'--' , os.path.basename(path)
-        for file in files:
-            if fnmatch.fnmatch(file,'*.cpp'):
-                #print len(split)*'--', file
-                cppFiles.append( os.path.join( path, file ) )
-
-    return cppFiles
-
-# Find all cpps in the specified dirs.
-# They are taken as relative to the SConscript dir
-# in which you call the funciton:
-def findCppInLocalDirs( src_dirs ):
+def RecursivelyGlobSourceInPaths( extension, dirList ):
+    # For each entry in list we glob all the source
+    # files in all subdirs
     src = []
-    for dir in src_dirs:
-        src += ( findCppFiles( dir ) )
+
+    for dir in dirList:
+        # traverse root directory, and list directories as dirs and files as files
+        for path, dirs, files in os.walk(dir):
+            src += Glob( os.path.join(path,'*.'+extension) );
+
     return src
-
-#src_dirs = [
-#    'src/graphics',
-#    'src/legacy'
-#]
-
-#src = findCppInLocalDirs( src_dirs )
-
-#src2 = []
-#for file in src:
-#    src2.append( os.path.join('./build/native/release',file) )
-
-#print src2

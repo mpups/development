@@ -40,14 +40,15 @@ compiler.AppendFlags( "-Wall -pedantic" )
 # Initialise the environment to use this compiler:
 env = envBuilder.makeEnvForCompiler(compiler)
 
+env.Decider('MD5-timestamp')
+
 # Make path for build directory:
 buildDir = os.path.join( 'build', target, buildType )
 
-Export('env','target','compiler')
-
 subdirs = utils.FindSconsDirs( './' )
-print subdirs
-for dir in subdirs:
-    sconsFile = os.path.join(dir, 'SConscript')
-    SConscript( sconsFile, variant_dir=os.path.join(dir,buildDir), duplicate=0 )
+for sconsDir in subdirs:
+    sconsFile = os.path.join( sconsDir, 'SConscript' )
+    buildPath = os.path.join( 'build', sconsDir, target, buildType )
+    clonedEnv = env.Clone()
+    SConscript( sconsFile, variant_dir=buildPath, duplicate=0, exports={ 'env' : clonedEnv, 'target' : target, 'compiler' : compiler } )
 
