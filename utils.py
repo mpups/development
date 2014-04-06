@@ -35,3 +35,9 @@ def RecursivelyGlobSourceInPaths( extension, dirList ):
             src += Glob( os.path.join(path,'*.'+extension) );
 
     return src
+
+def RemoveFiles( glob, filterList ):
+    for m in filterList:
+        for f in glob:
+            if ( m in f.abspath ):
+                glob.remove(f)
