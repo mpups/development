@@ -3,30 +3,30 @@ import compilers
 import envBuilder
 import utils
 
-AddOption( '--build-for',
-           dest='build-for',
+AddOption( '--platform',
+           dest='platform',
            type='string',
            nargs=1,
            action='store',
            metavar='ARCHITECTURE',
            default='native',
-           help='Specify architecture to build for: native,beagle,android')
+           help='Specify platform/architecture to build for: native,beagle,android')
 
 AddOption( '--type',
            dest='build-type',
            type='string',
            nargs=1,
            action='store',
-           metavar='BUILD CONFIGURATION',
+           metavar='BUILD-TYPE',
            default='release',
-           help='Specify configuration: debug,release')
+           help='Specify build type: debug,release')
 
 # Determine build configuration from command line options:
-target = GetOption('build-for')
+platform = GetOption('platform')
 buildType = GetOption('build-type')
 
-if not utils.TargetIsValid(target):
-    print 'Invalid target: ' + target
+if not utils.TargetIsValid(platform):
+    print 'Invalid platform/architecture: ' + platform
     Exit(1)
 
 if not utils.BuildTypeIsValid(buildType):
@@ -34,7 +34,7 @@ if not utils.BuildTypeIsValid(buildType):
     Exit(1)
 
 # Setup the compiler:
-compiler = compilers.makeCompilerFor(target, buildType)
+compiler = compilers.makeCompilerFor(platform,buildType)
 compiler.AppendFlags( "-Wall -pedantic" )
 
 # Initialise the environment to use this compiler:
@@ -43,12 +43,12 @@ env = envBuilder.makeEnvForCompiler(compiler)
 env.Decider('MD5-timestamp')
 
 # Make path for build directory:
-buildDir = os.path.join( 'build', target, buildType )
+buildDir = os.path.join( 'build', platform, buildType )
 
 subdirs = utils.FindSconsDirs( './' )
 for sconsDir in subdirs:
     sconsFile = os.path.join( sconsDir, 'SConscript' )
-    buildPath = os.path.join( 'build', sconsDir, target, buildType )
+    buildPath = os.path.join( 'build', sconsDir, platform, buildType )
     clonedEnv = env.Clone()
-    SConscript( sconsFile, variant_dir=buildPath, duplicate=0, exports={ 'env' : clonedEnv, 'target' : target, 'compiler' : compiler } )
+    SConscript( sconsFile, variant_dir=buildPath, duplicate=0, exports={ 'env' : clonedEnv, 'target' : platform, 'compiler' : compiler } )
 
