@@ -3,8 +3,8 @@ import utils
 import build
 
 # Standard initialisation:
-Import('env','target','compiler')
-utils.IgnoreIfTargetNotSupported( target, ['native','beagle','android'] )
+Import('env','compiler')
+target = env['platform']
 
 # Platform dependent includes
 includeMap = {
@@ -17,8 +17,8 @@ inc = includeMap[target]
 # Platform dependent libraries
 libs = [ 'avformat', 'avcodec', 'avutil', 'swscale' ]
 libMap = {
-    'native' : ['pthread', 'rt', 'dl','unicap', 'dc1394'],
-    'beagle' : ['pthread', 'rt', 'dl','unicap'],
+    'native' : ['unicap', 'dc1394'],
+    'beagle' : ['unicap'], # These were linked before but not sure they were necessary: 'pthread', 'rt', 'dl',
     'android' : []
 }
 libs += libMap[target]
@@ -51,13 +51,25 @@ if (target in ['beagle','android']):
 if (target in ['android']):
     utils.RemoveFiles( src, ['UnicapCapture.cpp','UnicapCamera.cpp'] )
 
-videolib = build.SharedLibrary(ENV=env,NAME='videolib',RPATH=rpath,CPPPATH=inc,LIBS=libs,LIBPATH=libpath,SRC=src)
+videolib = build.SharedLibrary(ENV=env,
+                               NAME='videolib',
+                               RPATH=rpath,
+                               CPPPATH=inc,
+                               LIBS=libs,
+                               LIBPATH=libpath,
+                               SRC=src,
+                               SUPPORTED_PLATFORMS=['native','beagle','android']
+)
 
 # capture test program - only supported on native builds
-utils.IgnoreIfTargetNotSupported( target, ['native'] )
-
 inc += ['#videolib/include', '/usr/local/glk/include', '/usr/include/freetype2']
 libs += ['videolib','glk','glkcore']
 env.Append(LIBPATH=['/usr/local/lib','/usr/local/glk/lib','./'])
-capture = build.Program(ENV=env,NAME='capture',CPPPATH=inc,LIBS=libs,RPATH='/usr/local/glk/lib', SRC='./src/tests/tools/capture.cpp')
+capture = build.Program(ENV=env,
+                        NAME='capture',
+                        CPPPATH=inc,
+                        LIBS=libs,
+                        RPATH='/usr/local/glk/lib',
+                        SRC='./src/tests/tools/capture.cpp',
+                        SUPPORTED_PLATFORMS=['native'])
 
