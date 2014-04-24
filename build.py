@@ -2,7 +2,9 @@ import os
 import utils
 
 # Build an executable
-def Program( ENV, NAME, CPPPATH, LIBS, RPATH, SRC ):
+def Program( ENV, NAME, CPPPATH, LIBS, RPATH, SRC, SUPPORTED_PLATFORMS ):
+    if not utils.TargetIsSupported(ENV['platform'],SUPPORTED_PLATFORMS):
+        return None
     env = ENV.Clone()
     env.Append( CPPPATH=CPPPATH )
     env.Append( LIBS=LIBS )
@@ -10,7 +12,9 @@ def Program( ENV, NAME, CPPPATH, LIBS, RPATH, SRC ):
     return env.Program( target=NAME, source=SRC )
 
 # Build a shared library
-def SharedLibrary( ENV, NAME, CPPPATH, LIBS, LIBPATH, RPATH, SRC ):
+def SharedLibrary( ENV, NAME, CPPPATH, LIBS, LIBPATH, RPATH, SRC, SUPPORTED_PLATFORMS ):
+    if not utils.TargetIsSupported(ENV['platform'],SUPPORTED_PLATFORMS):
+        return None
     env = ENV.Clone()
     soname = 'lib' + NAME + '.so'
     env.Append( CPPPATH=CPPPATH )

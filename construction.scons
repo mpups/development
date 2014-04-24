@@ -45,6 +45,8 @@ env.Decider('MD5-timestamp')
 # Make path for build directory:
 buildDir = os.path.join( 'build', platform, buildType )
 
+env['platform'] = platform
+
 subdirs = utils.FindSconsDirs( './' )
 for sconsDir in subdirs:
     sconsFile = os.path.join( sconsDir, 'SConscript' )

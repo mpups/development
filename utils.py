@@ -1,9 +1,12 @@
 import os
 from SCons.Script import Dir,Return,Glob
 
-def IgnoreIfTargetNotSupported( target, supported ):
-    if not target in supported:
-        print 'Ignoring project ' + Dir('.').path + ' (does not support target: ' + target + ')'
+def TargetIsSupported( target, supported ):
+    return target in supported
+
+def EndScriptIfTargetNotSupported( target, supported ):
+    if not TargetIsSupported(target,supported):
+        print 'INFO: Ignoring Project ' + Dir('.').path + ' (does not support platform: ' + target + ')'
         Return()
 
 def TargetIsValid( target ):
