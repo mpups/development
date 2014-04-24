@@ -1,68 +1,63 @@
 import os
 import utils
+import build
 
-# TODO : This file contains all of the things I regularly want to do
-# (e.g. build progs and libs for multiple platforms, excluding some files or progs on some platforms)
-# Need to change site_scons scripts so they make all of this easy (ideally whole script should be only a few lines)
-
+# Standard initialisation:
 Import('env','target','compiler')
-
 utils.IgnoreIfTargetNotSupported( target, ['native','beagle','android'] )
 
-inc = []
-if target == 'native':
-    inc += [ '/usr/include/unicap',
-             '/home/mark/tmp_installs/include' ]
-    rpath = '/home/mark/tmp_installs/lib'
-elif target == 'beagle':
-    inc += [ compiler.sysroot + '/include',
-             compiler.sysroot + '/include/unicap' ]
-    rpath = '/lib:/usr/local/lib'
-    env.Append( CPPDEFINES='ARM_BUILD' )
-elif target == 'android':
-    # Android is a little bitch:
-    ANDROID_FFMPEG = '/home/mark/code/android-ffmpeg-build/armeabi'
-    NDK_DIR = '/home/mark/code/android-ndk-r9b'
-    ANDROID_PLATFORM = NDK_DIR + '/platforms/android-8/arch-arm'
-    ANDROID_STL_PATH = NDK_DIR + '/sources/cxx-stl/gnu-libstdc++/4.8'
-    ANDROID_STL_INC = ANDROID_STL_PATH + '/include'
-    ANDROID_STL_BITS_INC = ANDROID_STL_PATH + '/libs/armeabi/include'
-    inc += [ ANDROID_FFMPEG + '/include',
-             ANDROID_PLATFORM + '/usr/include',
-             ANDROID_STL_INC, ANDROID_STL_BITS_INC
-              ]
-    rpath = ANDROID_PLATFORM + '/usr/lib'
-    env.Append( CPPDEFINES=['ANDROID', 'ARM_BUILD','__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS'] )
-    env.Append( LIBPATH=[ANDROID_PLATFORM + '/usr/lib',ANDROID_STL_PATH+'/libs/armeabi',ANDROID_FFMPEG+'/lib'] )
+# Platform dependent includes
+includeMap = {
+    'native' : [ '/usr/include/unicap', '/home/mark/tmp_installs/include' ],
+    'beagle' : [ compiler.sysroot + '/include', compiler.sysroot + '/include/unicap' ],
+    'android' : [ '/home/mark/code/android-ffmpeg-build/armeabi/include' ]
+}
+inc = includeMap[target]
 
-libs = [
-    'avformat', 'avcodec', 'avutil', 'swscale'
-    ]
+# Platform dependent libraries
+libs = [ 'avformat', 'avcodec', 'avutil', 'swscale' ]
+libMap = {
+    'native' : ['pthread', 'rt', 'dl','unicap', 'dc1394'],
+    'beagle' : ['pthread', 'rt', 'dl','unicap'],
+    'android' : []
+}
+libs += libMap[target]
 
-if target in ['native','beagle']:
-    libs += ['pthread', 'rt', 'dl','unicap']
+# Platform dependent rpath:
+rpathMap = {
+    'native' : '/home/mark/tmp_installs/lib',
+    'beagle' : '/lib:/usr/local/lib',
+    'android' : ''
+}
+rpath = rpathMap[target]
 
-if target == 'native':
-    libs += [ 'dc1394' ]
+# platform dependent libpaths:
+libpathMap = {
+    'native' : ['/home/mark/tmp_installs/lib'],
+    'beagle' : [],
+    'android' : ['/home/mark/code/android-ffmpeg-build/armeabi/lib']
+}
+libpath = libpathMap[target]
 
+# Android is a PIA of course:
 if target == 'android':
-    libs += ['gnustl_shared']
+    env.Append( CPPDEFINES=['__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS'] )
 
-sharedLibName = 'videolib'
-soname = 'lib' + sharedLibName + '.so'
+src = utils.RecursivelyGlobSourceInPaths( 'cpp', [ './src/video' ] )
 
-env.Append( CPPPATH=inc )
-env.Append( LIBS=libs )
-env.Append( CPPFLAGS = '-fPIC' )
-env.Append( LINKFLAGS = [ '-Wl,--soname=' + soname + ',-rpath='+rpath ] )
-
-libsrc = utils.RecursivelyGlobSourceInPaths( 'cpp', [ './src/video' ] )
-
+# Platform dependent source filters:
 if (target in ['beagle','android']):
-    utils.RemoveFiles( libsrc, [ 'Dc1394Camera.cpp' ] )
-
+    utils.RemoveFiles( src, [ 'Dc1394Camera.cpp' ] )
 if (target in ['android']):
-    utils.RemoveFiles( libsrc, ['UnicapCapture.cpp','UnicapCamera.cpp'] )
+    utils.RemoveFiles( src, ['UnicapCapture.cpp','UnicapCamera.cpp'] )
 
-gametoolLib = env.SharedLibrary( target=sharedLibName, source=libsrc )
+videolib = build.SharedLibrary(ENV=env,NAME='videolib',RPATH=rpath,CPPPATH=inc,LIBS=libs,LIBPATH=libpath,SRC=src)
+
+# capture test program - only supported on native builds
+utils.IgnoreIfTargetNotSupported( target, ['native'] )
+
+inc += ['#videolib/include', '/usr/local/glk/include', '/usr/include/freetype2']
+libs += ['videolib','glk','glkcore']
+env.Append(LIBPATH=['/usr/local/lib','/usr/local/glk/lib','./'])
+capture = build.Program(ENV=env,NAME='capture',CPPPATH=inc,LIBS=libs,RPATH='/usr/local/glk/lib', SRC='./src/tests/tools/capture.cpp')
 

@@ -270,8 +270,11 @@ timespec LibAvCapture::GetFrameTimestamp() const
     }
 
     // Convert from the codec's timebase to microseconds:
-    int64_t pts = av_rescale_q( m_avFrame->pts, m_codecContext->time_base, AVRational{1,1000000} );
-    return {pts/1000000,(pts%1000000)*1000};
+    const int64_t pts = av_rescale_q( m_avFrame->pts, m_codecContext->time_base, AVRational{1,1000000} );
+    const time_t secs = pts/1000000;
+    const long nsecs = (pts%1000000L)*1000L;
+    const timespec t{secs,nsecs};
+    return t;
 }
 
 void LibAvCapture::ExtractLuminanceImage( uint8_t* data, int stride )
