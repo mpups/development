@@ -8,8 +8,11 @@ def makeEnvForCompiler( compiler ):
         ENV = {'PATH' : compiler.path},
         CXX = compiler.cmd,
         CXXFLAGS = compiler.flags,
-        LIBPATH = compiler.sysroot + '/lib',
-        SYSROOT = compiler.sysroot
+        LIBPATH = compiler.libpath,
+        SYSROOT = compiler.sysroot,
+        CPPDEFINES = compiler.defines,
+        CPPPATH = compiler.includes,
+        LIBS = compiler.libs
     )
 
     if ( compiler.debug == False ):
