@@ -3,7 +3,7 @@ import utils
 
 Import( 'env', 'target', 'compiler' )
 
-utils.IgnoreIfTargetNotSupported( target, ['native','beagle'] )
+utils.EndScriptIfTargetNotSupported( target, ['native','beagle'] )
 
 # Different build types have different include paths for some libs:
 cppIncludes = [ '/usr/include','/usr/include/freetype2' ]
