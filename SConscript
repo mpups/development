@@ -39,10 +39,6 @@ libpathMap = {
 }
 libpath = libpathMap[target]
 
-# Android is a PIA of course:
-if target == 'android':
-    env.Append( CPPDEFINES=['__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS'] )
-
 src = utils.RecursivelyGlobSourceInPaths( 'cpp', [ './src/video' ] )
 
 # Platform dependent source filters:
@@ -50,6 +46,18 @@ if (target in ['beagle','android']):
     utils.RemoveFiles( src, [ 'Dc1394Camera.cpp' ] )
 if (target in ['android']):
     utils.RemoveFiles( src, ['UnicapCapture.cpp','UnicapCamera.cpp'] )
+
+#Platform dependent install path
+installMap = {
+    'native' : '/usr/local/videolib',
+    'beagle' : '',
+    'android': ''
+}
+installPath = installMap[target]
+
+# Android is a PIA of course:
+if target == 'android':
+    env.Append( CPPDEFINES=['__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS'] )
 
 videolib = build.SharedLibrary(ENV=env,
                                NAME='videolib',
@@ -69,7 +77,17 @@ capture = build.Program(ENV=env,
                         NAME='capture',
                         CPPPATH=inc,
                         LIBS=libs,
-                        RPATH='/usr/local/glk/lib',
+                        RPATH='/usr/local/glk/lib:'+os.path.join( installPath, 'lib' ),
                         SRC='./src/tests/tools/capture.cpp',
                         SUPPORTED_PLATFORMS=['native'])
+
+# Installing libs/executables is easy:
+if installPath:
+    installLib = env.Install( os.path.join( installPath, 'lib' ), videolib )
+    installCapture = env.Install( os.path.join( installPath, 'bin' ), capture )
+
+    # Installing the headers is a PIA:
+    installHeaders = utils.GenerateHeaderInstallActions(env,installPath,'include','videolib')
+    installSourceHeaders = utils.GenerateHeaderInstallActions(env,installPath,'src','videolib')
+    env.Alias( 'install-videolib', [ installLib, installCapture, installHeaders, installSourceHeaders] )
 
