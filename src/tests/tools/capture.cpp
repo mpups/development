@@ -13,7 +13,7 @@
 int main( int argc, char** argv )
 {
     std::unique_ptr<Capture> capture;
-    CameraCapture* camera = 0;
+    CameraCapture* camera = nullptr;
 
     if ( argc > 1 )
     {
@@ -34,6 +34,7 @@ int main( int argc, char** argv )
     if ( capture->IsOpen() == false )
     {
         std::cerr << "Error: no valid capture source." << std::endl;
+        capture.reset();
         return EXIT_FAILURE;
     }
 
@@ -53,7 +54,8 @@ int main( int argc, char** argv )
     double totalImageConversionTime_us = 0.0;
     double frames = 0.0;
 
-    while ( display.IsRunning() && capture->GetFrame() )
+    std::cerr << "Start Grabbing..." << std::endl;
+    while ( display.IsRunning() && camera != nullptr && capture->GetFrame() )
     {
         timer.Reset();
         capture->ExtractLuminanceImage( lum, capture->GetFrameWidth() );
@@ -65,6 +67,7 @@ int main( int argc, char** argv )
 
         frames += 1.0;
     }
+    std::cerr << "...Stopped Grabbing." << std::endl;
 
     if ( camera )
     {

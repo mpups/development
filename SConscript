@@ -55,6 +55,14 @@ installMap = {
 }
 installPath = installMap[target]
 
+#RPATH for executables that use this library:
+rpathExeMap = {
+    'native' : os.path.join( installPath, 'lib' ),
+    'beagle' : '/lib:/usr/local/lib',
+    'android' : ''
+}
+exeRPATH = rpathExeMap[target]
+
 # Android is a PIA of course:
 if target == 'android':
     env.Append( CPPDEFINES=['__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS'] )
@@ -70,16 +78,23 @@ videolib = build.SharedLibrary(ENV=env,
 )
 
 # capture test program - only supported on native builds
-inc += ['#videolib/include', '/usr/local/glk/include', '/usr/include/freetype2']
-libs += ['videolib','glk','glkcore']
 env.Append(LIBPATH=['/usr/local/lib','/usr/local/glk/lib','./'])
 capture = build.Program(ENV=env,
                         NAME='capture',
-                        CPPPATH=inc,
-                        LIBS=libs,
-                        RPATH='/usr/local/glk/lib:'+os.path.join( installPath, 'lib' ),
+                        CPPPATH=inc + ['#videolib/include', '/usr/local/glk/include', '/usr/include/freetype2'],
+                        LIBS= libs + ['videolib','glk','glkcore'],
+                        RPATH='/usr/local/glk/lib:'+exeRPATH,
                         SRC='./src/tests/tools/capture.cpp',
                         SUPPORTED_PLATFORMS=['native'])
+
+# GoogleTest unit tests:
+test = build.Program(ENV=env,
+                        NAME='utest',
+                        CPPPATH=inc,
+                        LIBS = libs + ['gtest','gtest_main','videolib'],
+                        RPATH=exeRPATH,
+                        SRC=['./src/tests/unit/gtests.cpp','./src/tests/unit/VideoTests.cpp'],
+                        SUPPORTED_PLATFORMS=['native','beagle'])
 
 # Installing libs/executables is easy:
 if installPath:

@@ -1,5 +1,3 @@
-#include "VideoTests.h"
-
 #include "../../video/FourCc.h"
 #include "../../video/LibAvWriter.h"
 #include "../../video/LibAvCapture.h"
@@ -131,3 +129,14 @@ void TestStdFunctionIO()
 
     RunReader( videoIn );
 }
+
+TEST( video, file )
+{
+    TestVideo();
+}
+
+TEST( video, stdfunction )
+{
+    TestStdFunctionIO();
+}
+
