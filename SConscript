@@ -16,14 +16,14 @@ includeMap = {
                 '/usr/include/gtest',
                 '/usr/include/',
                 '/usr/include/unicap',
-                '/home/mark/code/cereal-0.9.1/include'],
+                '#cereal-1.0.0/include'],
     'beagle' : ['#videolib/include',
                 compiler.sysroot + '/include',
                 compiler.sysroot + '/include/unicap',
-                '/home/mark/code/cereal-0.9.1/include'],
+                '#cereal-1.0.0/include'],
     'android' : ['#videolib/include',
                  '/home/mark/code/android-ffmpeg-build/armeabi/include',
-                 '/home/mark/code/cereal-0.9.1/include']
+                 '#cereal-1.0.0/include']
 }
 inc = includeMap[target]
 
@@ -34,8 +34,8 @@ libPathMap = {
                 '/usr/local/videolib/lib',
                 '/usr/lib/x86_64-linux-gnu',
                 '/home/mark/code/free_type_cpp/build'],
-    'beagle' : ['#build/videolib/beagle/release'],
-    'android' : ['#build/videolib/android/release']
+    'beagle' : ['#build/beagle/videolib/release'],
+    'android' : ['#build/android/videolib/release']
 }
 libPath = libPathMap[target]
 
