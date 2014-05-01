@@ -9,7 +9,7 @@ def Program( ENV, NAME, SRC, SUPPORTED_PLATFORMS, CPPPATH='', LIBS='', LIBPATH='
     env.Append( CPPPATH=CPPPATH )
     env.Append( LIBS=LIBS )
     env.Append( LIBPATH=LIBPATH )
-    env.Append( LINKFLAGS = [ '-Wl,-rpath=' + RPATH ] )
+    env.Append( RPATH=RPATH )
     return env.Program( target=NAME, source=SRC )
 
 # Build a shared library
@@ -22,5 +22,6 @@ def SharedLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, CPPPATH='', LIBS='', LIB
     env.Append( LIBS=LIBS )
     env.Append( LIBPATH=LIBPATH )
     env.Append( CPPFLAGS = '-fPIC' )
-    env.Append( LINKFLAGS = [ '-Wl,--soname=' + soname + ',-rpath=' + RPATH ] )
+    env.Append( RPATH=RPATH )
+    env.Append( LINKFLAGS = [ '-Wl,--soname=' + soname ] )
     return env.SharedLibrary( target=NAME, source=SRC )
