@@ -42,15 +42,12 @@ env = envBuilder.makeEnvForCompiler(compiler)
 
 env.Decider('MD5-timestamp')
 
-# Make path for build directory:
-buildDir = os.path.join( 'build', platform, buildType )
-
 env['platform'] = platform
 
 subdirs = utils.FindSconsDirs( './' )
 for sconsDir in subdirs:
     sconsFile = os.path.join( sconsDir, 'SConscript' )
-    buildPath = os.path.join( 'build', sconsDir, platform, buildType )
+    buildPath = os.path.join( 'build', platform, sconsDir, buildType )
     clonedEnv = env.Clone()
     SConscript( sconsFile, variant_dir=buildPath, duplicate=0, exports={ 'env' : clonedEnv, 'target' : platform, 'compiler' : compiler } )
 
