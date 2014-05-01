@@ -25,9 +25,9 @@ libs += libMap[target]
 
 # Platform dependent rpath:
 rpathMap = {
-    'native' : '/home/mark/tmp_installs/lib',
-    'beagle' : '/lib:/usr/local/lib',
-    'android' : ''
+    'native' : ['/home/mark/tmp_installs/lib'],
+    'beagle' : ['/lib', '/usr/local/lib'],
+    'android' : []
 }
 rpath = rpathMap[target]
 
@@ -57,9 +57,9 @@ installPath = installMap[target]
 
 #RPATH for executables that use this library:
 rpathExeMap = {
-    'native' : os.path.join( installPath, 'lib' ),
-    'beagle' : '/lib:/usr/local/lib',
-    'android' : ''
+    'native'  : [os.path.join( installPath, 'lib' )],
+    'beagle'  : ['/lib','/usr/local/lib'],
+    'android' : []
 }
 exeRPATH = rpathExeMap[target]
 
@@ -83,18 +83,20 @@ capture = build.Program(ENV=env,
                         NAME='capture',
                         CPPPATH=inc + ['#videolib/include', '/usr/local/glk/include', '/usr/include/freetype2'],
                         LIBS= libs + ['videolib','glk','glkcore'],
-                        RPATH='/usr/local/glk/lib:'+exeRPATH,
+                        RPATH=['/usr/local/glk/lib:'] + exeRPATH,
                         SRC='./src/tests/tools/capture.cpp',
-                        SUPPORTED_PLATFORMS=['native'])
+                        SUPPORTED_PLATFORMS=['native']
+)
 
 # GoogleTest unit tests:
 test = build.Program(ENV=env,
-                        NAME='utest',
-                        CPPPATH=inc,
-                        LIBS = libs + ['gtest','gtest_main','videolib'],
-                        RPATH=exeRPATH,
-                        SRC=['./src/tests/unit/gtests.cpp','./src/tests/unit/VideoTests.cpp'],
-                        SUPPORTED_PLATFORMS=['native','beagle'])
+                     NAME='utest',
+                     CPPPATH=inc,
+                     LIBS = libs + ['gtest','gtest_main','videolib'],
+                     RPATH=exeRPATH,
+                     SRC=['./src/tests/unit/gtests.cpp','./src/tests/unit/VideoTests.cpp'],
+                     SUPPORTED_PLATFORMS=['native','beagle']
+)
 
 # Installing libs/executables is easy:
 if installPath:
@@ -105,4 +107,3 @@ if installPath:
     installHeaders = utils.GenerateHeaderInstallActions(env,installPath,'include','videolib')
     installSourceHeaders = utils.GenerateHeaderInstallActions(env,installPath,'src','videolib')
     env.Alias( 'install-videolib', [ installLib, installCapture, installHeaders, installSourceHeaders] )
-

@@ -9,7 +9,7 @@
 #include <functional>
 
 extern "C" {
-#include <unicap.h>
+#include <unicap/unicap.h>
 }
 
 /**
