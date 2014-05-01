@@ -1,57 +1,65 @@
 import os
+import utils
+import build
 
-LIB_NAME = 'robolib'
-SONAME = 'librobolib.so'
+# Standard initialisation:
+Import('env','compiler')
+target = env['platform']
 
-NDKDIR = '/home/mark/code/android-ndk-r9b'
-SYSROOT = NDKDIR + '/platforms/android-3/arch-arm'
+# Platform dependent includes
+includeMap = {
+    'native' : ['/home/mark/tmp_installs/include',
+                '/usr/local/glk/include',
+                '/usr/local/videolib/include',
+                '/usr/include/lua5.2',
+                '/usr/include/freetype2',
+                '/usr/include/gtest',
+                '/usr/include/',
+                '/usr/include/unicap',
+                '/home/mark/code/cereal-0.9.1/include'],
+    'beagle' : ['#videolib/include',
+                compiler.sysroot + '/include',
+                compiler.sysroot + '/include/unicap',
+                '/home/mark/code/cereal-0.9.1/include'],
+    'android' : ['#videolib/include',
+                 '/home/mark/code/android-ffmpeg-build/armeabi/include',
+                 '/home/mark/code/cereal-0.9.1/include']
+}
+inc = includeMap[target]
 
-STLPATH = NDKDIR + '/sources/cxx-stl/gnu-libstdc++/4.8'
-STLINC = STLPATH + '/include'
-STLBITS = STLPATH + '/libs/armeabi/include'
+libPathMap = {
+    'native' : ['/home/mark/tmp_installs/lib',
+                '/usr/lib',
+                '/usr/local/glk/lib',
+                '/usr/local/videolib/lib',
+                '/usr/lib/x86_64-linux-gnu',
+                '/home/mark/code/free_type_cpp/build'],
+    'beagle' : ['#build/videolib/beagle/release'],
+    'android' : ['#build/videolib/android/release']
+}
+libPath = libPathMap[target]
 
-PLATFORMDIR = NDKDIR +'/platforms/android-8/arch-arm'
-PLATFORMINC = PLATFORMDIR + '/usr/include/'
+# Platform dependent rpath:
+rpathMap = {
+    'native' : ['/lib', '/usr/local/lib', '/usr/local/videolib/lib'],
+    'beagle' : ['/lib', '/usr/local/lib'],
+    'android' : []
+}
+rpath = rpathMap[target]
 
-SRC_FILES  = Glob('src/packetcomms/*.cpp')
-SRC_FILES += Glob('src/network/*.cpp')
-SRC_FILES += Glob('src/robotcomms/*.cpp')
+src = utils.RecursivelyGlobSourceInPaths( 'cpp', [ './src/packetcomms','./src/network','src/robotcomms' ] )
 
-HEADER_FILES = Glob('src/packetcomms/*.h')
-HEADER_FILES += Glob('src/network/*.h')
-HEADER_FILES += Glob('src/robotcomms/*.h')
+# Android is a PIA of course:
+if target == 'android':
+    env.Append( CPPDEFINES=['__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS'] )
 
-ANDROID_FFMPEG = '/home/mark/code/android-ffmpeg-build/armeabi'
-ANDROID_VIDEOLIB = '/home/mark/code/videolib'
-
-INC_DIRS  = [
-              ANDROID_VIDEOLIB + '/include',
-              '/home/mark/code/cereal-0.9.1/include',
-              ANDROID_FFMPEG + '/include',
-              STLINC,
-              STLBITS,
-              PLATFORMINC
-            ]
-
-LIBDIRS = [ PLATFORMDIR + '/usr/lib',
-            STLPATH + '/libs/armeabi',
-            ANDROID_VIDEOLIB + '/builds/android_build/',
-            ANDROID_FFMPEG + '/lib'
-            ]
-libs = [ 'avformat', 'avcodec', 'avutil', 'swscale', 'videolib', 'gnustl_shared' ]
-
-cxx = 'arm-linux-androideabi-g++'
-cxxflags = '-std=c++11 --sysroot=' + SYSROOT
-defines = [ '__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS', 'ANDROID' ]
-
-env = Environment( ENV = {'PATH' : os.environ['PATH']} )
-env.Append( CPPPATH=INC_DIRS )
-env.Append( CPPDEFINES=defines )
-env.Append( LINKFLAGS = [ '-Wl,--soname=' + SONAME ] )
-env.Append( LIBPATH=LIBDIRS )
-env.Append( LIBS=libs )
-builtLibrary = env.SharedLibrary( target=LIB_NAME, source=SRC_FILES, CXX=cxx, CXXFLAGS=cxxflags )
-
-INSTALL_PREFIX = '/home/mark/workspace/FFmpegJNI/jni/prebuilt/armeabi'
-env.Alias( 'install', env.Install( os.path.join( INSTALL_PREFIX, 'lib' ), builtLibrary ) )
+robolib = build.SharedLibrary(ENV=env,
+                              NAME='robolib',
+                              RPATH=rpath,
+                              CPPPATH=inc,
+                              LIBS=['videolib'],
+                              LIBPATH=libPath,
+                              SRC=src,
+                              SUPPORTED_PLATFORMS=['native','beagle','android']
+)
 
