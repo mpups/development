@@ -41,6 +41,8 @@ def RecursivelyGlobSourceInPaths( extension, dirList ):
     return src
 
 def RemoveFiles( glob, filterList ):
+    if type(filterList) is str:
+        raise Exception("RemoveFiles requires filterList to be a list of strings.")
     for m in filterList:
         for f in glob:
             if ( m in f.abspath ):

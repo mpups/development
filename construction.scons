@@ -21,9 +21,19 @@ AddOption( '--type',
            default='release',
            help='Specify build type: debug,release')
 
+AddOption( '--install-path',
+           dest='install-path',
+           type='string',
+           nargs=1,
+           action='store',
+           metavar='PATH-PREFIX',
+           default='#install',
+           help='Specify installation directory prefix, e.g /usr/local')
+
 # Determine build configuration from command line options:
 platform = GetOption('platform')
 buildType = GetOption('build-type')
+installPath = GetOption('install-path')
 
 if not utils.TargetIsValid(platform):
     print 'Invalid platform/architecture: ' + platform
@@ -39,15 +49,14 @@ compiler.AppendFlags( '-Wall -pedantic' )
 
 # Initialise the environment to use this compiler:
 env = envBuilder.makeEnvForCompiler(compiler)
-
 env.Decider('MD5-timestamp')
-
 env['platform'] = platform
+env['installPath'] = Dir(os.path.join(installPath,platform)).abspath
 
 subdirs = utils.FindSconsDirs( './' )
 for sconsDir in subdirs:
     sconsFile = os.path.join( sconsDir, 'SConscript' )
     buildPath = os.path.join( 'build', platform, sconsDir, buildType )
     clonedEnv = env.Clone()
-    SConscript( sconsFile, variant_dir=buildPath, duplicate=0, exports={ 'env' : clonedEnv, 'target' : platform, 'compiler' : compiler } )
+    SConscript( sconsFile, variant_dir=buildPath, duplicate=0, exports={ 'env' : clonedEnv, 'compiler' : compiler } )
 

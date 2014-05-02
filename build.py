@@ -2,7 +2,7 @@ import os
 import utils
 
 # Build an executable
-def Program( ENV, NAME, SRC, SUPPORTED_PLATFORMS, CPPPATH='', LIBS='', LIBPATH='', RPATH='' ):
+def Program( ENV, NAME, SRC, SUPPORTED_PLATFORMS, CPPPATH=[], LIBS=[], LIBPATH=[], RPATH=[] ):
     if not utils.TargetIsSupported(ENV['platform'],SUPPORTED_PLATFORMS):
         return None
     env = ENV.Clone()
@@ -13,7 +13,7 @@ def Program( ENV, NAME, SRC, SUPPORTED_PLATFORMS, CPPPATH='', LIBS='', LIBPATH='
     return env.Program( target=NAME, source=SRC )
 
 # Build a shared library
-def SharedLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, CPPPATH='', LIBS='', LIBPATH='', RPATH='' ):
+def SharedLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, CPPPATH=[], LIBS=[], LIBPATH=[], RPATH=[] ):
     if not utils.TargetIsSupported(ENV['platform'],SUPPORTED_PLATFORMS):
         return None
     env = ENV.Clone()
