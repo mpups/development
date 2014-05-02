@@ -5,6 +5,7 @@ import build
 # Standard initialisation:
 Import('env','compiler')
 target = env['platform']
+installPath = os.path.join(env['installPath'],'usr','local')
 
 # Platform dependent includes
 includeMap = {
@@ -47,14 +48,6 @@ if (target in ['beagle','android']):
 if (target in ['android']):
     utils.RemoveFiles( src, ['UnicapCapture.cpp','UnicapCamera.cpp'] )
 
-#Platform dependent install path
-installMap = {
-    'native' : '/usr/local/videolib',
-    'beagle' : '',
-    'android': ''
-}
-installPath = installMap[target]
-
 #RPATH for executables that use this library:
 rpathExeMap = {
     'native'  : [os.path.join( installPath, 'lib' )],
@@ -83,7 +76,7 @@ capture = build.Program(ENV=env,
                         NAME='capture',
                         CPPPATH=inc + ['#videolib/include', '/usr/local/glk/include', '/usr/include/freetype2'],
                         LIBS= libs + ['videolib','glk','glkcore'],
-                        RPATH=['/usr/local/glk/lib:'] + exeRPATH,
+                        RPATH=['/usr/local/glk/lib'] + exeRPATH,
                         SRC='./src/tests/tools/capture.cpp',
                         SUPPORTED_PLATFORMS=['native']
 )
@@ -106,4 +99,4 @@ if installPath:
     # Installing the headers is a PIA:
     installHeaders = utils.GenerateHeaderInstallActions(env,installPath,'include','videolib')
     installSourceHeaders = utils.GenerateHeaderInstallActions(env,installPath,'src','videolib')
-    env.Alias( 'install-videolib', [ installLib, installCapture, installHeaders, installSourceHeaders] )
+    env.Alias( 'install', [ installLib, installCapture, installHeaders, installSourceHeaders] )
