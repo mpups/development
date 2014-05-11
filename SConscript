@@ -50,11 +50,12 @@ rpathMap = {
 }
 rpath = rpathMap[target]
 
-src = utils.RecursivelyGlobSourceInPaths( 'cpp', [ './src/packetcomms','./src/network','src/robotcomms','src/motor_control','src/io/linux' ] )
+src = utils.RecursivelyGlobSourceInPaths( 'cpp', [ 'src/packetcomms','src/network','src/robotcomms','src/motor_control','src/io/linux' ] )
 
 # Android is a PIA of course:
 if target == 'android':
     env.Append( CPPDEFINES=['__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS'] )
+    utils.RemoveFiles(src,['src/io/linux/Joystick.cpp'])
 
 robolib = build.SharedLibrary(ENV=env,
                               NAME='robolib',
