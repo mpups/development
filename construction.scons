@@ -51,6 +51,7 @@ compiler.AppendFlags( '-Wall -pedantic' )
 env = envBuilder.makeEnvForCompiler(compiler)
 env.Decider('MD5-timestamp')
 env['platform'] = platform
+#env['compiler'] = compiler
 env['installPath'] = Dir(os.path.join(installPath,platform)).abspath
 
 subdirs = utils.FindSconsDirs( './' )
