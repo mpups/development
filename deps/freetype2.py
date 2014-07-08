@@ -1,18 +1,14 @@
-import deps
-
-module = deps.Make('freetype2')
-
-module.incpath = {
+incpath = {
     'native' : ['/usr/include','/usr/include/freetype2'],
     'beagle' : ['/home/mark/beagleboardxm/deploy_final/include/freetype2']
 }
 
-module.libpath = {
+libpath = {
     'native' : ['/usr/include','/usr/include/freetype2'],
     'beagle' : ['/home/mark/beagleboardxm/deploy_final/lib']
 }
 
-module.libs = {
+libs = {
     'native' : ['freetype'],
     'beagle' : ['freetype']
 }

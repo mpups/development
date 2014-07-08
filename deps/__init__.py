@@ -1,4 +1,5 @@
 from SCons.Errors import UserError
+import importlib
 
 class Dep:
     def __init__(self,name):
@@ -7,27 +8,22 @@ class Dep:
         self.libpath={}
         self.libs={}
 
-_db = {}
-
 def _Add( env, name ):
-    dep = _db[name]
     platform = env['platform']
+
     try:
-        env.Append(CPPPATH=dep.incpath[platform])
-        env.Append(LIBPATH=dep.libpath[platform])
-        env.Append(LIBS=dep.libs[platform])
+        module = importlib.import_module('deps.' + name)
+    except ImportError, e:
+        raise UserError("%s (Each external dependency needs a module in the deps folder.)"%(e))
+
+    try:
+        env.Append(CPPPATH=module.incpath[platform])
+        env.Append(LIBPATH=module.libpath[platform])
+        env.Append(LIBS=module.libs[platform])
     except KeyError, e:
         raise UserError("Dependency '%s' does not support platform %s"%(name,e))
-
-    return
 
 def List(env, names):
     for name in names:
         _Add(env,name)
-
-def Make(name):
-    _db[name] = Dep(name)
-    return _db[name]
-
-import freetype2
 
