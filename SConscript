@@ -1,25 +1,19 @@
 import os
 import utils
+import build
 
 Import( 'env', 'compiler' )
 target = env['platform']
 
 utils.EndScriptIfTargetNotSupported( target, ['native','beagle'] )
 
-# Different build types have different include paths for some libs:
-cppIncludes = [ '/usr/include','/usr/include/freetype2' ]
-if ( target == "beagle" ):
-    cppIncludes = [ os.path.join(compiler.sysroot, 'include/freetype2') ]
-env.Append( CPPPATH=cppIncludes )
-
-LIB_NAME = 'freetypecpp'
-SONAME   = 'lib' + LIB_NAME + '.so'
-LINKS = [ 'freetype' ]
-env.Append( LIBS=LINKS )
-env.Append( LINKFLAGS = [ '-Wl,--soname=' + SONAME ] )
-
-SRC_FILES    = Glob('src/*.cpp')
-builtLibrary = env.SharedLibrary( target=LIB_NAME, source=SRC_FILES )
+builtLibrary = build.SharedLibrary(
+                    ENV=env,
+                    NAME='freetypecpp',
+                    SRC=Glob('src/*.cpp'),
+                    SUPPORTED_PLATFORMS=['native','beagle'],
+                    DEPS=['freetype2']
+                    )
 
 INSTALL_PREFIX = os.path.join( env['installPath'], 'usr/local' )
 env.Alias( 'install', env.Install( os.path.join( INSTALL_PREFIX, 'lib' ), builtLibrary ) )
