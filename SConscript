@@ -74,11 +74,12 @@ videolib = build.SharedLibrary(ENV=env,
 env.Append(LIBPATH=['/usr/local/lib','/usr/local/glk/lib','./'])
 capture = build.Program(ENV=env,
                         NAME='capture',
-                        CPPPATH=inc + ['#videolib/include', '/usr/local/glk/include', '/usr/include/freetype2'],
+                        CPPPATH=inc + ['#videolib/include', '/usr/local/glk/include'],
                         LIBS= libs + ['videolib','glk','glkcore'],
                         RPATH=['/usr/local/glk/lib'] + exeRPATH,
                         SRC='./src/tests/tools/capture.cpp',
-                        SUPPORTED_PLATFORMS=['native']
+                        SUPPORTED_PLATFORMS=['native'],
+                        DEPS=['freetype2']
 )
 
 # GoogleTest unit tests:
