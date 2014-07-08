@@ -12,7 +12,6 @@ includeMap = {
     'native' : ['/home/mark/tmp_installs/include',
                 '/usr/local/glk/include',
                 '/usr/include/lua5.2',
-                '/usr/include/freetype2',
                 '/usr/include/gtest',
                 '/usr/include/',
                 '/usr/include/unicap',
@@ -20,7 +19,6 @@ includeMap = {
                 '#cereal-1.0.0/include'],
     'beagle' : [compiler.sysroot + '/include',
                 compiler.sysroot + '/include/unicap',
-                os.path.join(compiler.sysroot,'include','freetype2'),
                 '#cereal-1.0.0/include',
                 '#videolib/include',
                 '#free_type_cpp/include'],
@@ -61,6 +59,7 @@ robolib = build.SharedLibrary(ENV=env,
                               NAME='robolib',
                               SRC=src,
                               SUPPORTED_PLATFORMS=['native','beagle','android'],
+                              DEPS=['freetype2'],
                               RPATH=rpath,
                               CPPPATH=inc,
                               LIBS=['videolib'],
@@ -68,7 +67,7 @@ robolib = build.SharedLibrary(ENV=env,
 )
 
 # Programs:
-progLibs = ['pthread','videolib','freetype','freetypecpp']
+progLibs = ['pthread','videolib','freetypecpp']
 if target=='native':
     progLibs += ['glk','glkcore']
 progLibs += ['robolib']
@@ -82,6 +81,7 @@ robotcomms = build.Program(ENV=env,
                            NAME='puppybot-comms',
                            SRC=commsSrc,
                            SUPPORTED_PLATFORMS=['native','beagle'],
+                           DEPS=['freetype2'],
                            CPPPATH=inc,
                            LIBS=progLibs,
                            LIBPATH=libPath + ['/usr/local/glk/lib'],
