@@ -39,5 +39,4 @@ def StaticLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIB
     env.Append( CPPPATH=CPPPATH )
     env.Append( LIBS=LIBS )
     env.Append( LIBPATH=LIBPATH )
-    env.Append( RPATH=RPATH )
     return env.StaticLibrary( target=NAME, source=SRC )

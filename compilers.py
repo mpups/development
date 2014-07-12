@@ -27,7 +27,6 @@ def makeBeagle():
     c.sysroot = "/home/mark/beagleboardxm/deploy_final"
     c.libpath = c.sysroot + '/lib'
     c.AppendFlags( "-mtune=cortex-a8 -mfpu=neon" )
-    c.AppendFlags( c.sysroot+"/lib" )
     return c
 
 # Android is a little bitch so we always
@@ -46,7 +45,6 @@ def makeAndroid():
     c.libs = ['gnustl_shared']
     c.sysroot = NDK_ROOT + '/platforms/android-8/arch-arm'
     c.AppendFlags( '-mfloat-abi=softfp' )
-    c.AppendFlags( c.sysroot + '/usr/lib' )
     return c
 
 def MakeAndroidPath( sdkRoot, ndkRoot ):

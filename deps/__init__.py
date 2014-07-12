@@ -20,6 +20,7 @@ def _Add( env, name ):
         env.Append(CPPPATH=module.incpath[platform])
         env.Append(LIBPATH=module.libpath[platform])
         env.Append(LIBS=module.libs[platform])
+        env.Append(RPATH=module.rpath[platform])
     except KeyError, e:
         raise UserError("Dependency '%s' does not support platform %s"%(name,e))
 
