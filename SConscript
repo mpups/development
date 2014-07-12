@@ -7,89 +7,49 @@ Import('env','compiler')
 target = env['platform']
 installPath = os.path.join(env['installPath'],'usr','local')
 
-# Platform dependent includes
-includeMap = {
-    'native' : [ '/usr/include/unicap', '/home/mark/tmp_installs/include' ],
-    'beagle' : [ compiler.sysroot + '/include', compiler.sysroot + '/include/unicap' ],
-    'android' : [ '/home/mark/code/android-ffmpeg-build/armeabi/include' ]
-}
-inc = includeMap[target]
-
-# Platform dependent libraries
-libs = [ 'avformat', 'avcodec', 'avutil', 'swscale' ]
-libMap = {
-    'native' : ['unicap', 'dc1394'],
-    'beagle' : ['unicap'], # These were linked before but not sure they were necessary: 'pthread', 'rt', 'dl',
-    'android' : []
-}
-libs += libMap[target]
-
-# Platform dependent rpath:
-rpathMap = {
-    'native' : ['/home/mark/tmp_installs/lib'],
-    'beagle' : ['/lib', '/usr/local/lib'],
-    'android' : []
-}
-rpath = rpathMap[target]
-
-# platform dependent libpaths:
-libpathMap = {
-    'native' : ['/home/mark/tmp_installs/lib'],
-    'beagle' : [],
-    'android' : ['/home/mark/code/android-ffmpeg-build/armeabi/lib']
-}
-libpath = libpathMap[target]
-
 src = utils.RecursivelyGlobSourceInPaths( 'cpp', [ './src/video' ] )
 
-# Platform dependent source filters:
-if (target in ['beagle','android']):
+# Arrange platform dependent stuff:
+deps = ['ffmpeg']
+if target in ['native','beagle']:
+    deps += ['unicap']
+if target in ['beagle','android']:
     utils.RemoveFiles( src, [ 'Dc1394Camera.cpp' ] )
-if (target in ['android']):
+if target in ['android']:
     utils.RemoveFiles( src, ['UnicapCapture.cpp','UnicapCamera.cpp'] )
-
-#RPATH for executables that use this library:
-rpathExeMap = {
-    'native'  : [os.path.join( installPath, 'lib' )],
-    'beagle'  : ['/lib','/usr/local/lib'],
-    'android' : []
-}
-exeRPATH = rpathExeMap[target]
-
-# Android is a PIA of course:
-if target == 'android':
     env.Append( CPPDEFINES=['__STDC_CONSTANT_MACROS', '__STDC_LIMIT_MACROS'] )
+if target in ['native']:
+    deps += ['dc1394']
 
-videolib = build.SharedLibrary(ENV=env,
-                               NAME='videolib',
-                               RPATH=rpath,
-                               CPPPATH=inc,
-                               LIBS=libs,
-                               LIBPATH=libpath,
-                               SRC=src,
-                               SUPPORTED_PLATFORMS=['native','beagle','android']
+videolib = build.SharedLibrary(
+    ENV=env,
+    NAME='videolib',
+    SRC=src,
+    SUPPORTED_PLATFORMS=['native','beagle','android'],
+    DEPS=deps
 )
 
 # capture test program - only supported on native builds
-env.Append(LIBPATH=['/usr/local/lib','/usr/local/glk/lib','./'])
-capture = build.Program(ENV=env,
-                        NAME='capture',
-                        CPPPATH=inc + ['#videolib/include', '/usr/local/glk/include'],
-                        LIBS= libs + ['videolib','glk','glkcore'],
-                        RPATH=['/usr/local/glk/lib'] + exeRPATH,
-                        SRC='./src/tests/tools/capture.cpp',
-                        SUPPORTED_PLATFORMS=['native'],
-                        DEPS=['freetype2']
+env.Append(LIBPATH=['/usr/local/lib','./'])
+capture = build.Program(
+    ENV=env,
+    NAME='capture',
+    CPPPATH=['#videolib/include', '/usr/local/glk/include'],
+    LIBS= ['videolib'],
+    RPATH=['/usr/local/glk/lib'],
+    SRC='./src/tests/tools/capture.cpp',
+    SUPPORTED_PLATFORMS=['native'],
+    DEPS=['glk','freetype2'] + deps
 )
 
 # GoogleTest unit tests:
-test = build.Program(ENV=env,
-                     NAME='utest',
-                     CPPPATH=inc,
-                     LIBS = libs + ['gtest','gtest_main','videolib'],
-                     RPATH=exeRPATH,
-                     SRC=['./src/tests/unit/gtests.cpp','./src/tests/unit/VideoTests.cpp'],
-                     SUPPORTED_PLATFORMS=['native','beagle']
+test = build.Program(
+    ENV=env,
+    NAME='utest',
+    LIBS = ['videolib'],
+    SRC=['./src/tests/unit/gtests.cpp','./src/tests/unit/VideoTests.cpp'],
+    SUPPORTED_PLATFORMS=['native','beagle'],
+    DEPS=deps+['gtest']
 )
 
 # Installing libs/executables is easy:
