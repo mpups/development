@@ -6,6 +6,7 @@ import build
 Import('env','compiler')
 target = env['platform']
 installPath = os.path.join(env['installPath'],'usr','local')
+libPath = [os.path.join(installPath,'lib')]
 
 src = utils.RecursivelyGlobSourceInPaths( 'cpp', [ './src/video' ] )
 
@@ -36,10 +37,10 @@ capture = build.Program(
     NAME='capture',
     CPPPATH=['#videolib/include', '/usr/local/glk/include'],
     LIBS= ['videolib'],
-    RPATH=['/usr/local/glk/lib'],
     SRC='./src/tests/tools/capture.cpp',
     SUPPORTED_PLATFORMS=['native'],
-    DEPS=['glk','freetype2'] + deps
+    DEPS=['glk','freetype2'] + deps,
+    RPATH=libPath
 )
 
 # GoogleTest unit tests:
