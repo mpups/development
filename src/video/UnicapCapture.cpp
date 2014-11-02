@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include "video_conversion.h"
+#include <memory.h>
 
 UnicapCapture::UnicapCapture()
 :
