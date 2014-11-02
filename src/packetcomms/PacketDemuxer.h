@@ -38,7 +38,7 @@ class PacketDemuxer
 public:
     typedef std::shared_ptr<PacketSubscriber> SubscriberPtr;
 
-    PacketDemuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds );
+    PacketDemuxer( AbstractReader& socket, const std::vector<std::string>& packetIds );
     virtual ~PacketDemuxer();
 
     bool Ok() const;
@@ -62,7 +62,7 @@ private:
     IdManager m_packetIds;
     std::mutex m_subscriberLock;
     std::unordered_map< SubscriptionEntry::first_type, SubscriptionEntry::second_type > m_subscribers;
-    AbstractSocket& m_transport;
+    AbstractReader& m_transport;
     bool m_transportError;
 
     // This must be initialised last to ensure all other members are intialised before the thread starts:

@@ -66,7 +66,7 @@ int runClient( int argc, char** argv )
     @note Number of command line arguments decides whether process will be server or client.
 */
 int main( int argc, char** argv )
-{   
+{
     if ( argc == 2 )
     {
         // Only a port specified so this will be a server process:
@@ -78,4 +78,3 @@ int main( int argc, char** argv )
         return runClient( argc, argv );
     }
 }
-

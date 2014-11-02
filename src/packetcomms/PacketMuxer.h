@@ -49,7 +49,7 @@ class PacketMuxer
 public:
     typedef std::shared_ptr<PacketSubscriber> Subscription;
 
-    PacketMuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds );
+    PacketMuxer( AbstractWriter& socket, const std::vector<std::string>& packetIds );
     virtual ~PacketMuxer();
 
     bool Ok() const;
@@ -84,7 +84,7 @@ private:
 
     std::unordered_map< MapEntry::first_type, MapEntry::second_type > m_txQueues;
 
-    AbstractSocket& m_transport;
+    AbstractWriter& m_transport;
     bool m_transportError;
 
     // Async function should be initialised last - it requires everything else to

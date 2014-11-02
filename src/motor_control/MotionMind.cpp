@@ -148,7 +148,7 @@ bool MotionMind::Move( int32_t addr, int32_t move_c, int32_t& position )
     cmd[4] = (move_c >> 16) & 0xFF;
     cmd[5] = (move_c >> 24) & 0xFF;
     cmd[6] = cmd[0] + cmd[1] + cmd[2] + cmd[3] + cmd[4] + cmd[5];
-    int n = m_com.Write( cmd, 7 ); /// @todo - This is not guaranteed to write all the bytes
+    const int n = m_com.Write( cmd, 7 ); /// @todo - This is not guaranteed to write all the bytes
     assert( n == 7 );
 
     return GetAck( position );

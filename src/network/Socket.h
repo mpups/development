@@ -19,7 +19,7 @@ class Ipv4Address;
 
     @todo TcpSocket should be derived from this base class instead of embedded in it.
 **/
-class Socket : public AbstractSocket
+class Socket : public AbstractWriter, public AbstractReader
 {
 public:
     Socket();

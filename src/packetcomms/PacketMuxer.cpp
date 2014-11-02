@@ -12,7 +12,7 @@
 
     This object is guaranteed to only ever write to the socket.
 */
-PacketMuxer::PacketMuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds )
+PacketMuxer::PacketMuxer(AbstractWriter &socket, const std::vector<std::string>& packetIds )
 :
     m_packetIds     (packetIds),
     m_numPosted     (0),

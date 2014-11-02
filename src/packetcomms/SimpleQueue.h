@@ -31,8 +31,8 @@ public:
 
     public:
         LockedQueue( const LockedQueue& ) = delete;
-        LockedQueue( LockedQueue&& other ) : m_q(other.m_q) { std::swap(m_secureLock,other.m_secureLock); };
-        virtual ~LockedQueue() {};
+        LockedQueue( LockedQueue&& other ) : m_q(other.m_q) { std::swap(m_secureLock,other.m_secureLock); }
+        virtual ~LockedQueue() {}
 
         template< class Rep, class Period >
         void WaitNotEmpty(const std::chrono::duration<Rep,Period>& timeout)
@@ -52,39 +52,38 @@ public:
         }
 
     private:
-        LockedQueue( const SimpleQueue& q ) : m_q(q), m_secureLock(q.m_lock) {};
+        LockedQueue( const SimpleQueue& q ) : m_q(q), m_secureLock(q.m_lock) {}
         const SimpleQueue& m_q;
         std::unique_lock<std::mutex> m_secureLock;
     };
 
-    SimpleQueue() {};
+    SimpleQueue() {}
     SimpleQueue( const SimpleQueue& ) = delete;
-    virtual ~SimpleQueue() {};
+    virtual ~SimpleQueue() {}
 
     /**
-        This call will block forever if you hold a LockedQueue from this queue.
+        This call will block forever if you hold a LockedQueue from
+        this queue in the same thread.
     */
     void Emplace( const ComPacket::ConstSharedPacket& item )
     {
         std::lock_guard<std::mutex> guard( m_lock );
         m_items.emplace( item );
         m_notEmpty.notify_all();
-    };
+    }
 
     /**
-        You should acquire the lock before calling any of the functions other than Emplace().
-        WaitNotEmpty() explicitly enforces this by requiring you to pass back the lock.
-
-        This call will block forever if you already hold a LockedQueue from this queue.
+        This call will block forever if you already hold a LockedQueue
+        from this queue in the same thread.
     */
-    LockedQueue Lock() { return LockedQueue( *this ); };
+    LockedQueue Lock() { return LockedQueue( *this ); }
 
     // You may or may not get away with calling these without holding a
     // LockedQueue object, but technically you should hold one before calling them:
-    size_t Size() const { return m_items.size(); };
-    bool Empty() const { return m_items.empty(); };
-    const ComPacket::ConstSharedPacket& Front() const { return m_items.front(); };
-    void Pop() { m_items.pop(); };
+    size_t Size() const { return m_items.size(); }
+    bool Empty() const { return m_items.empty(); }
+    const ComPacket::ConstSharedPacket& Front() const { return m_items.front(); }
+    void Pop() { m_items.pop(); }
 
 protected:
 

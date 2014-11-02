@@ -11,7 +11,7 @@
 
     This object is guaranteed to only ever read from the socket.
 */
-PacketDemuxer::PacketDemuxer( AbstractSocket& socket, const std::vector<std::string>& packetIds )
+PacketDemuxer::PacketDemuxer(AbstractReader& socket, const std::vector<std::string>& packetIds )
 :
     m_packetIds     ( packetIds ),
     m_transport     ( socket ),
