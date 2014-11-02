@@ -22,7 +22,7 @@ def makeNative():
 def makeBeagle():
     c = Compiler()
     c.cmd     = "arm-none-linux-gnueabi-g++"
-    c.path   += ":/home/mark/x-tools/arm-none-linux-gnueabi/bin"
+    c.path   += ":/home/mark/software/x-tools/arm-none-linux-gnueabi/bin"
     c.defines = ['ARM_BUILD']
     c.sysroot = "/home/mark/beagleboardxm/deploy_final"
     c.libpath = c.sysroot + '/lib'
@@ -33,8 +33,8 @@ def makeBeagle():
 # set up the compiler with fixed version of sdk/ndk
 # and always use gnu_stl to simplify things:
 def makeAndroid():
-    SDK_ROOT = '/home/mark/code/android-sdk-linux_x86'
-    NDK_ROOT = '/home/mark/code/android-ndk-r9b'
+    SDK_ROOT = '/home/mark/software/android-sdk-linux'
+    NDK_ROOT = '/home/mark/software/android-ndk-r10c'
 
     c = Compiler()
     c.cmd     = 'arm-linux-androideabi-g++'
