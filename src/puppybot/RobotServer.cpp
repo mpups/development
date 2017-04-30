@@ -207,7 +207,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 
     // Load a font as a joke:
     Ft::Library ftLib;
-    Ft::Cache ftCache( ftLib, "/usr/share/fonts/truetype/droid/DroidSans.ttf" );
+    Ft::Cache ftCache(ftLib, "/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf");
     ftCache.SetSizePx(11);
     const int32_t textX = 1;
     const int32_t textY = 12;
@@ -260,7 +260,7 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
                 Serialise( *m_muxer, "AvInfo", stamp, framesCompressed );
 
                 // Wrap the conversion buffer in a video frame object (YUV420P is native for mpg4):
-                VideoFrame frame( m_buffer[1], PIX_FMT_YUV420P, streamWidth, streamHeight, streamWidth );
+                VideoFrame frame( m_buffer[1], AV_PIX_FMT_YUV420P, streamWidth, streamHeight, streamWidth );
                 sentOk = streamer.PutVideoFrame( frame );
                 sentOk &= !streamer.IoError();
             }
