@@ -23,7 +23,7 @@ public:
     FrameConverter(  );
     virtual ~FrameConverter();
 
-    bool Configure( int srcW, int srcH, PixelFormat srcFormat, int dstW, int dstH, PixelFormat dstFormat );
+    bool Configure( int srcW, int srcH, AVPixelFormat srcFormat, int dstW, int dstH, AVPixelFormat dstFormat );
     bool Convert( uint8_t* src[], int srcStride[], int rowOffset, int rowHeight, uint8_t* dst[], int dstStride[] ) const;
     bool Convert( const VideoFrame& frame, uint8_t* dst[], int dstStride[] ) const;
 

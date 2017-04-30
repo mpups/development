@@ -39,7 +39,7 @@ public:
     uint8_t* UnsafeBufferAccess() { return m_buffer; };
 
 protected:
-    void FrameConversion( PixelFormat format, uint8_t* data, int stride );
+    void FrameConversion( AVPixelFormat format, uint8_t* data, int stride );
 
 private:
     void OnCapture( uint8_t* buffer, const timespec& time );

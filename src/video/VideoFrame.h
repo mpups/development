@@ -15,8 +15,8 @@ class VideoFrame
 {
 public:
     VideoFrame( const VideoFrame& ) = delete;
-    VideoFrame( PixelFormat format, uint32_t width, uint32_t height );
-    VideoFrame( uint8_t* buffer, PixelFormat format, uint32_t width, uint32_t height, uint32_t stride );
+    VideoFrame( AVPixelFormat format, uint32_t width, uint32_t height );
+    VideoFrame( uint8_t* buffer, AVPixelFormat format, uint32_t width, uint32_t height, uint32_t stride );
     virtual ~VideoFrame();
 
     void operator = ( const VideoFrame& ) = delete;
@@ -29,11 +29,11 @@ public:
 
     int GetWidth() const;
     int GetHeight() const;
-    PixelFormat GetAvPixelFormat() const;
+    AVPixelFormat GetAvPixelFormat() const;
 
 private:
-    AVPicture   m_picture;
-    PixelFormat m_format;
+    AVPicture     m_picture;
+    AVPixelFormat m_format;
     int         m_width;
     int         m_height;
     const bool  m_freePicture;

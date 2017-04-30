@@ -104,7 +104,7 @@ void LibAvCapture::Init( const char* streamName )
     }
 
     // Allocate video frame
-    m_avFrame = avcodec_alloc_frame();
+    m_avFrame = av_frame_alloc();
 }
 
 /**
@@ -279,22 +279,22 @@ timespec LibAvCapture::GetFrameTimestamp() const
 
 void LibAvCapture::ExtractLuminanceImage( uint8_t* data, int stride )
 {
-    FrameConversion( PIX_FMT_GRAY8, data, stride );
+    FrameConversion( AV_PIX_FMT_GRAY8, data, stride );
 }
 
 void LibAvCapture::ExtractRgbImage( uint8_t* data, int stride )
 {
-    FrameConversion( PIX_FMT_RGB24, data, stride );
+    FrameConversion( AV_PIX_FMT_RGB24, data, stride );
 }
 
 void LibAvCapture::ExtractBgrImage( uint8_t* data, int stride )
 {
-    FrameConversion( PIX_FMT_BGR24, data, stride );
+    FrameConversion( AV_PIX_FMT_BGR24, data, stride );
 }
 
 void LibAvCapture::ExtractRgb565Image( uint8_t* data, int stride )
 {
-    FrameConversion( PIX_FMT_RGB565, data, stride );
+    FrameConversion( AV_PIX_FMT_RGB565, data, stride );
 }
 
 /**
@@ -304,11 +304,11 @@ void LibAvCapture::ExtractRgb565Image( uint8_t* data, int stride )
     @note It is currently assumed the output image will be the same size as the
     video frame read from the file.
 
-    @param format PixelFormat of output buffer - currently only supports single plane formats.
+    @param format AVPixelFormat of output buffer - currently only supports single plane formats.
     @param data pointer to buffer that must be large enough to hold the data
     @param stride number of bytes to jump between rows in data.
 */
-void LibAvCapture::FrameConversion( PixelFormat format, uint8_t* data, int stride )
+void LibAvCapture::FrameConversion( AVPixelFormat format, uint8_t* data, int stride )
 {
     const int w = m_codecContext->width;
     const int h = m_codecContext->height;

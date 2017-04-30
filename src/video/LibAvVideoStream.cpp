@@ -20,23 +20,23 @@ extern "C" {
 */
 AVPixelFormat LibAvVideoStream::ChooseCodecFormat( AVCodecID id, AVPixelFormat inputFormat )
 {
-    PixelFormat pixelFormat = PIX_FMT_YUV420P;
+    AVPixelFormat pixelFormat = AV_PIX_FMT_YUV420P;
 
     switch ( id )
     {
-        case CODEC_ID_FFV1:
-        pixelFormat = PIX_FMT_YUV422P;
+        case AV_CODEC_ID_FFV1:
+        pixelFormat = AV_PIX_FMT_YUV422P;
         break;
 
-        case CODEC_ID_HUFFYUV:
-        pixelFormat = PIX_FMT_YUV422P;
+        case AV_CODEC_ID_HUFFYUV:
+        pixelFormat = AV_PIX_FMT_YUV422P;
         break;
 
-        case CODEC_ID_MJPEG:
-        pixelFormat = PIX_FMT_YUVJ420P;
+        case AV_CODEC_ID_MJPEG:
+        pixelFormat = AV_PIX_FMT_YUVJ420P;
         break;
 
-        case CODEC_ID_RAWVIDEO:
+        case AV_CODEC_ID_RAWVIDEO:
         pixelFormat = inputFormat;
         break;
 
@@ -69,7 +69,7 @@ LibAvVideoStream::LibAvVideoStream( AVFormatContext* context, uint32_t width, ui
     {
         CodecContext()->codec_id  = codecId;
         CodecContext()->codec_tag = fourcc;
-        CodecContext()->pix_fmt = LibAvVideoStream::ChooseCodecFormat( codecId, PIX_FMT_RGB24 );
+        CodecContext()->pix_fmt = LibAvVideoStream::ChooseCodecFormat( codecId, AV_PIX_FMT_RGB24 );
         CodecContext()->bit_rate = 10000000;
         CodecContext()->bit_rate_tolerance = 1000000;
         CodecContext()->gop_size = 50;

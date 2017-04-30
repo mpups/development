@@ -30,8 +30,8 @@ FrameConverter::~FrameConverter()
     @return true if the configuration was successful, false
     if there was an error.
 */
-bool FrameConverter::Configure( int srcW, int srcH, PixelFormat srcFormat,
-                                int dstW, int dstH, PixelFormat dstFormat )
+bool FrameConverter::Configure( int srcW, int srcH, AVPixelFormat srcFormat,
+                                int dstW, int dstH, AVPixelFormat dstFormat )
 {
     m_context = sws_getCachedContext( m_context,
                                     srcW, srcH, srcFormat, dstW, dstH, dstFormat,

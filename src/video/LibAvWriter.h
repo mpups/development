@@ -44,11 +44,11 @@ private:
 
     AVOutputFormat*  m_outputFormat;
     AVFormatContext* m_formatContext;
-    FFMpegCustomIO*    m_customIO;
-    AVFrame          m_codecFrame;
+    FFMpegCustomIO*  m_customIO;
+    AVFrame*         m_codecFrame;
 
     LibAvVideoStream* m_stream;
-    FrameConverter   m_converter;
+    FrameConverter    m_converter;
 
     bool    m_open;
 

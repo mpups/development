@@ -140,7 +140,7 @@ const char* UnicapCapture::GetModel() const
 
     @todo - conversion assumes camera image is YUYV422 - need to detect and choose format appropriately.
 */
-void UnicapCapture::FrameConversion(PixelFormat format, uint8_t* data, int stride )
+void UnicapCapture::FrameConversion(AVPixelFormat format, uint8_t* data, int stride )
 {
     const int w = m_camera.GetFrameWidth();
     const int h = m_camera.GetFrameHeight();
@@ -150,7 +150,7 @@ void UnicapCapture::FrameConversion(PixelFormat format, uint8_t* data, int strid
     uint8_t* dstPlanes[4] = { data, 0, 0, 0 };
     int dstStrides[4] = { stride, 0, 0, 0 };
 
-    m_converter.Configure( w, h, PIX_FMT_YUYV422, w, h, format );
+    m_converter.Configure( w, h, AV_PIX_FMT_YUYV422, w, h, format );
     m_converter.Convert( srcPlanes, srcStrides, 0, h, dstPlanes, dstStrides );
 }
 
@@ -181,10 +181,10 @@ void UnicapCapture::ExtractLuminanceImage( uint8_t* data, int stride )
 }
 void UnicapCapture::ExtractRgbImage( uint8_t* dest, int stride )
 {
-    FrameConversion( PIX_FMT_RGB24, dest, stride );
+    FrameConversion( AV_PIX_FMT_RGB24, dest, stride );
 }
 
 void UnicapCapture::ExtractBgrImage(uint8_t* dest, int stride )
 {
-    FrameConversion( PIX_FMT_BGR24, dest, stride );
+    FrameConversion( AV_PIX_FMT_BGR24, dest, stride );
 }

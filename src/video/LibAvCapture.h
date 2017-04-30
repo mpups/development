@@ -47,7 +47,7 @@ public:
     static void InitLibAvCodec();
 
 protected:
-    void FrameConversion( PixelFormat format, uint8_t* data, int stride );
+    void FrameConversion( AVPixelFormat format, uint8_t* data, int stride );
 
 private:
     AVFormatContext* m_formatContext;

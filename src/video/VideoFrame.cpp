@@ -5,7 +5,7 @@
 
     The AVPicture will be freed in the destructor.
 */
-VideoFrame::VideoFrame( PixelFormat format, uint32_t width, uint32_t height )
+VideoFrame::VideoFrame( AVPixelFormat format, uint32_t width, uint32_t height )
 :
     m_format        ( format ),
     m_width         ( width  ),
@@ -20,7 +20,7 @@ VideoFrame::VideoFrame( PixelFormat format, uint32_t width, uint32_t height )
 
     This object will never modify the wrapped buffer.
 */
-VideoFrame::VideoFrame( uint8_t* buffer, PixelFormat format, uint32_t width, uint32_t height, uint32_t stride )
+VideoFrame::VideoFrame( uint8_t* buffer, AVPixelFormat format, uint32_t width, uint32_t height, uint32_t stride )
 :
     m_format        ( format ),
     m_width         ( width  ),
@@ -38,7 +38,7 @@ VideoFrame::VideoFrame( uint8_t* buffer, PixelFormat format, uint32_t width, uin
     m_picture.linesize[2] = 0;
     m_picture.linesize[3] = 0;
 
-    if ( format == PIX_FMT_YUV420P )
+    if ( format == AV_PIX_FMT_YUV420P )
     {
         m_picture.data[1]   = buffer + (width*height);
         m_picture.linesize[1] = width/2;
@@ -106,7 +106,7 @@ int VideoFrame::GetHeight() const
     return m_height;
 }
 
-PixelFormat VideoFrame::GetAvPixelFormat() const
+AVPixelFormat VideoFrame::GetAvPixelFormat() const
 {
     return m_format;
 }

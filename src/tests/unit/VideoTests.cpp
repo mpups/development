@@ -33,7 +33,7 @@ void RunWriter( FFMpegCustomIO& videoIO )
     int err = posix_memalign( (void**)&buffer, 16, 640*480 );
     ASSERT_EQ( 0, err );
 
-    VideoFrame frame( buffer, PIX_FMT_GRAY8, FRAME_WIDTH, FRAME_HEIGHT, FRAME_WIDTH );
+    VideoFrame frame( buffer, AV_PIX_FMT_GRAY8, FRAME_WIDTH, FRAME_HEIGHT, FRAME_WIDTH );
 
     for ( int i=0;i<256;++i)
     {

@@ -50,7 +50,8 @@ test = build.Program(
     LIBS = ['videolib','pthread'],
     SRC=['./src/tests/unit/gtests.cpp','./src/tests/unit/VideoTests.cpp'],
     SUPPORTED_PLATFORMS=['native','beagle'],
-    DEPS=deps+['gtest']
+    DEPS=deps+['gtest'],
+    RPATH=libPath
 )
 
 # Installing libs/executables is easy:

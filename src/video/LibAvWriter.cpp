@@ -96,7 +96,8 @@ LibAvWriter::~LibAvWriter()
 {
     if ( m_stream && m_stream->IsValid() )
     {
-        avpicture_free( reinterpret_cast<AVPicture*>( &m_codecFrame ) );
+        avpicture_free( reinterpret_cast<AVPicture*>(m_codecFrame) );
+        av_frame_free(&m_codecFrame);
         av_write_trailer( m_formatContext );
 
         if ( m_customIO == 0 )
@@ -149,11 +150,11 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
         m_stream = new LibAvVideoStream( m_formatContext, width, height, fps, fourcc );
         if ( m_stream->IsValid() )
         {
-            avcodec_get_frame_defaults( &m_codecFrame );
-            int err = avpicture_alloc( reinterpret_cast<AVPicture*>( &m_codecFrame ), m_stream->CodecContext()->pix_fmt, m_stream->CodecContext()->width, m_stream->CodecContext()->height );
+            m_codecFrame = av_frame_alloc();
+            int err = avpicture_alloc( reinterpret_cast<AVPicture*>( m_codecFrame ), m_stream->CodecContext()->pix_fmt, m_stream->CodecContext()->width, m_stream->CodecContext()->height );
             assert( err == 0 );
 
-            m_codecFrame.pts = 0;
+            m_codecFrame->pts = 0;
             av_dump_format( m_formatContext, 0, m_formatContext->filename, 1 );
 
             // We don't check result of above because the following fails gracefully if m_codec==null
@@ -180,7 +181,7 @@ bool LibAvWriter::AddVideoStream( uint32_t width, uint32_t height, uint32_t fps,
 
         if ( success )
         {
-            avformat_write_header( m_formatContext, 0 );
+            int err = avformat_write_header( m_formatContext, 0 );
         }
     }
 
@@ -196,29 +197,28 @@ bool LibAvWriter::PutVideoFrame( VideoFrame& frame )
 {
     const int width  = frame.GetWidth();
     const int height = frame.GetHeight();
-    const PixelFormat format = frame.GetAvPixelFormat();
+    const AVPixelFormat format = frame.GetAvPixelFormat();
     AVCodecContext* codecContext = m_stream->CodecContext();
 
     struct timespec t1;
     struct timespec t2;
     clock_gettime( CLOCK_MONOTONIC, &t1 );
 
-    AVFrame srcFrame;
-    avcodec_get_frame_defaults( &srcFrame );
+    AVFrame* srcFrame = av_frame_alloc();
 
     AVFrame* frameToSend;
     if (  format == codecContext->pix_fmt )
     {
         // No conversion needed so just copy pointers:
-        frame.FillAvFramePointers( srcFrame );
-        frameToSend = &srcFrame;
+        frame.FillAvFramePointers( *srcFrame );
+        frameToSend = srcFrame;
     }
     else
     {
         if ( m_converter.Configure( width, height, format, codecContext->width, codecContext->height, codecContext->pix_fmt ) )
         {
-            m_converter.Convert( frame, m_codecFrame.data, m_codecFrame.linesize );
-            frameToSend = &m_codecFrame;
+            m_converter.Convert( frame, m_codecFrame->data, m_codecFrame->linesize );
+            frameToSend = m_codecFrame;
         }
         else
         {
@@ -230,8 +230,8 @@ bool LibAvWriter::PutVideoFrame( VideoFrame& frame )
     clock_gettime( CLOCK_MONOTONIC, &t2 );
     lastConvertTime_ms = milliseconds(t2) - milliseconds(t1);
 
-    m_codecFrame.pts += 1;
-    srcFrame.pts = m_codecFrame.pts; /** @todo - allow caller to specify timestamp */
+    m_codecFrame->pts += 1;
+    srcFrame->pts = m_codecFrame->pts; /** @todo - allow caller to specify timestamp */
     bool success = WriteCodecFrame( frameToSend );
     return success;
 }
