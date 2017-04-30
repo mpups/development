@@ -3,7 +3,7 @@ incpath = {
 }
 
 libpath = {
-    'native' : ['/usr/lib']
+    'native' : ['/usr/lib/x86_64-linux-gnu/']
 }
 
 libs = {
