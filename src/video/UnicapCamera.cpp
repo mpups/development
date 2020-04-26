@@ -67,7 +67,7 @@ void UnicapCamera::NewFrame( unicap_event_t event, unicap_handle_t handle, unica
     fillTime.tv_nsec = buffer->fill_time.tv_usec * 1000;
 
     UnicapCamera* camera = reinterpret_cast<UnicapCamera*>( data );
-    if ( camera->m_captureCallback == false )
+    if ( !camera->m_captureCallback )
     {
         std::cerr << "Error: no capture callback set - did you call StartCapture() before SetCaptureCallback()?" << std::endl;
     }

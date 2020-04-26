@@ -21,7 +21,7 @@ int main( int argc, char** argv )
         capture.reset( new LibAvCapture( argv[1] ) );
         if ( false == capture->IsOpen() )
         {
-            std::cerr << "Coult not open video-file: " << argv[1] << std::endl;
+            std::cerr << "Could not open video-file: " << argv[1] << std::endl;
         }
     }
     else

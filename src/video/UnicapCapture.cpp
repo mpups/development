@@ -5,6 +5,8 @@
 #include "video_conversion.h"
 #include <memory.h>
 
+#include <functional>
+
 UnicapCapture::UnicapCapture()
 :
     m_buffer        ( nullptr ),
