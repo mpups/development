@@ -7,7 +7,7 @@ libpath = {
 }
 
 libs = {
-    'native' : ['opencv_ml', 'opencv_highgui', 'opencv_core']
+    'native' : ['libopencv_imgcodecs', 'opencv_core']
 }
 
 rpath = {
