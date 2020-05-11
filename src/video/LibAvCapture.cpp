@@ -224,7 +224,7 @@ bool LibAvCapture::GetFrame()
 
     if ( success == false )
     {
-        if ( m_codecContext->codec->capabilities & CODEC_CAP_DELAY )
+        if ( m_codecContext->codec->capabilities & AV_CODEC_CAP_DELAY )
         {
             // av_read_frame reached the end of input
             // but there might be more buffered frames:

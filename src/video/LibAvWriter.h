@@ -40,7 +40,7 @@ protected:
     bool WriteCodecFrame( AVFrame* );
 
 private:
-    static const int BUFFER_SIZE = FF_MIN_BUFFER_SIZE+(640*480*4);
+    static const int BUFFER_SIZE = AV_INPUT_BUFFER_MIN_SIZE+(640*480*4);
 
     AVOutputFormat*  m_outputFormat;
     AVFormatContext* m_formatContext;
