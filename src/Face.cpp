@@ -9,7 +9,7 @@ namespace Ft
 
 /**
     Construct a new font face from a file.
-    
+
     @param lib Reference to the FreeType library.
     @param font Name of the font file.
     @param index The index of the font face to open (Font files with multiple faces only).
@@ -18,17 +18,13 @@ Face::Face( Library& lib, const char* font, FT_Long index )
 :
     m_face(0)
 {
-    m_err = FT_New_Face( lib.m_lib, font, index, &m_face );   
-
-    if ( m_err == FT_Err_Unknown_File_Format )
-    {
-        assert(0);
-    }
+    m_err = FT_New_Face( lib.m_lib, font, index, &m_face );
+    assert( m_err == 0 );
 }
 
 /**
     Construct a new font face from a file that has already been loaded into a memory buffer.
-    
+
     @param lib Reference to the FreeType library.
     @param base Pointer to start of memory buffer.
     @param size Size of memory buffer in bytes.
@@ -38,12 +34,8 @@ Face::Face( Library& lib, const FT_Byte* base, FT_Long size, FT_Long index )
 :
     m_face(0)
 {
-    m_err = FT_New_Memory_Face( lib.m_lib, base, size, index, &m_face );   
-
-    if ( m_err == FT_Err_Unknown_File_Format )
-    {
-        assert(0);
-    }
+    m_err = FT_New_Memory_Face( lib.m_lib, base, size, index, &m_face );
+    assert( m_err == 0 );
 }
 
 /**
@@ -106,7 +98,7 @@ FT_Error Face::SetCharSize( FT_F26Dot6 width, FT_F26Dot6 height, FT_UInt hres_dp
 
     @param width_px Width in pixels
     @param height_px Height in pixels
-        
+
     @return error code.
 **/
 FT_Error Face::SetPixelSizes( FT_UInt width_px, FT_UInt height_px )
@@ -127,7 +119,7 @@ FT_UInt Face::GetCharIndex( FT_ULong charcode ) const {
 
 /**
     Load the specified glyph into the 'glyph slot', wher eit can be accessed with ... .
-    
+
     The glyph might be transformed accoring to SetTransform().
 
     @param glyphIndex Glyph index (e.g. as returned by GetCharIndex()). For CID fonts this should be the CID key.
