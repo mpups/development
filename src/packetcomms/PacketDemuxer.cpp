@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <functional>
 
 #include <arpa/inet.h>
 #include <assert.h>

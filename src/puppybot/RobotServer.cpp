@@ -207,7 +207,10 @@ void RobotServer::StreamVideo( TeleJoystick& joy )
 
     // Load a font as a joke:
     Ft::Library ftLib;
-    Ft::Cache ftCache(ftLib, "/usr/share/fonts/truetype/ttf-dejavu/DejaVuSansMono.ttf");
+    Ft::Cache ftCache(ftLib, "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf");
+    if (!ftCache.FontLoaded()) {
+        throw std::runtime_error("Font not loaded.");
+    }
     ftCache.SetSizePx(11);
     const int32_t textX = 1;
     const int32_t textY = 12;

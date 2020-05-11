@@ -165,7 +165,7 @@ void RobotClient::SendJoystickData()
 {
     if ( m_joystick.IsAvailable() )
     {
-        robolib::MuxJoystickData(*m_muxer,m_joystick.GetAxis(1),m_joystick.GetAxis(2),32767);
+        robolib::MuxJoystickData(*m_muxer, m_joystick.GetAxis(1), m_joystick.GetAxis(3), 32767);
     }
     else
     {

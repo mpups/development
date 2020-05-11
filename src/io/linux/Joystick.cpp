@@ -11,6 +11,7 @@
 #include <memory.h>
 
 #include <iostream>
+#include <functional>
 
 Joystick::Joystick( JoystickDevice_t device )
 :

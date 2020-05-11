@@ -4,6 +4,8 @@
 #include "IdManager.h"
 #include "ComPacket.h"
 
+#include <functional>
+
 class PacketDemuxer;
 
 /**

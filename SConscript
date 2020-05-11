@@ -51,8 +51,8 @@ robotcomms = build.Program(ENV=env,
                            RPATH=libPath
 )
 
-env.Alias( 'install',
-    env.Install( os.path.join( installPath,'lib' ), robolib ),
-    env.Install( os.path.join( installPath,'bin' ), robotcomms )
-)
+installLib = env.Install( os.path.join( installPath,'lib' ), robolib )
+installBin = env.Install( os.path.join( installPath,'bin' ), robotcomms )
+installService = env.Install( '/etc/systemd/system/', env.File('puppybot.service') )
+env.Alias( 'install', [installLib, installBin, installService])
 

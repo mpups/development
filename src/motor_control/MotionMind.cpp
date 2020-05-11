@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <thread>
+#include <functional>
 
 double GetMicroSeconds()
 {
