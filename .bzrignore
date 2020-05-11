@@ -1,6 +1,0 @@
-linux_build
-docs/html
-cmake-build
-qtcreator
-builds/android_build
-builds/beagleboardxm_gcc-4.8.1
