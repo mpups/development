@@ -36,23 +36,24 @@ buildType = GetOption('build-type')
 installPath = GetOption('install-path')
 
 if not utils.TargetIsValid(platform):
-    print 'Invalid platform/architecture: ' + platform
-    Exit(1)
+    raise RuntimeError("Invalid platform/architecture: " + platform)
 
 if not utils.BuildTypeIsValid(buildType):
-    print 'Invalid build type: ' + buildType
-    Exit(1)
+    raise RuntimeError("Invalid build type: " + buildType)
 
 # Setup the compiler:
-compiler = compilers.makeCompilerFor(platform,buildType)
+compiler = compilers.makeCompilerFor(platform, buildType)
 compiler.AppendFlags( '-Wall -pedantic' )
+
+print("Compiler cmd: " + compiler.cmd)
+print("Compiler path: " + compiler.path)
+print("Compiler sysroot: " + compiler.sysroot)
 
 # Initialise the environment to use this compiler:
 env = envBuilder.makeEnvForCompiler(compiler)
 env.Decider('MD5-timestamp')
 env['platform'] = platform
-#env['compiler'] = compiler
-env['installPath'] = Dir(os.path.join(installPath,platform)).abspath
+env['installPath'] = Dir(os.path.join(installPath, platform)).abspath
 
 subdirs = utils.FindSconsDirs( './' )
 for sconsDir in subdirs:

@@ -1,8 +1,9 @@
 import sys
+import os
 
 class Compiler:
     cmd   = ""
-    path  = "/bin"
+    path  = "/bin:/usr/bin"
     flags = "-std=c++11"
     defines = []
     includes = []
@@ -16,7 +17,6 @@ class Compiler:
 def makeNative():
     c = Compiler()
     c.cmd   = "/usr/bin/c++"
-    c.path += ":/usr/bin"
     return c
 
 def makeBeagle():
@@ -29,43 +29,50 @@ def makeBeagle():
     c.AppendFlags( "-mtune=cortex-a8 -mfpu=neon" )
     return c
 
-# Android is a little bitch so we always
-# set up the compiler with fixed version of sdk/ndk
-# and always use gnu_stl to simplify things:
-def makeAndroid():
-    SDK_ROOT = '/home/mark/software/android-sdk-linux'
-    NDK_ROOT = '/home/mark/software/android-ndk-r10c'
+SDK_ROOT = '/home/markp/Android/Sdk/'
+PLATFORM_VERSION = '29'
+NDK_VERSION = '21.1.6352462'
+PLATFORM = 'android-' + PLATFORM_VERSION
+NDK_ROOT = os.path.join(SDK_ROOT, 'ndk', NDK_VERSION)
+PLATFORM_ROOT = os.path.join(NDK_ROOT, 'platforms', PLATFORM)
 
+# For Android we have to set a lot of things,
+# paths to binaries especially must be correct:
+def makeAndroid():
     c = Compiler()
-    c.cmd     = 'arm-linux-androideabi-g++'
-    c.path   += MakeAndroidPath( SDK_ROOT, NDK_ROOT )
+    c.cmd = 'armv7a-linux-androideabi' + PLATFORM_VERSION + '-clang++'
+    c.path += ":" + MakeAndroidPath( SDK_ROOT, NDK_ROOT )
     c.defines = ['ANDROID', 'ARM_BUILD']
-    c.includes = MakeAndroidIncludes( NDK_ROOT )
-    c.libpath = MakeAndroidLibPath( NDK_ROOT )
-    c.libs = ['gnustl_shared']
-    c.sysroot = NDK_ROOT + '/platforms/android-8/arch-arm'
+    c.includes = MakeAndroidIncludes()
+    c.libpath = MakeAndroidLibPath()
+    c.libs = []
+    c.sysroot = os.path.join(NDK_ROOT, 'toolchains/llvm/prebuilt/linux-x86_64/sysroot')
     c.AppendFlags( '-mfloat-abi=softfp' )
     return c
 
 def MakeAndroidPath( sdkRoot, ndkRoot ):
-    path = ":" + sdkRoot + "/tools:" + sdkRoot + "/platform-tools:" + ndkRoot + ":" + ndkRoot + "/toolchains/arm-linux-androideabi-4.8/prebuilt/linux-x86_64/bin"
+    sdkSubdirs = []#['tools/bin', 'tools', 'platform-tools']
+    ndkSubdirs = [
+        #'toolchains/llvm/prebuilt/linux-x86_64/arm-linux-androideabi/bin',
+        #'toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin',
+        'toolchains/llvm/prebuilt/linux-x86_64/bin']
+
+    path = ':'.join([os.path.join(sdkRoot, d) for d in sdkSubdirs] + [os.path.join(ndkRoot, d) for d in ndkSubdirs])
     return path
 
-def MakeAndroidIncludes( NDK_ROOT ):
-    ANDROID_INC = NDK_ROOT + '/platforms/android-8/arch-arm/usr/include'
-    ANDROID_STL_PATH = NDK_ROOT + '/sources/cxx-stl/gnu-libstdc++/4.8'
-    ANDROID_STL_INC = ANDROID_STL_PATH + '/include'
-    ANDROID_STL_BITS_INC = ANDROID_STL_PATH + '/libs/armeabi/include'
-    inc = [ ANDROID_INC, ANDROID_STL_INC, ANDROID_STL_BITS_INC ]
+def MakeAndroidIncludes():
+    ANDROID_STL_ROOT = os.path.join(NDK_ROOT, 'sources/cxx-stl')
+    ANDROID_STL_INC = os.path.join(ANDROID_STL_ROOT, 'llvm-libc++/include')
+    inc = [] # Latest clang knows where everything is.
     return inc
 
-def MakeAndroidLibPath(NDK_ROOT):
-    ANDROID_LIB = NDK_ROOT + '/platforms/android-8/arch-arm/usr/lib'
-    ANDROID_STL = NDK_ROOT + '/sources/cxx-stl/gnu-libstdc++/4.8/libs/armeabi'
-    libpath=[ ANDROID_LIB, ANDROID_STL ]
+def MakeAndroidLibPath():
+    ANDROID_LIB = os.path.join(PLATFORM_ROOT, 'arch-arm/usr/lib')
+    ANDROID_STL = os.path.join(NDK_ROOT, 'sources/cxx-stl/llvm-libc++/libs/armeabi-v7a')
+    libpath = [ANDROID_LIB, ANDROID_STL]
     return libpath
 
-def makeCompilerFor( target, buildType ):
+def makeCompilerFor(target, buildType):
     if target == "native":
         compiler = makeNative()
     elif target == "beagle":
@@ -73,8 +80,7 @@ def makeCompilerFor( target, buildType ):
     elif target == "android":
         compiler = makeAndroid()
     else:
-        print "Error: unknown build target: " + target
-        sys.exit()
+        raise RuntimeError("Error: unknown build target: " + target)
 
     if ( buildType == 'debug' ):
         compiler.AppendFlags( "-g -O0" )

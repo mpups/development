@@ -1,18 +1,20 @@
+import os
 import compilers
 
 bc = compilers.makeBeagle()
-ac = compilers.makeAndroid()
+android_install_root = '/home/markp/development/install/android/ffmpeg'
+
 
 incpath = {
     'native'  : ['/home/mark/local_installs/include'],
-    'beagle'  : [bc.sysroot+'/include'],
-    'android' : ['/home/mark/software/android-ffmpeg-install/armeabi/include']
+    'beagle'  : [os.path.join(bc.sysroot, '/include')],
+    'android' : [os.path.join(android_install_root, 'include')]
 }
 
 libpath = {
     'native'  : ['/home/mark/local_installs/lib'],
-    'beagle'  : [bc.sysroot+'/lib'],
-    'android' : ['/home/mark/software/android-ffmpeg-install/armeabi/lib']
+    'beagle'  : [os.path.join(bc.sysroot, '/lib')],
+    'android' : [os.path.join(android_install_root, 'lib')]
 }
 
 libs = {

@@ -4,7 +4,7 @@ import deps
 
 # Build an executable
 def Program( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIBS=[], LIBPATH=[], RPATH=[] ):
-    if not utils.TargetIsSupported(ENV['platform'],SUPPORTED_PLATFORMS):
+    if not utils.TargetIsSupported(ENV['platform'], SUPPORTED_PLATFORMS):
         return None
     env = ENV.Clone()
     deps.List(env,DEPS)
@@ -16,7 +16,7 @@ def Program( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIBS=[], 
 
 # Build a shared library
 def SharedLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIBS=[], LIBPATH=[], RPATH=[] ):
-    if not utils.TargetIsSupported(ENV['platform'],SUPPORTED_PLATFORMS):
+    if not utils.TargetIsSupported(ENV['platform'], SUPPORTED_PLATFORMS):
         return None
     env = ENV.Clone()
     deps.List(env,DEPS)
@@ -32,7 +32,7 @@ def SharedLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIB
 
 # Build a shared library
 def StaticLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIBS=[], LIBPATH=[], RPATH=[] ):
-    if not utils.TargetIsSupported(ENV['platform'],SUPPORTED_PLATFORMS):
+    if not utils.TargetIsSupported(ENV['platform'], SUPPORTED_PLATFORMS):
         return None
     env = ENV.Clone()
     deps.List(env,DEPS)
