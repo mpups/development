@@ -7,7 +7,7 @@ def Program( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIBS=[], 
     if not utils.TargetIsSupported(ENV['platform'], SUPPORTED_PLATFORMS):
         return None
     env = ENV.Clone()
-    deps.List(env,DEPS)
+    deps.List(env, DEPS)
     env.Append( CPPPATH=CPPPATH )
     env.Append( LIBS=LIBS )
     env.Append( LIBPATH=LIBPATH )
@@ -19,16 +19,16 @@ def SharedLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIB
     if not utils.TargetIsSupported(ENV['platform'], SUPPORTED_PLATFORMS):
         return None
     env = ENV.Clone()
-    deps.List(env,DEPS)
-    env.Append( CPPPATH=CPPPATH )
-    env.Append( LIBS=LIBS )
-    env.Append( LIBPATH=LIBPATH )
-    env.Append( CPPFLAGS = '-fPIC' )
-    env.Append( RPATH=RPATH )
+    deps.List(env, DEPS)
+    env.Append(CPPPATH=CPPPATH)
+    env.Append(LIBS=LIBS)
+    env.Append(LIBPATH=LIBPATH)
+    env.Append(CPPFLAGS = '-fPIC')
+    env.Append(RPATH=RPATH)
 
     soname = 'lib' + NAME + '.so'
-    env.Append( LINKFLAGS = [ '-Wl,--soname=' + soname ] )
-    return env.SharedLibrary( target=NAME, source=SRC )
+    env.Append(LINKFLAGS = ['-Wl,--soname=' + soname ])
+    return env.SharedLibrary(target=NAME, source=SRC)
 
 # Build a shared library
 def StaticLibrary( ENV, NAME, SRC, SUPPORTED_PLATFORMS, DEPS=[], CPPPATH=[], LIBS=[], LIBPATH=[], RPATH=[] ):

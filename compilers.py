@@ -37,19 +37,30 @@ NDK_ROOT = os.path.join(SDK_ROOT, 'ndk', NDK_VERSION)
 PLATFORM_ROOT = os.path.join(NDK_ROOT, 'platforms', PLATFORM)
 
 # TODO: How to do NDK x86 support? Need to be able to build all there variants:
-LLVM_PREFIX = 'i686' # 'armv7a' 'i686' # 'x86_64'
-LIB_ARCH = 'arch-x86' # 'arch-arm' 'arch-arm64'  'arch-x86' 'arch-x86_64'
-ABI_NAME = '-linux-android' # '-linux-androideabi' '-linux-android'
+#LLVM_PREFIX = 'i686' # 'armv7a' 'i686' # 'x86_64'
+#LIB_ARCH = 'arch-x86' # 'arch-arm' 'arch-arm64'  'arch-x86' 'arch-x86_64'
+#ABI_NAME = '-linux-android' # '-linux-androideabi' '-linux-android'
+
+def translateABIToTriple(abi):
+    lookup = {
+        "armeabi-v7a": ('armv7a',  'arch-arm',    '-linux-androideabi'),
+        "arm64-v8a":   ('aarch64', 'arch-arm64',  '-linux-android'),
+        "x86":         ('i686',    'arch-x86',    '-linux-android'),
+        "x86-64":      ('x86_64',  'arch-x86_64', '-linux-android')
+    }
+    return lookup[abi]
 
 # For Android we have to set a lot of things,
 # paths to binaries especially must be correct:
-def makeAndroid():
+def makeAndroid(abi):
+    llvm_prefix, arch, abi_name = translateABIToTriple(abi)
+
     c = Compiler()
-    c.cmd = LLVM_PREFIX + ABI_NAME + PLATFORM_VERSION + '-clang++'
+    c.cmd = llvm_prefix + abi_name + PLATFORM_VERSION + '-clang++'
     c.path += ":" + MakeAndroidPath(SDK_ROOT, NDK_ROOT)
     c.defines = ['ANDROID', 'ARM_BUILD']
     c.includes = MakeAndroidIncludes()
-    c.libpath = MakeAndroidLibPath()
+    c.libpath = MakeAndroidLibPath(abi, arch)
     c.libs = []
     c.sysroot = os.path.join(NDK_ROOT, 'toolchains/llvm/prebuilt/linux-x86_64/sysroot')
     c.AppendFlags( '-mfloat-abi=softfp' )
@@ -71,19 +82,19 @@ def MakeAndroidIncludes():
     inc = [] # Latest clang knows where everything is.
     return inc
 
-def MakeAndroidLibPath():
-    ANDROID_LIB = os.path.join(PLATFORM_ROOT, LIB_ARCH, 'usr/lib')
-    ANDROID_STL = os.path.join(NDK_ROOT, 'sources/cxx-stl/llvm-libc++/libs/armeabi-v7a')
+def MakeAndroidLibPath(abi, lib_arch):
+    ANDROID_LIB = os.path.join(PLATFORM_ROOT, lib_arch, 'usr/lib')
+    ANDROID_STL = os.path.join(NDK_ROOT, 'sources/cxx-stl/llvm-libc++/libs', abi)
     libpath = [ANDROID_LIB, ANDROID_STL]
     return libpath
 
-def makeCompilerFor(target, buildType):
+def makeCompilerFor(target, buildType, abi):
     if target == "native":
         compiler = makeNative()
     elif target == "beagle":
         compiler = makeBeagle()
     elif target == "android":
-        compiler = makeAndroid()
+        compiler = makeAndroid(abi)
     else:
         raise RuntimeError("Error: unknown build target: " + target)
 

@@ -1,6 +1,8 @@
 from SCons.Errors import UserError
 import importlib
 
+ABI = 'none'
+
 class Dep:
     def __init__(self,name):
         self.name = name
@@ -8,8 +10,10 @@ class Dep:
         self.libpath={}
         self.libs={}
 
-def _Add( env, name ):
+def _Add(env, name):
     platform = env['platform']
+    global ABI
+    ABI = env['abi']
 
     try:
         module = importlib.import_module('deps.' + name)
