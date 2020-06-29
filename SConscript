@@ -5,8 +5,8 @@ import build
 # Standard initialisation:
 Import('env','compiler')
 target = env['platform']
-installPath = os.path.join(env['installPath'],'usr','local')
-libPath = [os.path.join(installPath,'lib')]
+installPath = os.path.join(env['installPath'], 'usr', 'local')
+libPath = [os.path.join(installPath, 'lib')]
 
 src = utils.RecursivelyGlobSourceInPaths( 'cpp', [ './src/video' ] )
 
@@ -56,10 +56,10 @@ test = build.Program(
 
 # Installing libs/executables is easy:
 if installPath:
-    installLib = env.Install( os.path.join( installPath, 'lib' ), videolib )
-    installCapture = env.Install( os.path.join( installPath, 'bin' ), capture )
+    installLib = env.Install(os.path.join(installPath, 'lib'), videolib)
+    installCapture = env.Install(os.path.join(installPath, 'bin'), capture)
 
     # Installing the headers is a PIA:
-    installHeaders = utils.GenerateHeaderInstallActions(env,installPath,'include','videolib')
-    installSourceHeaders = utils.GenerateHeaderInstallActions(env,installPath,'src','videolib')
-    env.Alias( 'install', [ installLib, installCapture, installHeaders, installSourceHeaders] )
+    installHeaders = utils.GenerateHeaderInstallActions(env, installPath, 'include', 'videolib')
+    installSourceHeaders = utils.GenerateHeaderInstallActions(env, installPath, 'src', 'videolib')
+    env.Alias('install', [installLib, installCapture, installHeaders, installSourceHeaders])
