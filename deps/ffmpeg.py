@@ -2,8 +2,8 @@ import os
 import compilers
 
 bc = compilers.makeBeagle()
-android_install_root = '/home/markp/development/install/android/ffmpeg'
-
+# TODO: to support different arm archs need access to arch here - where is install root itself?:
+android_install_root = '/home/markp/development/install/android/x86/ffmpeg'
 
 incpath = {
     'native'  : ['/home/mark/local_installs/include'],

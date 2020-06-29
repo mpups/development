@@ -10,7 +10,7 @@ AddOption( '--platform',
            action='store',
            metavar='ARCHITECTURE',
            default='native',
-           help='Specify platform/architecture to build for: native,beagle,android')
+           help='Specify platform/architecture to build for: native, beagle, android')
 
 AddOption( '--type',
            dest='build-type',

@@ -1,24 +1,24 @@
 import os
 import fnmatch
-from SCons.Script import Dir,Return,Glob
+from SCons.Script import Dir, Return, Glob
 
-def TargetIsSupported( target, supported ):
+def TargetIsSupported(target, supported):
     return target in supported
 
-def EndScriptIfTargetNotSupported( target, supported ):
+def EndScriptIfTargetNotSupported(target, supported):
     if not TargetIsSupported(target,supported):
         print 'INFO: Ignoring Project ' + Dir('.').path + ' (does not support platform: ' + target + ')'
         Return()
 
-def TargetIsValid( target ):
+def TargetIsValid(target):
     validTargets = [ 'native','beagle','android' ]
     return target in validTargets;
 
-def BuildTypeIsValid( type ):
+def BuildTypeIsValid(type):
     validTypes = [ 'debug', 'release' ]
     return type in validTypes;
 
-def FindSconsDirs( root ):
+def FindSconsDirs(root):
     sconsDirs = []
     for file in os.listdir( root ):
         fullpath = os.path.join(root,file)
@@ -28,19 +28,23 @@ def FindSconsDirs( root ):
 
     return sconsDirs
 
-def RecursivelyGlobSourceInPaths( extension, dirList ):
+def RecursivelyGlobSourceInPaths(extension, dirList):
     # For each entry in list we glob all the source
     # files in all subdirs
     src = []
 
-    for dir in dirList:
+    basePath = Dir('.').srcnode().abspath
+    dirs = [os.path.join(basePath, d) for d in dirList]
+    for d in dirs:
         # traverse root directory, and list directories as dirs and files as files
-        for path, dirs, files in os.walk(dir):
-            src += Glob( os.path.join(path,'*.'+extension) )
+        for path, dirs, files in os.walk(d):
+            glob_pattern = os.path.join(path, '*.' + extension)
+            glob = Glob(glob_pattern)
+            src += glob
 
     return src
 
-def RemoveFiles( glob, filterList ):
+def RemoveFiles(glob, filterList):
     if type(filterList) is str:
         raise Exception("RemoveFiles requires filterList to be a list of strings.")
     for m in filterList:
@@ -50,19 +54,19 @@ def RemoveFiles( glob, filterList ):
 
 # This is not to be used to pass source files to SCons (it will not work).
 # Use RecursivelyGlobSourceInPaths instead.
-def RecursivelyFindFiles( extension, topDir ):
+def RecursivelyFindFiles(extension, topDir):
     src = []
-    pattern = '*.'+extension
+    pattern = '*.' + extension
     # traverse root directory, and list directories as dirs and files as files
     for path, dirs, files in os.walk(topDir):
         for file in files:
-            if fnmatch.fnmatch(file,pattern):
-                src.append( os.path.join( path, file ) )
-
+            if fnmatch.fnmatch(file, pattern):
+                src.append(os.path.join(path, file))
     return src
 
-def GenerateHeaderInstallActions(env,installPath,searchDir,projectDir):
+def GenerateHeaderInstallActions(env, installPath, searchDir, projectDir):
     realDir = Dir('.').srcnode().abspath
-    sources = RecursivelyFindFiles('h', os.path.join(realDir,searchDir) )
-    return [ env.Install(os.path.join( installPath, os.path.dirname(h.split(projectDir+'/')[1]) ), h) for h in sources ]
+    searchPath = os.path.join(realDir, searchDir)
+    sources = RecursivelyFindFiles('h', searchPath)
+    return [env.Install(os.path.join(installPath, os.path.dirname(h.split(projectDir+'/')[1])), h) for h in sources]
 

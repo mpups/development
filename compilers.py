@@ -4,7 +4,7 @@ import os
 class Compiler:
     cmd   = ""
     path  = "/bin:/usr/bin"
-    flags = "-std=c++11"
+    flags = "-std=c++14"
     defines = []
     includes = []
     libpath = []
@@ -36,12 +36,17 @@ PLATFORM = 'android-' + PLATFORM_VERSION
 NDK_ROOT = os.path.join(SDK_ROOT, 'ndk', NDK_VERSION)
 PLATFORM_ROOT = os.path.join(NDK_ROOT, 'platforms', PLATFORM)
 
+# TODO: How to do NDK x86 support? Need to be able to build all there variants:
+LLVM_PREFIX = 'i686' # 'armv7a' 'i686' # 'x86_64'
+LIB_ARCH = 'arch-x86' # 'arch-arm' 'arch-arm64'  'arch-x86' 'arch-x86_64'
+ABI_NAME = '-linux-android' # '-linux-androideabi' '-linux-android'
+
 # For Android we have to set a lot of things,
 # paths to binaries especially must be correct:
 def makeAndroid():
     c = Compiler()
-    c.cmd = 'armv7a-linux-androideabi' + PLATFORM_VERSION + '-clang++'
-    c.path += ":" + MakeAndroidPath( SDK_ROOT, NDK_ROOT )
+    c.cmd = LLVM_PREFIX + ABI_NAME + PLATFORM_VERSION + '-clang++'
+    c.path += ":" + MakeAndroidPath(SDK_ROOT, NDK_ROOT)
     c.defines = ['ANDROID', 'ARM_BUILD']
     c.includes = MakeAndroidIncludes()
     c.libpath = MakeAndroidLibPath()
@@ -50,7 +55,7 @@ def makeAndroid():
     c.AppendFlags( '-mfloat-abi=softfp' )
     return c
 
-def MakeAndroidPath( sdkRoot, ndkRoot ):
+def MakeAndroidPath(sdkRoot, ndkRoot):
     sdkSubdirs = []#['tools/bin', 'tools', 'platform-tools']
     ndkSubdirs = [
         #'toolchains/llvm/prebuilt/linux-x86_64/arm-linux-androideabi/bin',
@@ -67,7 +72,7 @@ def MakeAndroidIncludes():
     return inc
 
 def MakeAndroidLibPath():
-    ANDROID_LIB = os.path.join(PLATFORM_ROOT, 'arch-arm/usr/lib')
+    ANDROID_LIB = os.path.join(PLATFORM_ROOT, LIB_ARCH, 'usr/lib')
     ANDROID_STL = os.path.join(NDK_ROOT, 'sources/cxx-stl/llvm-libc++/libs/armeabi-v7a')
     libpath = [ANDROID_LIB, ANDROID_STL]
     return libpath
