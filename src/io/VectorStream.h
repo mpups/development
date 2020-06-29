@@ -39,7 +39,7 @@ public:
     }
 
 private:
-    std::streambuf::int_type overflow( std::streambuf::int_type ch )
+    virtual std::streambuf::int_type overflow( std::streambuf::int_type ch )
     {
         if ( ch == std::streambuf::traits_type::eof() )
         {
@@ -81,7 +81,7 @@ public:
     }
 
 private:
-    std::streambuf::int_type overflow()
+    virtual std::streambuf::int_type overflow()
     {
         return traits_type::eof();
     }
