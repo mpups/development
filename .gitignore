@@ -10,9 +10,11 @@ doc/latex
 *.o
 *.obj
 *.opensdf
+*.os
 *.pdb
 *.pyc
 __pycache__
+.sconsign.dblite
 *.sdf
 *.slo
 *.so
