@@ -2,6 +2,7 @@
 build
 doc/html
 doc/latex
+install
 *.dylib
 *.la
 *.lai

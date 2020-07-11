@@ -1,7 +1,7 @@
 incpath = {
-    'native'  : ['#cereal-1.2.2/include'],
-    'beagle'  : ['#cereal-1.2.2/include'],
-    'android' : ['#cereal-1.2.2/include']
+    'native'  : ['#cereal/include'],
+    'beagle'  : ['#cereal/include'],
+    'android' : ['#cereal/include']
 }
 
 libpath = {
