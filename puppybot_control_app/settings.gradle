@@ -1,0 +1,2 @@
+rootProject.name='PuppybotControl'
+include ':app', ':FFmpegJNI'
