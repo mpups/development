@@ -1,0 +1,11 @@
+scons
+cmake
+libopencv-dev
+libavcodec-dev
+libeigen3-dev
+libgtest-dev
+libdc1394-22-dev
+libfreetype6-dev
+libunicap2-dev
+libxrender-dev
+joystick
