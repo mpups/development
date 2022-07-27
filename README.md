@@ -34,8 +34,7 @@ any library by changing the search paths in the `deps/*.py`.
 # Android Build Instructions for robolib
 
 The android configuration only builds a subset of libraries and programs
-that enable the supported Andoid robolib client side apps (available in a
-separate repo).
+that enable the supported [Andoid robolib client side app](./puppybot_control_app/).
 
 1. Download Android Studio and install the latest NDK version compatible with your device
 (the same NDK must be used to build the pre-requisites and this repo).
